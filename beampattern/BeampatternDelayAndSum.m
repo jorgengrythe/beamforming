@@ -20,8 +20,6 @@ amplitudes = [0 2]; %difference in dB levels
 %Load array
 load ../../data/arrays/S1.mat
 w = hiResWeights;
-%load ../arrays/gfai-72.mat
-%load arrays/gfai-48.mat
 
 inputSignal = 0;
 max_spectrum_val = 0;
