@@ -1,5 +1,5 @@
-function [ee, kx, ky] = steeringVector(xPos, yPos, f, c, theta, phi)
-%steeringVector - calculate steering vector of 2D array
+function [ee, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
+%steeringVector - calculate steering vector of array
 %
 %Calculates the steering vector for different scanning angles
 %
@@ -19,7 +19,7 @@ function [ee, kx, ky] = steeringVector(xPos, yPos, f, c, theta, phi)
 %ky 	- phi scanning angles in polar coordinates
 %
 %Created by Jørgen Grythe, Norsonic AS
-%Last updated 2015-09-30
+%Last updated 2015-10-27
 
 if ~isvector(xPos)
     error('X-positions of array elements must be a 1xP vector where P is number of elements')
@@ -31,17 +31,17 @@ end
 
 
 %theta is the elevation and is the normal incidence angle from -90 to 90
-if ~exist('theta', 'var')
-    theta = -pi/2:pi/180:pi/2;
+if ~exist('thetaAngles', 'var')
+    thetaAngles = -pi/2:pi/180:pi/2;
 else
-    theta = theta*pi/180;
+    thetaAngles = thetaAngles*pi/180;
 end
 
 %phi is the azimuth, and is the angle in the XY-plane from 0 to 360
-if ~exist('phi', 'var')
-    phi = 0:pi/180:2*pi;
+if ~exist('phiAngles', 'var')
+    phiAngles = 0:pi/180:2*pi;
 else
-    phi = phi*pi/180;
+    phiAngles = phiAngles*pi/180;
 end
  
 %Wavenumber
@@ -51,8 +51,8 @@ k = 2*pi*f/c;
 P = size(xPos,2);
 
 %Changing wave vector to spherical coordinates
-kx = sin(theta)'*cos(phi);
-ky = sin(theta)'*sin(phi);
+kx = sin(thetaAngles)'*cos(phiAngles);
+ky = sin(thetaAngles)'*sin(phiAngles);
 
 %Calculate steering vector/matrix 
 kxx = bsxfun(@times,kx,reshape(xPos,1,1,P));
