@@ -4,10 +4,12 @@ c = 340;
 fs = 44.1e3;
 f = 5e3;
 
-load ../data/arrays/S1.mat
-w = hiResWeights;
-% load data/arrays/ring-72.mat
-% w = ones(1,numel(xPos));
+array = load('../data/arrays/S1.mat');
+w = array.hiResWeights;
+%array = load('../data/arrays/ring-72.mat');
+xPos = array.xPos;
+yPos = array.yPos;
+%w = ones(1,numel(xPos));
 
 [imageFile, imageMap] = imread('../data/fig/room.jpg');
 
@@ -30,12 +32,11 @@ scanningPointsX = scanningPointsX(:)';
 scanningPointsY = scanningPointsY(:)';
 
 
-
-
 %Sources
 xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0.1 0.37 1.32 2.18 2.18 2.18];
 yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 0.5 1.47 -0.33 0.26 -0.15 -0.55];
-amplitudes = [1 2 3 5 3 6 3 5 1 2 3];
+%amplitudes = [1 2 3 5 3 6 3 5 1 2 3];
+amplitudes = [0 0 0 0 0 0 0 0 0 0 0];
 zPosSource = distanceToScanningPlane*ones(1,length(xPosSource));
 
 % Convert from cartesian points to polar angles source
@@ -50,8 +51,6 @@ thetaArrivalAngles(isnan(thetaArrivalAngles)) = 0;
 phiArrivalAngles(isnan(phiArrivalAngles)) = 0;
 
 
-
-
 %Create input signal
 inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
@@ -64,6 +63,39 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
 
 
 
+
+    function inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes)
+
+        
+        nSamples = 1e3;
+        
+        T = nSamples/fs;
+        t = 0:1/fs:T-1/fs;
+        
+        inputSignal = 0;
+        for k = 1:numel(thetaArrivalAngles)
+            
+            %Number of elements/sensors in the array
+            P = size(xPos,2);
+            
+            %Changing wave vector to spherical coordinates
+            kx = sin(thetaArrivalAngles(k)*pi/180).*cos(phiArrivalAngles(k)*pi/180);
+            ky = sin(thetaArrivalAngles(k)*pi/180).*sin(phiArrivalAngles(k)*pi/180);
+            
+            %Calculate steering vector/matrix
+            kxx = bsxfun(@times,kx,reshape(xPos,P,1));
+            kyy = bsxfun(@times,ky,reshape(yPos,P,1));
+            doa = exp(1j*2*pi*f/c*(kxx+kyy));
+            signal = 10^(amplitudes(k)/20)*doa*exp(1j*2*pi*(f*t+randn(1,nSamples)));
+            
+            %Total signal equals sum of individual signals
+            inputSignal = inputSignal + signal;
+        end
+    end
+
+        
+        
+        
 
     function S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY)
         % Calculate steered response in frequency domain
@@ -85,7 +117,6 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
         
         %Get steering vector to each point
         k = 2*pi*f/c;
-        
         kx = sin(thetaScanningAngles*pi/180).*cos(phiScanningAngles*pi/180);
         ky = sin(thetaScanningAngles*pi/180).*sin(phiScanningAngles*pi/180);
         k_xx = bsxfun(@times,kx,reshape(xPos,nElements,1));
@@ -118,13 +149,13 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
         
         S = abs(S)/max(max(abs(S)));
         S = 10*log10(S);
-    
+    end
 
 
 
     function plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, scanningPointsY, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
         % Points in space and scanspace
-        fig = figure(1);clf
+        fig = figure;
         set(fig,'color',[0 0 0])
         
         %Background image
@@ -142,10 +173,14 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
         
         %Sources with context menu
         for sourceNumber = 1:numel(amplitudes)
-            plotSources(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber),100, [1 1 1]*0.5);
+            plotSources(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber),100, [1 1 1]*0.4);
             cm = uicontextmenu;
-            for dBVal = [0 1 2 3 4 5 10 15]
-                eval(['uimenu(''Parent'',cm,''Label'',''+' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber });'])
+            for dBVal = [-50 -10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
+                if dBVal > 0
+                    eval(['uimenu(''Parent'',cm,''Label'',''+' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber, sPlot });'])
+                else
+                    eval(['uimenu(''Parent'',cm,''Label'',''' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber, sPlot });'])
+                end
             end
             plotSources(sourceNumber).UIContextMenu = cm;
         end
@@ -172,5 +207,15 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
             'max', log10(range(2)));
         addlistener(h,'ContinuousValueChange',@(hObject,eventdata) caxis([-10^get(hObject, 'Value') 0]));
         addlistener(h,'ContinuousValueChange',@(hObject,eventdata) title(['Dynamic range: ' sprintf('%0.2f', 10^get(hObject, 'Value')) ' dB'],'fontweight','normal'));
-    
+    end
 
+        
+        function changeDbOfSource(~, ~, dBVal, sourceClicked, sPlot)
+            
+            amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
+            inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+            S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+            sPlot.CData = S;
+        end
+    
+end
