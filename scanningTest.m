@@ -6,12 +6,13 @@ f = 5e3;
 
 array = load('../data/arrays/S1.mat');
 w = array.hiResWeights;
-%array = load('../data/arrays/ring-72.mat');
+% array = load('../data/arrays/ring-72.mat');
+% w = array.w;
 xPos = array.xPos;
 yPos = array.yPos;
-%w = ones(1,numel(xPos));
 
-[imageFile, imageMap] = imread('../data/fig/room.jpg');
+imageFile = imread('../data/fig/room.jpg');
+grayScaleValues = rgb2gray(imageFile);
 
 % Acoustical coverage / listening points
 maxAcousticalCoveringAngleHorizontal = 42;
@@ -33,7 +34,7 @@ scanningPointsY = scanningPointsY(:)';
 
 
 %Sources
-xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0.1 0.37 1.32 2.18 2.18 2.18];
+xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0 0.37 1.32 2.18 2.18 2.18];
 yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 0.5 1.47 -0.33 0.26 -0.15 -0.55];
 %amplitudes = [1 2 3 5 3 6 3 5 1 2 3];
 amplitudes = [0 0 0 0 0 0 0 0 0 0 0];
@@ -163,26 +164,47 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
         hold on
         
         %Coloring of sources
-        sPlot = imagesc(scanningPointsX, scanningPointsY, S);
-        sPlot.AlphaData = 0.4;
+        sourcePlot = imagesc(scanningPointsX, scanningPointsY, S);
+        sourcePlot.AlphaData = 0.4;
         cmap = colormap;
         cmap(1,:) = [1 1 1]*0.8;
         colormap(cmap);
         axis xy equal
         box on
         
+        
+        cmFrequency = uicontextmenu;
+        topMenuFreq = uimenu('Parent',cmFrequency,'Label','Frequency');
+        topMenuTheme = uimenu('Parent',cmFrequency,'Label','Background');
+        uimenu('Parent',topMenuFreq, 'Label', '1 kHz', 'Callback',{ @changeFrequencyOfSource, 1e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '2 kHz', 'Callback',{ @changeFrequencyOfSource, 2e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '3 kHz', 'Callback',{ @changeFrequencyOfSource, 3e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '4 kHz', 'Callback',{ @changeFrequencyOfSource, 4e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '5 kHz', 'Callback',{ @changeFrequencyOfSource, 5e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '6 kHz', 'Callback',{ @changeFrequencyOfSource, 6e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '7 kHz', 'Callback',{ @changeFrequencyOfSource, 7e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '8 kHz', 'Callback',{ @changeFrequencyOfSource, 8e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '9 kHz', 'Callback',{ @changeFrequencyOfSource, 9e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '10 kHz', 'Callback',{ @changeFrequencyOfSource, 10e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '11 kHz', 'Callback',{ @changeFrequencyOfSource, 11e3 , sourcePlot });
+        uimenu('Parent',topMenuFreq, 'Label', '12 kHz', 'Callback',{ @changeFrequencyOfSource, 12e3 , sourcePlot });
+        uimenu('Parent',topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
+        uimenu('Parent',topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
+        
+        sourcePlot.UIContextMenu = cmFrequency;
+        
         %Sources with context menu
         for sourceNumber = 1:numel(amplitudes)
-            plotSources(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber),100, [1 1 1]*0.4);
-            cm = uicontextmenu;
-            for dBVal = [-50 -10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
+            plotSources(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber),300, [1 1 1]*0.4);
+            cmSourcePower = uicontextmenu;
+            for dBVal = [-50 -10 -5 -4 -3 -2 -1 1 2 3 4 5 10 +50]
                 if dBVal > 0
-                    eval(['uimenu(''Parent'',cm,''Label'',''+' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber, sPlot });'])
+                    eval(['uimenu(''Parent'',cmSourcePower,''Label'',''+' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber, sourcePlot });'])
                 else
-                    eval(['uimenu(''Parent'',cm,''Label'',''' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber, sPlot });'])
+                    eval(['uimenu(''Parent'',cmSourcePower,''Label'',''' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber, sourcePlot });'])
                 end
             end
-            plotSources(sourceNumber).UIContextMenu = cm;
+            plotSources(sourceNumber).UIContextMenu = cmSourcePower;
         end
                
         xlabel('x [m]')
@@ -209,13 +231,31 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
         addlistener(h,'ContinuousValueChange',@(hObject,eventdata) title(['Dynamic range: ' sprintf('%0.2f', 10^get(hObject, 'Value')) ' dB'],'fontweight','normal'));
     end
 
+
+    function changeDbOfSource(~, ~, dBVal, sourceClicked, sourcePlot)
         
-        function changeDbOfSource(~, ~, dBVal, sourceClicked, sPlot)
-            
-            amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
-            inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
-            S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-            sPlot.CData = S;
+        amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
+        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+        sourcePlot.CData = S;
+    end
+
+
+    function changeFrequencyOfSource(~, ~, frequency, sourcePlot)
+        
+        f = frequency;
+        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+        sourcePlot.CData = S;
+    end
+
+    function changeBackgroundColor(~, ~, color, imagePlot)
+        
+        if strcmp(color, 'color')
+            imagePlot.CData = imageFile;
+        else
+            imagePlot.CData = grayScaleValues;
         end
-    
+    end
+
 end
