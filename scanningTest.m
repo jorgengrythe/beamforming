@@ -4,8 +4,9 @@ c = 340;
 fs = 44.1e3;
 f = 5e3;
 
-array = load('../data/arrays/S2.mat');
+array = load('../data/arrays/S1.mat');
 w = array.hiResWeights;
+%w = array.subArrayWeights(1,:);
 % array = load('../data/arrays/ring-72.mat');
 % w = array.w;
 xPos = array.xPos;
@@ -105,6 +106,8 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
             %Total signal equals sum of individual signals
             inputSignal = inputSignal + signal;
         end
+        
+        inputSignal = inputSignal + awgn(inputSignal, -10, 'measured', 'dB');
     end
 
         
@@ -156,12 +159,12 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         set(fig,'color',[0 0 0])
         
         %Background image
-        plotImage = image(scanningPointsX, scanningPointsY, imageFile);
+        imagePlot = image(scanningPointsX, scanningPointsY, imageFile);
         hold on
         
         %Coloring of sources
-        plotSteeredResponse = imagesc(scanningPointsX, scanningPointsY, S);
-        plotSteeredResponse.AlphaData = 0.4;
+        steeredResponsePlot = imagesc(scanningPointsX, scanningPointsY, S);
+        steeredResponsePlot.AlphaData = 0.4;
         cmap = colormap;
         cmap(1,:) = [1 1 1]*0.8;
         colormap(cmap);
@@ -169,36 +172,42 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         box on
         
         %Context menu to change frequency and background color
-        cmFrequency = uicontextmenu;
-        topMenuFreq = uimenu('Parent',cmFrequency,'Label','Frequency');
-        topMenuTheme = uimenu('Parent',cmFrequency,'Label','Background');
+        cmFigure = uicontextmenu;
+        topMenuFreq = uimenu('Parent',cmFigure,'Label','Frequency');
+        topMenuArray = uimenu('Parent',cmFigure,'Label','Array');
+        topMenuTheme = uimenu('Parent',cmFigure,'Label','Background');
         for freq = [0.5e3 0.8e3 1e3 2e3 3e3 4e3 5e3 6e3 7e3 8e3 9e3 10e3 11e3 12e3]
-         uimenu('Parent',topMenuFreq, 'Label', [num2str(freq*1e-3) 'kHz'], 'Callback',{ @changeFrequencyOfSource, freq , plotSteeredResponse });
+         uimenu('Parent',topMenuFreq, 'Label', [num2str(freq*1e-3) 'kHz'], 'Callback',{ @changeFrequencyOfSource, freq , steeredResponsePlot });
         end
-        uimenu('Parent',topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', plotImage });
-        uimenu('Parent',topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', plotImage });
         
-        plotSteeredResponse.UIContextMenu = cmFrequency;
+        uimenu('Parent',topMenuArray, 'Label', 'S1', 'Callback',{ @changeArray, 'S1', steeredResponsePlot });
+        uimenu('Parent',topMenuArray, 'Label', 'S2', 'Callback',{ @changeArray, 'S2', steeredResponsePlot });
+        uimenu('Parent',topMenuArray, 'Label', 'ring-48', 'Callback',{ @changeArray, 'ring-48', steeredResponsePlot });
+        uimenu('Parent',topMenuArray, 'Label', 'ring-72', 'Callback',{ @changeArray, 'ring-72', steeredResponsePlot });
+        uimenu('Parent',topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
+        uimenu('Parent',topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
+        
+        steeredResponsePlot.UIContextMenu = cmFigure;
         
         %Sources with context menu
         for sourceNumber = 1:numel(amplitudes)
-            plotSources(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber),300, [1 1 1]*0.4);
+            sourcePlot(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber),300, [1 1 1]*0.4);
             
             cmSourcePower = uicontextmenu;
             if amplitudes(sourceNumber) == -100
-                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceNumber, plotSteeredResponse, plotSources });
+                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceNumber, steeredResponsePlot, sourcePlot });
             else
-                uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceNumber, plotSteeredResponse, plotSources });
+                uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceNumber, steeredResponsePlot, sourcePlot });
                 for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
                     if dBVal > 0
-                        uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, plotSteeredResponse });
+                        uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, steeredResponsePlot });
                     else
                         
-                        uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, plotSteeredResponse });
+                        uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, steeredResponsePlot });
                     end
                 end
             end
-            plotSources(sourceNumber).UIContextMenu = cmSourcePower;
+            sourcePlot(sourceNumber).UIContextMenu = cmSourcePower;
         end
                
         xlabel('x [m]')
@@ -215,37 +224,38 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         
         title(['Dynamic range: ' sprintf('%0.2f', defaultDisplayValue) ' dB'], 'FontWeight', 'normal','Color',[1 1 1]);
         
-        h = uicontrol('style', 'slider', ...
+        dynamicRangeSlider = uicontrol('style', 'slider', ...
             'Units', 'normalized',...
             'position', [0.92 0.18 0.03 0.6],...
             'value', log10(defaultDisplayValue),...
             'min', log10(range(1)),...
             'max', log10(range(2)));
-        addlistener(h,'ContinuousValueChange',@(hObject,eventdata) caxis([-10^get(hObject, 'Value') 0]));
-        addlistener(h,'ContinuousValueChange',@(hObject,eventdata) title(['Dynamic range: ' sprintf('%0.2f', 10^get(hObject, 'Value')) ' dB'],'fontweight','normal'));
+        addlistener(dynamicRangeSlider,'ContinuousValueChange',@(hObject, eventdata) caxis([-10^hObject.Value 0]));
+        addlistener(dynamicRangeSlider,'ContinuousValueChange',@(hObject, eventdata) title(['Dynamic range: ' sprintf('%0.2f', 10^hObject.Value) ' dB'],'fontweight','normal'));
+        
     end
 
 
-    function changeDbOfSource(~, ~, dBVal, sourceClicked, plotSteeredResponse, plotSources)
+    function changeDbOfSource(~, ~, dBVal, sourceClicked, steeredResponsePlot, sourcePlot)
         if ischar(dBVal)
             
             cmSourcePower = uicontextmenu;
             if strcmp(dBVal,'enable')
                 amplitudes(sourceClicked) = 0;
-                uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceClicked, plotSteeredResponse, plotSources });
+                uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceClicked, steeredResponsePlot, sourcePlot });
                 for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
                     if dBVal > 0
-                        uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, plotSteeredResponse, plotSources  });
+                        uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, steeredResponsePlot, sourcePlot  });
                     else
                         
-                        uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, plotSteeredResponse, plotSources  });
+                        uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, steeredResponsePlot, sourcePlot  });
                     end
                 end
             else
                 amplitudes(sourceClicked) = -100;
-                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceClicked, plotSteeredResponse, plotSources });
+                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceClicked, steeredResponsePlot, sourcePlot });
             end
-            plotSources(sourceClicked).UIContextMenu = cmSourcePower;
+            sourcePlot(sourceClicked).UIContextMenu = cmSourcePower;
             
         else
             amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
@@ -253,16 +263,16 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         
         inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        plotSteeredResponse.CData = S;
+        steeredResponsePlot.CData = S;
     end
 
 
-    function changeFrequencyOfSource(~, ~, frequency, sourcePlot)
+    function changeFrequencyOfSource(~, ~, frequency, steeredResponsePlot)
         
         f = frequency;
         inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        sourcePlot.CData = S;
+        steeredResponsePlot.CData = S;
     end
 
     function changeBackgroundColor(~, ~, color, imagePlot)
@@ -272,6 +282,22 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         else
             imagePlot.CData = imageFileGray;
         end
+    end
+
+    function changeArray(~, ~, arrayClicked, steeredResponsePlot)
+        
+        array = load(['../data/arrays/' arrayClicked '.mat']);
+        if strcmp(arrayClicked,'S1') || strcmp(arrayClicked,'S2')
+            w = array.hiResWeights;
+        else
+            w = array.w;
+        end
+        xPos = array.xPos;
+        yPos = array.yPos;
+
+        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+        steeredResponsePlot.CData = S;
     end
 
 end
