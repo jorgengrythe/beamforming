@@ -4,7 +4,7 @@ c = 340;
 fs = 44.1e3;
 f = 5e3;
 
-array = load('../data/arrays/S1.mat');
+array = load('../data/arrays/S2.mat');
 w = array.hiResWeights;
 % array = load('../data/arrays/ring-72.mat');
 % w = array.w;
@@ -36,7 +36,7 @@ scanningPointsY = scanningPointsY(:)';
 %Sources
 xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0 0.37 1.32 2.18 2.18 2.18];
 yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 0.5 1.47 -0.33 0.26 -0.15 -0.55];
-amplitudes = [0 0 0 0 0 0 0 0 0 0 0];
+amplitudes = [-100 -100 -100 0 -100 -100 -100 0 -100 -100 -100];
 zPosSource = distanceToScanningPlane*ones(1,length(xPosSource));
 
 [thetaArrivalAngles, phiArrivalAngles] = convertCartesianToPolar(xPosSource, yPosSource, zPosSource);
@@ -183,13 +183,19 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         %Sources with context menu
         for sourceNumber = 1:numel(amplitudes)
             plotSources(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber),300, [1 1 1]*0.4);
+            
             cmSourcePower = uicontextmenu;
-            for dBVal = [-50 -10 -5 -4 -3 -2 -1 1 2 3 4 5 10 +50]
-                if dBVal > 0
-                    uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, plotSteeredResponse });
-                else
-                    
-                    uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, plotSteeredResponse });
+            if amplitudes(sourceNumber) == -100
+                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceNumber, plotSteeredResponse, plotSources });
+            else
+                uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceNumber, plotSteeredResponse, plotSources });
+                for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
+                    if dBVal > 0
+                        uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, plotSteeredResponse });
+                    else
+                        
+                        uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, plotSteeredResponse });
+                    end
                 end
             end
             plotSources(sourceNumber).UIContextMenu = cmSourcePower;
@@ -220,12 +226,34 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
     end
 
 
-    function changeDbOfSource(~, ~, dBVal, sourceClicked, sourcePlot)
+    function changeDbOfSource(~, ~, dBVal, sourceClicked, plotSteeredResponse, plotSources)
+        if ischar(dBVal)
+            
+            cmSourcePower = uicontextmenu;
+            if strcmp(dBVal,'enable')
+                amplitudes(sourceClicked) = 0;
+                uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceClicked, plotSteeredResponse, plotSources });
+                for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
+                    if dBVal > 0
+                        uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, plotSteeredResponse, plotSources  });
+                    else
+                        
+                        uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, plotSteeredResponse, plotSources  });
+                    end
+                end
+            else
+                amplitudes(sourceClicked) = -100;
+                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceClicked, plotSteeredResponse, plotSources });
+            end
+            plotSources(sourceClicked).UIContextMenu = cmSourcePower;
+            
+        else
+            amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
+        end
         
-        amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
         inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        sourcePlot.CData = S;
+        plotSteeredResponse.CData = S;
     end
 
 
