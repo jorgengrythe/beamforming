@@ -100,8 +100,8 @@ if isequal(scaleView,'log')
         'value', log10(defaultDisplayValue),...
         'min', log10(range(1)),...
         'max', log10(range(2)));
-    addlistener(h,'ContinuousValueChange',@(hObject,eventdata) caxis([-10^get(hObject, 'Value') 0]));
-    addlistener(h,'ContinuousValueChange',@(hObject,eventdata) title(['Dynamic range: ' sprintf('%0.2f', 10^get(hObject, 'Value')) ' dB'],'fontweight','normal'));
+    addlistener(h,'ContinuousValueChange',@(hObject,eventdata) caxis([-10^hObject.Value 0]));
+    addlistener(h,'ContinuousValueChange',@(hObject,eventdata) title(['Dynamic range: ' sprintf('%0.2f', 10^hObject.Value) ' dB'],'fontweight','normal'));
     
 elseif isequal(scaleView,'lin')
     h = uicontrol('style', 'slider', ...
@@ -110,8 +110,8 @@ elseif isequal(scaleView,'lin')
         'value', defaultDisplayValue,...
         'min', range(1),...
         'max', range(2));
-    addlistener(h,'ContinuousValueChange',@(hObject,eventdata) caxis([-get(hObject, 'Value') 0]));
-    addlistener(h,'ContinuousValueChange',@(hObject,eventdata) title(['Dynamic range: ' sprintf('%0.2f', get(hObject, 'Value')) ' dB'],'fontweight','normal'));
+    addlistener(h,'ContinuousValueChange',@(hObject,eventdata) caxis([-hObject.Value 0]));
+    addlistener(h,'ContinuousValueChange',@(hObject,eventdata) title(['Dynamic range: ' sprintf('%0.2f', hObject.Value) ' dB'],'fontweight','normal'));
     
 else
     error('Use log or lin for scale value')
