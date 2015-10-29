@@ -11,8 +11,8 @@ w = array.hiResWeights;
 xPos = array.xPos;
 yPos = array.yPos;
 
-imageFile = imread('../data/fig/room.jpg');
-grayScaleValues = rgb2gray(imageFile);
+imageFileColor = imread('../data/fig/room.jpg');
+imageFileGray = imread('../data/fig/roombw.jpg');
 
 % Acoustical coverage / listening points
 maxAcousticalCoveringAngleHorizontal = 42;
@@ -36,20 +36,10 @@ scanningPointsY = scanningPointsY(:)';
 %Sources
 xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0 0.37 1.32 2.18 2.18 2.18];
 yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 0.5 1.47 -0.33 0.26 -0.15 -0.55];
-%amplitudes = [1 2 3 5 3 6 3 5 1 2 3];
 amplitudes = [0 0 0 0 0 0 0 0 0 0 0];
 zPosSource = distanceToScanningPlane*ones(1,length(xPosSource));
 
-% Convert from cartesian points to polar angles source
-thetaArrivalAngles = atan(sqrt(xPosSource.^2+yPosSource.^2)./zPosSource);
-phiArrivalAngles = atan(yPosSource./xPosSource);
-
-thetaArrivalAngles = thetaArrivalAngles*180/pi;
-phiArrivalAngles = phiArrivalAngles*180/pi;
-phiArrivalAngles(xPosSource<0) = phiArrivalAngles(xPosSource<0) + 180;
-
-thetaArrivalAngles(isnan(thetaArrivalAngles)) = 0;
-phiArrivalAngles(isnan(phiArrivalAngles)) = 0;
+[thetaArrivalAngles, phiArrivalAngles] = convertCartesianToPolar(xPosSource, yPosSource, zPosSource);
 
 
 %Create input signal
@@ -59,35 +49,58 @@ inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalA
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
 
 %Plot image and steered response
-plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, scanningPointsY, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
+plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX, scanningPointsY, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
 
 
+    function [thetaAngles, phiAngles] = convertCartesianToPolar(xPos, yPos, zPos)
+        % Convert from cartesian points to polar angles source
+        thetaAngles = atan(sqrt(xPos.^2+yPos.^2)./zPos);
+        phiAngles = atan(yPos./xPos);
+        
+        thetaAngles = thetaAngles*180/pi;
+        phiAngles = phiAngles*180/pi;
+        phiAngles(xPos<0) = phiAngles(xPos<0) + 180;
+        
+        thetaAngles(isnan(thetaAngles)) = 0;
+        phiAngles(isnan(phiAngles)) = 0;
+    end
 
-
+    function [e, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
+              
+        %Change from degrees to radians
+        thetaAngles = thetaAngles*pi/180;
+        phiAngles = phiAngles*pi/180;
+        
+        %Wavenumber
+        k = 2*pi*f/c;
+        
+        %Number of elements/sensors in the array
+        P = size(xPos,2);
+        
+        %Changing wave vector to spherical coordinates
+        kx = sin(thetaAngles).*cos(phiAngles);
+        ky = sin(thetaAngles).*sin(phiAngles);
+        
+        %Calculate steering vector/matrix
+        kxx = bsxfun(@times,kx,reshape(xPos,P,1));
+        kyy = bsxfun(@times,ky,reshape(yPos,P,1));
+        e = exp(1j*k*(kxx+kyy));
+        
+    end
 
     function inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes)
-
-        
+              
         nSamples = 1e3;
         
         T = nSamples/fs;
         t = 0:1/fs:T-1/fs;
         
         inputSignal = 0;
-        for k = 1:numel(thetaArrivalAngles)
+        for source = 1:numel(thetaArrivalAngles)
             
-            %Number of elements/sensors in the array
-            P = size(xPos,2);
+            doa = steeringVector(xPos, yPos, f, c, thetaArrivalAngles(source), phiArrivalAngles(source));
             
-            %Changing wave vector to spherical coordinates
-            kx = sin(thetaArrivalAngles(k)*pi/180).*cos(phiArrivalAngles(k)*pi/180);
-            ky = sin(thetaArrivalAngles(k)*pi/180).*sin(phiArrivalAngles(k)*pi/180);
-            
-            %Calculate steering vector/matrix
-            kxx = bsxfun(@times,kx,reshape(xPos,P,1));
-            kyy = bsxfun(@times,ky,reshape(yPos,P,1));
-            doa = exp(1j*2*pi*f/c*(kxx+kyy));
-            signal = 10^(amplitudes(k)/20)*doa*exp(1j*2*pi*(f*t+randn(1,nSamples)));
+            signal = 10^(amplitudes(source)/20)*doa*exp(1j*2*pi*(f*t+randn(1,nSamples)));
             
             %Total signal equals sum of individual signals
             inputSignal = inputSignal + signal;
@@ -99,30 +112,14 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
         
 
     function S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY)
-        % Calculate steered response in frequency domain
+
         nSamples = numel(inputSignal);
-        nElements = numel(xPos);
         
-        
-        % Convert from cartesian points to polar angles scanning
-        thetaScanningAngles = atan(sqrt(scanningPointsX.^2+scanningPointsY.^2)/distanceToScanningPlane);
-        phiScanningAngles = atan(scanningPointsY./scanningPointsX);
-        
-        thetaScanningAngles = thetaScanningAngles*180/pi;
-        phiScanningAngles = phiScanningAngles*180/pi;
-        phiScanningAngles(scanningPointsX<0) = phiScanningAngles(scanningPointsX<0) + 180;
-        
-        thetaScanningAngles(isnan(thetaScanningAngles)) = 0;
-        phiScanningAngles(isnan(phiScanningAngles)) = 0;
-        
+        [thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
+               
         
         %Get steering vector to each point
-        k = 2*pi*f/c;
-        kx = sin(thetaScanningAngles*pi/180).*cos(phiScanningAngles*pi/180);
-        ky = sin(thetaScanningAngles*pi/180).*sin(phiScanningAngles*pi/180);
-        k_xx = bsxfun(@times,kx,reshape(xPos,nElements,1));
-        k_yy = bsxfun(@times,ky,reshape(yPos,nElements,1));
-        e = exp(1j*k*(k_xx+k_yy));
+        e = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
         
         % Multiply input signal by weighting vector
         inputSignal = diag(w)*inputSignal;
@@ -147,7 +144,6 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
         
         S = interp2(S, interpolationFactor, interpolationMethod);
         
-        
         S = abs(S)/max(max(abs(S)));
         S = 10*log10(S);
     end
@@ -155,43 +151,34 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
 
 
     function plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, scanningPointsY, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
-        % Points in space and scanspace
+
         fig = figure;
         set(fig,'color',[0 0 0])
         
         %Background image
-        imagePlot = image(scanningPointsX, scanningPointsY, imageFile);
+        plotImage = image(scanningPointsX, scanningPointsY, imageFile);
         hold on
         
         %Coloring of sources
-        sourcePlot = imagesc(scanningPointsX, scanningPointsY, S);
-        sourcePlot.AlphaData = 0.4;
+        plotSteeredResponse = imagesc(scanningPointsX, scanningPointsY, S);
+        plotSteeredResponse.AlphaData = 0.4;
         cmap = colormap;
         cmap(1,:) = [1 1 1]*0.8;
         colormap(cmap);
         axis xy equal
         box on
         
-        
+        %Context menu to change frequency and background color
         cmFrequency = uicontextmenu;
         topMenuFreq = uimenu('Parent',cmFrequency,'Label','Frequency');
         topMenuTheme = uimenu('Parent',cmFrequency,'Label','Background');
-        uimenu('Parent',topMenuFreq, 'Label', '1 kHz', 'Callback',{ @changeFrequencyOfSource, 1e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '2 kHz', 'Callback',{ @changeFrequencyOfSource, 2e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '3 kHz', 'Callback',{ @changeFrequencyOfSource, 3e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '4 kHz', 'Callback',{ @changeFrequencyOfSource, 4e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '5 kHz', 'Callback',{ @changeFrequencyOfSource, 5e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '6 kHz', 'Callback',{ @changeFrequencyOfSource, 6e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '7 kHz', 'Callback',{ @changeFrequencyOfSource, 7e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '8 kHz', 'Callback',{ @changeFrequencyOfSource, 8e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '9 kHz', 'Callback',{ @changeFrequencyOfSource, 9e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '10 kHz', 'Callback',{ @changeFrequencyOfSource, 10e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '11 kHz', 'Callback',{ @changeFrequencyOfSource, 11e3 , sourcePlot });
-        uimenu('Parent',topMenuFreq, 'Label', '12 kHz', 'Callback',{ @changeFrequencyOfSource, 12e3 , sourcePlot });
-        uimenu('Parent',topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
-        uimenu('Parent',topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
+        for freq = [0.5e3 0.8e3 1e3 2e3 3e3 4e3 5e3 6e3 7e3 8e3 9e3 10e3 11e3 12e3]
+         uimenu('Parent',topMenuFreq, 'Label', [num2str(freq*1e-3) 'kHz'], 'Callback',{ @changeFrequencyOfSource, freq , plotSteeredResponse });
+        end
+        uimenu('Parent',topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', plotImage });
+        uimenu('Parent',topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', plotImage });
         
-        sourcePlot.UIContextMenu = cmFrequency;
+        plotSteeredResponse.UIContextMenu = cmFrequency;
         
         %Sources with context menu
         for sourceNumber = 1:numel(amplitudes)
@@ -199,9 +186,10 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
             cmSourcePower = uicontextmenu;
             for dBVal = [-50 -10 -5 -4 -3 -2 -1 1 2 3 4 5 10 +50]
                 if dBVal > 0
-                    eval(['uimenu(''Parent'',cmSourcePower,''Label'',''+' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber, sourcePlot });'])
+                    uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, plotSteeredResponse });
                 else
-                    eval(['uimenu(''Parent'',cmSourcePower,''Label'',''' num2str(dBVal) ' dB'',''Callback'',{@changeDbOfSource, ' num2str(dBVal) ', sourceNumber, sourcePlot });'])
+                    
+                    uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, plotSteeredResponse });
                 end
             end
             plotSources(sourceNumber).UIContextMenu = cmSourcePower;
@@ -252,9 +240,9 @@ plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, sca
     function changeBackgroundColor(~, ~, color, imagePlot)
         
         if strcmp(color, 'color')
-            imagePlot.CData = imageFile;
+            imagePlot.CData = imageFileColor;
         else
-            imagePlot.CData = grayScaleValues;
+            imagePlot.CData = imageFileGray;
         end
     end
 
