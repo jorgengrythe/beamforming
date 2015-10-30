@@ -6,14 +6,11 @@ f = 5e3;
 
 array = load('../data/arrays/S1.mat');
 w = array.hiResWeights;
-%w = array.subArrayWeights(1,:);
-% array = load('../data/arrays/ring-72.mat');
-% w = array.w;
 xPos = array.xPos;
 yPos = array.yPos;
 
-imageFileColor = imread('../data/fig/room.jpg');
-imageFileGray = imread('../data/fig/roombw.jpg');
+imageFileColor = imread('data/fig/room.jpg');
+imageFileGray = imread('data/fig/roombw.jpg');
 
 % Acoustical coverage / listening points
 maxAcousticalCoveringAngleHorizontal = 42;
