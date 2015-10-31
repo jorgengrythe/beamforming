@@ -50,8 +50,11 @@ S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, 
 plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX, scanningPointsY, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
 
 
+
+
+
     function [thetaAngles, phiAngles] = convertCartesianToPolar(xPos, yPos, zPos)
-        % Convert from cartesian points to polar angles source
+    % Convert from cartesian points to polar angles source
         thetaAngles = atan(sqrt(xPos.^2+yPos.^2)./zPos);
         phiAngles = atan(yPos./xPos);
         
@@ -63,7 +66,11 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         phiAngles(isnan(phiAngles)) = 0;
     end
 
+
+
+
     function [e, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
+    %Calculate steering vector for various angles
               
         %Change from degrees to radians
         thetaAngles = thetaAngles*pi/180;
@@ -86,8 +93,13 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         
     end
 
+
+
+
     function inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes)
+    %Gernerate input signal to all sensors
               
+        %Use 1000 samples for signal length
         nSamples = 1e3;
         
         T = nSamples/fs;
@@ -96,14 +108,17 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         inputSignal = 0;
         for source = 1:numel(thetaArrivalAngles)
             
+            %Calculate direction of arrival for the signal for each sensor
             doa = steeringVector(xPos, yPos, f, c, thetaArrivalAngles(source), phiArrivalAngles(source));
             
+            %Generate the signal at each microphone
             signal = 10^(amplitudes(source)/20)*doa*exp(1j*2*pi*(f*t+randn(1,nSamples)));
             
             %Total signal equals sum of individual signals
             inputSignal = inputSignal + signal;
         end
         
+        %Add white gaussian noise
         inputSignal = inputSignal + awgn(inputSignal, -10, 'measured', 'dB');
     end
 
@@ -112,9 +127,11 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         
 
     function S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY)
+        %Calculate delay-and-sum power at scanning points
 
         nSamples = numel(inputSignal);
         
+        %Get scanning angles from scanning points
         [thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
                
         
@@ -150,7 +167,11 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
 
 
 
+
+
+
     function plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, scanningPointsY, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
+        %Plot the image with overlaid steered response power
 
         fig = figure;
         set(fig,'color',[0 0 0])
@@ -168,25 +189,29 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         axis xy equal
         box on
         
-        %Context menu to change frequency and background color
+        %Context menu to change frequency, background color or array
         cmFigure = uicontextmenu;
+        
         topMenuFreq = uimenu('Parent',cmFigure,'Label','Frequency');
         topMenuArray = uimenu('Parent',cmFigure,'Label','Array');
         topMenuTheme = uimenu('Parent',cmFigure,'Label','Background');
+        
         for freq = [0.5e3 0.8e3 1e3 2e3 3e3 4e3 5e3 6e3 7e3 8e3 9e3 10e3 11e3 12e3]
-         uimenu('Parent',topMenuFreq, 'Label', [num2str(freq*1e-3) 'kHz'], 'Callback',{ @changeFrequencyOfSource, freq , steeredResponsePlot });
+            uimenu('Parent',topMenuFreq, 'Label', [num2str(freq*1e-3) 'kHz'], 'Callback',{ @changeFrequencyOfSource, freq , steeredResponsePlot });
         end
         
         uimenu('Parent',topMenuArray, 'Label', 'S1', 'Callback',{ @changeArray, 'S1', steeredResponsePlot });
         uimenu('Parent',topMenuArray, 'Label', 'S2', 'Callback',{ @changeArray, 'S2', steeredResponsePlot });
         uimenu('Parent',topMenuArray, 'Label', 'ring-48', 'Callback',{ @changeArray, 'ring-48', steeredResponsePlot });
         uimenu('Parent',topMenuArray, 'Label', 'ring-72', 'Callback',{ @changeArray, 'ring-72', steeredResponsePlot });
+        
         uimenu('Parent',topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
         uimenu('Parent',topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
         
         steeredResponsePlot.UIContextMenu = cmFigure;
         
-        %Sources with context menu
+        
+        %Plot sources with context menu
         for sourceNumber = 1:numel(amplitudes)
             sourcePlot(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber),300, [1 1 1]*0.4);
             
@@ -221,6 +246,7 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         
         title(['Dynamic range: ' sprintf('%0.2f', defaultDisplayValue) ' dB'], 'FontWeight', 'normal','Color',[1 1 1]);
         
+        %Add dynamic range slider
         dynamicRangeSlider = uicontrol('style', 'slider', ...
             'Units', 'normalized',...
             'position', [0.92 0.18 0.03 0.6],...
@@ -233,7 +259,12 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
     end
 
 
+
+
     function changeDbOfSource(~, ~, dBVal, sourceClicked, steeredResponsePlot, sourcePlot)
+        
+        %Generate a new context menu for the source if it is
+        %enabled/disabled
         if ischar(dBVal)
             
             cmSourcePower = uicontextmenu;
@@ -264,6 +295,8 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
     end
 
 
+
+
     function changeFrequencyOfSource(~, ~, frequency, steeredResponsePlot)
         
         f = frequency;
@@ -271,6 +304,8 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         steeredResponsePlot.CData = S;
     end
+
+
 
     function changeBackgroundColor(~, ~, color, imagePlot)
         
@@ -280,6 +315,8 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
             imagePlot.CData = imageFileGray;
         end
     end
+
+
 
     function changeArray(~, ~, arrayClicked, steeredResponsePlot)
         
