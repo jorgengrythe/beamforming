@@ -3,9 +3,8 @@ function [] = scanningTest()
 c = 340;
 fs = 44.1e3;
 f = 5e3;
-SNR = 0;
 
-array = load('../data/arrays/S1.mat');
+array = load('data/arrays/Nor848A-10.mat');
 w = array.hiResWeights;
 xPos = array.xPos;
 yPos = array.yPos;
@@ -42,7 +41,7 @@ zPosSource = distanceToScanningPlane*ones(1,length(xPosSource));
 
 
 %Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, SNR);
+inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
 %Calculate steered response
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
@@ -97,10 +96,9 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
 
 
 
-    function inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, SNR)
+    function inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes)
     %Gernerate input signal to all sensors
               
-        %Use 1000 samples for signal length
         nSamples = 1e3;
         
         T = nSamples/fs;
@@ -119,10 +117,20 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
             inputSignal = inputSignal + signal;
         end
         
-        if exist('SNR', 'var')
-        %Add white gaussian noise
-        inputSignal = inputSignal + awgn(inputSignal, SNR, 'measured', 'dB');
-        end
+%         %Add white gaussian noise
+%         if exist('SNR', 'var')
+%             nSensors = numel(xPos);
+%             whiteGaussianNoise = randn(nSensors, nSamples);
+%             
+%             signalPower = sum(abs(inputSignal).*abs(inputSignal))/nSamples;
+%             noisePower = sum(abs(whiteGaussianNoise).*abs(whiteGaussianNoise))/nSamples;
+%             
+%             scaleFactor = (signalPower/noisePower)*10^(-SNR/10);
+%             whiteGaussianNoiseScaled = sqrt(scaleFactor)*whiteGaussianNoise;
+%             
+%             inputSignal = inputSignal + whiteGaussianNoiseScaled;
+%             %inputSignal = inputSignal + awgn(inputSignal, SNR, 'measured', 'dB');
+%         end
     end
 
         
@@ -177,7 +185,12 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         %Plot the image with overlaid steered response power
 
         fig = figure;
-        set(fig,'color',[0 0 0])
+        fig.Name = 'Acoustic camera test';
+        fig.NumberTitle = 'off';
+        fig.ToolBar = 'none';
+        fig.MenuBar = 'none';
+        fig.Color = [0 0 0];
+        fig.Resize = 'off';
         
         %Background image
         imagePlot = image(scanningPointsX, scanningPointsY, imageFile);
@@ -197,30 +210,19 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         
         topMenuFreq = uimenu('Parent',cmFigure,'Label','Frequency');
         topMenuArray = uimenu('Parent',cmFigure,'Label','Array');
-        topMenuSNR = uimenu('Parent',cmFigure,'Label','SNR');
         topMenuTheme = uimenu('Parent',cmFigure,'Label','Background');
         
         %Frequency
         for freq = [0.5e3 0.8e3 1e3 2e3 3e3 4e3 5e3 6e3 7e3 8e3 9e3 10e3 11e3 12e3]
             uimenu('Parent',topMenuFreq, 'Label', [num2str(freq*1e-3) 'kHz'], 'Callback',{ @changeFrequencyOfSource, freq , steeredResponsePlot });
         end
-        
-        %SNR
-        for SNR = [-30 -20 -15 -10 -5 0 5 10 15 20]
-            if SNR > 0
-                uimenu('Parent',topMenuSNR,'Label',['+' num2str(SNR) 'dB'],'Callback', { @changeSNR, SNR, steeredResponsePlot });
-            else
-                
-                uimenu('Parent',topMenuSNR,'Label',[num2str(SNR) 'dB'],'Callback', { @changeSNR, SNR, steeredResponsePlot });
-            end
-        end
-        
+              
         %Array
-        uimenu('Parent',topMenuArray, 'Label', 'S1', 'Callback',{ @changeArray, 'S1', steeredResponsePlot });
-        uimenu('Parent',topMenuArray, 'Label', 'S1-ring', 'Callback',{ @changeArray, 'S1-ring', steeredResponsePlot });
-        uimenu('Parent',topMenuArray, 'Label', 'S2', 'Callback',{ @changeArray, 'S2', steeredResponsePlot });
-        uimenu('Parent',topMenuArray, 'Label', 'ring-48', 'Callback',{ @changeArray, 'ring-48', steeredResponsePlot });
-        uimenu('Parent',topMenuArray, 'Label', 'ring-72', 'Callback',{ @changeArray, 'ring-72', steeredResponsePlot });
+        uimenu('Parent',topMenuArray, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
+        uimenu('Parent',topMenuArray, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
+        uimenu('Parent',topMenuArray, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
+        uimenu('Parent',topMenuArray, 'Label', 'Ring-48', 'Callback',{ @changeArray, 'Ring-48', steeredResponsePlot });
+        uimenu('Parent',topMenuArray, 'Label', 'Ring-72', 'Callback',{ @changeArray, 'Ring-72', steeredResponsePlot });
         
         %Theme
         uimenu('Parent',topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
@@ -318,7 +320,7 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
     function changeFrequencyOfSource(~, ~, frequency, steeredResponsePlot)
         
         f = frequency;
-        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, SNR);
+        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         steeredResponsePlot.CData = S;
     end
@@ -338,14 +340,14 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
 
     function changeArray(~, ~, arrayClicked, steeredResponsePlot)
         
-        if strcmp(arrayClicked,'S1-ring')
-            array = load('../data/arrays/S1.mat');
+        if strcmp(arrayClicked,'Nor848A-10-ring')
+            array = load('data/arrays/Nor848A-10.mat');
             xPos = array.xPos(225:256);
             yPos = array.yPos(225:256);
             w = ones(1,32)/32;
         else
-            array = load(['../data/arrays/' arrayClicked '.mat']);
-            if strcmp(arrayClicked,'S1') || strcmp(arrayClicked,'S2')
+            array = load(['data/arrays/' arrayClicked '.mat']);
+            if strcmp(arrayClicked,'Nor848A-4') || strcmp(arrayClicked,'Nor848A-10')
                 w = array.hiResWeights;
             else
                 w = array.w;
@@ -354,19 +356,10 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
             yPos = array.yPos;
         end
 
-        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, SNR);
+        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         steeredResponsePlot.CData = S;
     end
 
-
-
-    function changeSNR(~, ~, snrClicked, steeredResponsePlot)
-        SNR =  snrClicked;       
-        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, snrClicked);
-        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        steeredResponsePlot.CData = S;
-        
-    end
 
 end
