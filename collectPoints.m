@@ -37,6 +37,11 @@ hold(axResponse, 'on');
 grid(axResponse, 'on')
 grid(axResponse,'minor')
 axResponse.NextPlot = 'replacechildren';
+cmFigure = uicontextmenu;
+for freq = [0.5e3 0.8e3 1e3 2e3 3e3 4e3 5e3 6e3 7e3 8e3 9e3 10e3 11e3 12e3]
+    uimenu('Parent',cmFigure, 'Label', [num2str(freq*1e-3) ' kHz'], 'Callback',{ @changeFrequencyOfSource, freq });
+end
+axResponse.UIContextMenu = cmFigure;
 
     function drawPoint(obj,eventData)
         
@@ -54,22 +59,26 @@ axResponse.NextPlot = 'replacechildren';
                       
             xPos = [xPos eventData.IntersectionPoint(1)];
             yPos = [yPos eventData.IntersectionPoint(2)];
-            w = ones(1, numel(xPos))/numel(xPos);
             
-            inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
-            S = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
-                thetaScanningAngles, phiScanningAngles);
-            
-            spectrumLog = 10*log10(abs(S)/max(abs(S)));
-
-            plot(axResponse, thetaScanningAngles, spectrumLog)
-
-
+            plotBeampattern1D
         end
-        
-        
     end
 
+    function changeFrequencyOfSource(~, ~, clickedFrequency)
+        f = clickedFrequency;
+        plotBeampattern1D
+    end
+
+    function plotBeampattern1D
+        
+        w = ones(1, numel(xPos))/numel(xPos);
+        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
+        S = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
+            thetaScanningAngles, phiScanningAngles);
+        
+        spectrumLog = 10*log10(abs(S)/max(abs(S)));
+        plot(axResponse, thetaScanningAngles, spectrumLog)
+    end
 
 end
 
