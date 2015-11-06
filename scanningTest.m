@@ -190,25 +190,20 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         %Axes
         axis(ax, 'xy', 'equal')
         box(ax, 'on')    
-        xlabel(ax, 'x [m]')
-        ylabel(ax, 'y [m]')
+        xlabel(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz'],'fontweight','normal')
         ylim(ax, [-maxScanningPlaneExtentY maxScanningPlaneExtentY])
         xlim(ax, [-maxScanningPlaneExtentX maxScanningPlaneExtentX])
         ax.Color = [0 0 0];
         ax.XColor = [1 1 1];
         ax.YColor = [1 1 1];
+        ax.XTick = [];
+        ax.YTick = [];
         
         %Context menu to change frequency, background color and array
         cmFigure = uicontextmenu;
-        topMenuFreq = uimenu('Parent',cmFigure,'Label','Frequency');
         topMenuArray = uimenu('Parent',cmFigure,'Label','Array');
         topMenuTheme = uimenu('Parent',cmFigure,'Label','Background');
-        
-        %Frequency
-        for freq = [0.5e3 0.8e3 1e3 2e3 3e3 4e3 5e3 6e3 7e3 8e3 9e3 10e3 11e3 12e3]
-            uimenu('Parent',topMenuFreq, 'Label', [num2str(freq*1e-3) 'kHz'], 'Callback',{ @changeFrequencyOfSource, freq , steeredResponsePlot });
-        end
-              
+                     
         %Array
         uimenu('Parent',topMenuArray, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
         uimenu('Parent',topMenuArray, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
@@ -260,6 +255,17 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
             'max', log10(range(2)));
         addlistener(dynamicRangeSlider,'ContinuousValueChange',@(hObject, eventdata) caxis(ax, [-10^hObject.Value 0]));
         addlistener(dynamicRangeSlider,'ContinuousValueChange',@(hObject, eventdata) title(ax, ['Dynamic range: ' sprintf('%0.2f', 10^hObject.Value) ' dB'],'fontweight','normal'));
+        
+        
+        %Add frequency slider
+        frequencySlider = uicontrol('style', 'slider', ...
+            'Units', 'normalized',...
+            'position', [0.13 0.03 0.78 0.04],...
+            'value', f,...
+            'min', 0.1e3,...
+            'max', 20e3);
+        addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value, steeredResponsePlot) );
+        addlistener(frequencySlider,'ContinuousValueChange',@(obj,evt) xlabel(ax, ['Frequency: ' sprintf('%0.1f', obj.Value*1e-3) ' kHz'],'fontweight','normal'));
         
     end
 
