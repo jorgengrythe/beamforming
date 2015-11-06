@@ -28,7 +28,7 @@ title(axArray,'Microphone positions', 'fontweight', 'normal');
 
 axResponse = subplot(212);
 box(axResponse, 'on')
-title(axResponse,'Beampattern', 'fontweight', 'normal');
+title(axResponse,['Beampattern @ ' sprintf('%0.2f', f*1e-3) ' kHz'],'fontweight','normal');
 xlabel(axResponse, '\theta');
 ylabel(axResponse, 'dB');
 axResponse.XLim = [thetaScanningAngles(1) thetaScanningAngles(end)];
@@ -37,15 +37,18 @@ hold(axResponse, 'on');
 grid(axResponse, 'on')
 grid(axResponse,'minor')
 axResponse.NextPlot = 'replacechildren';
-cmFigure = uicontextmenu;
-for freq = [0.5e3 0.8e3 1e3 2e3 3e3 4e3 5e3 6e3 7e3 8e3 9e3 10e3 11e3 12e3]
-    uimenu('Parent',cmFigure, 'Label', [num2str(freq*1e-3) ' kHz'], 'Callback',{ @changeFrequencyOfSource, freq });
-end
-axResponse.UIContextMenu = cmFigure;
+
+frequencySlider = uicontrol('style', 'slider', ...
+    'Units', 'normalized',...
+    'position', [0.93 0.1 0.03 0.35],...
+    'value', f,...
+    'min', 0.5e3,...
+    'max', 10e3);
+addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value) );
+addlistener(frequencySlider,'ContinuousValueChange',@(obj,evt) title(axResponse, ['Beampattern @ ' sprintf('%0.2f', obj.Value*1e-3) ' kHz'],'fontweight','normal'));
 
     function drawPoint(obj,eventData)
-        
-        %If the right button is pressed not on a point, do nothing
+        %Clear the canvas on right click
         if strcmp(obj.Parent.SelectionType,'alt')
             disp(xPos)
             cla(axArray)
