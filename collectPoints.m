@@ -27,6 +27,7 @@ axArray.YTick = [-1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1];
 grid(axArray, 'on')
 grid(axArray,'minor')
 title(axArray,'Microphone positions', 'fontweight', 'normal');
+axis(axArray, 'square')
 
 %Axis for beampattern
 axResponse = subplot(212);
@@ -35,17 +36,20 @@ title(axResponse,['Beampattern @ ' sprintf('%0.2f', f*1e-3) ' kHz'],'fontweight'
 xlabel(axResponse, '\theta');
 ylabel(axResponse, 'dB');
 axResponse.XLim = [thetaScanningAngles(1) thetaScanningAngles(end)];
-axResponse.YLim = [-40 1];
+axResponse.YLim = [-50 0];
+axResponse.YTick = [-50 -40 -30 -20 -10 -3 0];
+axResponse.XTick = [-90 -60 -30 0 30 60 90];
 hold(axResponse, 'on');
 grid(axResponse, 'on')
-grid(axResponse,'minor')
+%grid(axResponse,'minor')
 axResponse.NextPlot = 'replacechildren';
+%axis(axResponse, 'square')
 
 
 %Add frequency slider
 frequencySlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
-    'position', [0.93 0.1 0.03 0.35],...
+    'position', [0.93 0.1 0.035 0.35],...
     'value', f,...
     'min', 0.1e3,...
     'max', 20e3);
@@ -54,8 +58,12 @@ addlistener(frequencySlider,'ContinuousValueChange',@(obj,evt) title(axResponse,
 
 %Add context menu to geometry
 cmFigure = uicontextmenu;
-uimenu('Parent',cmFigure,'Label','Nor848A-4', 'Callback', { @changeArray });
-uimenu('Parent',cmFigure,'Label','Nor848A-10', 'Callback', { @changeArray });
+cmNor848A4 = uimenu('Parent',cmFigure,'Label','Nor848A-4');
+cmNor848A10 = uimenu('Parent',cmFigure,'Label','Nor848A-10');
+uimenu('Parent',cmNor848A4,'Label','Weighted', 'Callback', { @changeArray, 'Nor848A-4', 'weighted' });
+uimenu('Parent',cmNor848A4,'Label','Unweighted', 'Callback', { @changeArray, 'Nor848A-4', 'unweighted' });
+uimenu('Parent',cmNor848A10,'Label','Weighted', 'Callback', { @changeArray, 'Nor848A-10', 'weighted' });
+uimenu('Parent',cmNor848A10,'Label','Unweighted', 'Callback', { @changeArray, 'Nor848A-10', 'unweighted' });
 uimenu('Parent',cmFigure,'Label','Clear all', 'Callback', { @clearFigure });
 axArray.UIContextMenu = cmFigure;
 
@@ -99,12 +107,16 @@ axArray.UIContextMenu = cmFigure;
         yPos = [];
     end
 
-    function changeArray(object, eventdata)
+    function changeArray(~, ~, selectedArray, selectedWeighting)
         clearFigure
-        array = load(['data/arrays/' object.Label '.mat']);
+        array = load(['data/arrays/' selectedArray '.mat']);
         xPos = array.xPos;
         yPos = array.yPos;
+        if strcmp(selectedWeighting, 'weighted')
         w = array.hiResWeights;
+        else
+            w = ones(1, numel(xPos));
+        end
         plot(axArray,xPos,yPos,'.','Color',[0 0.4470 0.7410],...
             'MarkerSize',10);
         plotBeampattern1D(w)
