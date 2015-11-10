@@ -64,6 +64,7 @@ uimenu('Parent',cmNor848A4,'Label','Weighted', 'Callback', { @changeArray, 'Nor8
 uimenu('Parent',cmNor848A4,'Label','Unweighted', 'Callback', { @changeArray, 'Nor848A-4', 'unweighted' });
 uimenu('Parent',cmNor848A10,'Label','Weighted', 'Callback', { @changeArray, 'Nor848A-10', 'weighted' });
 uimenu('Parent',cmNor848A10,'Label','Unweighted', 'Callback', { @changeArray, 'Nor848A-10', 'unweighted' });
+uimenu('Parent',cmFigure,'Label','Ring-72', 'Callback', { @changeArray, 'Ring-72', 'unweighted' });
 uimenu('Parent',cmFigure,'Label','Clear all', 'Callback', { @clearFigure });
 axArray.UIContextMenu = cmFigure;
 
