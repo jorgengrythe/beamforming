@@ -5,15 +5,20 @@ yPos = [];
 w = [];
 f = 1e3;
 c = 340;
-fs = 44.1e3;
-thetaArrivalAngles = 0;
-phiArrivalAngles = 0;
+thetaSteeringAngle = 0;
+phiSteeringAngle = 0;
 thetaScanningAngles = -90:0.1:90;
 phiScanningAngles = 0;
 
 
 % Create figure and axes
 fig = figure;
+fig.Position = [400 150 470 750];
+fig.Name = 'Beampattern';
+fig.NumberTitle = 'off';
+fig.ToolBar = 'none';
+fig.MenuBar = 'none';
+fig.Resize = 'off';
 
 %Axis for geometry
 axArray = subplot(211);
@@ -33,7 +38,7 @@ axis(axArray, 'square')
 axResponse = subplot(212);
 box(axResponse, 'on')
 title(axResponse,['Beampattern @ ' sprintf('%0.2f', f*1e-3) ' kHz'],'fontweight','normal');
-xlabel(axResponse, '\theta');
+%xlabel(axResponse, '\theta');
 ylabel(axResponse, 'dB');
 axResponse.XLim = [thetaScanningAngles(1) thetaScanningAngles(end)];
 axResponse.YLim = [-50 0];
@@ -49,12 +54,22 @@ axResponse.NextPlot = 'replacechildren';
 %Add frequency slider
 frequencySlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
-    'position', [0.93 0.1 0.035 0.35],...
+    'position', [0.935 0.11 0.035 0.34],...
     'value', f,...
     'min', 0.1e3,...
     'max', 20e3);
 addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value) );
 addlistener(frequencySlider,'ContinuousValueChange',@(obj,evt) title(axResponse, ['Beampattern @ ' sprintf('%0.2f', obj.Value*1e-3) ' kHz'],'fontweight','normal'));
+
+%Add steering angle slider
+angleSlider = uicontrol('style', 'slider', ...
+    'Units', 'normalized',...
+    'position', [0.13 0.04 0.78 0.025],...
+    'value', thetaSteeringAngle,...
+    'min', -90,...
+    'max', 90);
+addlistener(angleSlider, 'ContinuousValueChange', @(obj,evt) changeAngleOfSource(obj, evt, obj.Value) );
+
 
 %Add context menu to geometry
 cmFigure = uicontextmenu;
@@ -86,19 +101,27 @@ axArray.UIContextMenu = cmFigure;
         end
     end
 
-    function changeFrequencyOfSource(~, ~, clickedFrequency)
-        f = clickedFrequency;
+    function changeFrequencyOfSource(~, ~, selectedFrequency)
+        f = selectedFrequency;
+        plotBeampattern1D(w)
+    end
+
+    function changeAngleOfSource(~, ~, selectedAngle)
+        thetaSteeringAngle = selectedAngle;
         plotBeampattern1D(w)
     end
 
     function plotBeampattern1D(w)
         
-        inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
-        S = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
-            thetaScanningAngles, phiScanningAngles);
-        
-        spectrumLog = 10*log10(abs(S)/max(abs(S)));
-        plot(axResponse, thetaScanningAngles, spectrumLog)
+        try
+            beamPattern = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, ...
+                phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+            beamPattern = 20*log10(beamPattern);
+            
+            plot(axResponse, thetaScanningAngles, beamPattern)
+        catch
+            %Don't do anything if xPos/yPos doesn't exist
+        end
     end
 
     function clearFigure(~, ~)
@@ -114,7 +137,7 @@ axArray.UIContextMenu = cmFigure;
         xPos = array.xPos;
         yPos = array.yPos;
         if strcmp(selectedWeighting, 'weighted')
-        w = array.hiResWeights;
+            w = array.hiResWeights;
         else
             w = ones(1, numel(xPos));
         end
