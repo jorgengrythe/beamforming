@@ -38,7 +38,6 @@ axis(axArray, 'square')
 axResponse = subplot(212);
 box(axResponse, 'on')
 title(axResponse,['Beampattern @ ' sprintf('%0.2f', f*1e-3) ' kHz'],'fontweight','normal');
-%xlabel(axResponse, '\theta');
 ylabel(axResponse, 'dB');
 axResponse.XLim = [thetaScanningAngles(1) thetaScanningAngles(end)];
 axResponse.YLim = [-50 0];
@@ -46,9 +45,7 @@ axResponse.YTick = [-50 -40 -30 -20 -10 -3 0];
 axResponse.XTick = [-90 -60 -30 0 30 60 90];
 hold(axResponse, 'on');
 grid(axResponse, 'on')
-%grid(axResponse,'minor')
 axResponse.NextPlot = 'replacechildren';
-%axis(axResponse, 'square')
 
 
 %Add frequency slider
@@ -147,5 +144,4 @@ axArray.UIContextMenu = cmFigure;
     end
 
 end
-
 
