@@ -69,14 +69,14 @@ for tick = spokeTicks
 
     text((dBmin*1.08) * sin(tick*pi/180), ...
         (dBmin*1.08) * cos(tick*pi/180), ...
-        int2str(tick),...
+        [int2str(tick) '^\circ'],...
         'HorizontalAlignment', 'center', ...
         'fontSize', 10, ...
         'Parent', axResponse);
 end
 
 %Plot dB ticks
-dBTicks = [-3 -10 -20 -30 -40];
+dBTicks = [-10 -20 -30 -40];
 txtAngle = 10;
 for tick = dBTicks
     line(cos(0:pi/50:2*pi)*(dBmin+tick), sin(0:pi/50:2*pi)*(dBmin+tick), ...
@@ -167,7 +167,7 @@ axArray.UIContextMenu = cmFigure;
 
     function plotBeampattern1D(w)
         
-        %try
+        try
             beamPattern = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, ...
                 phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
             beamPattern = 20*log10(beamPattern);
@@ -180,9 +180,9 @@ axArray.UIContextMenu = cmFigure;
             bpPlot = plot(axResponse, xx, yy, 'Color', [0 0.4470 0.7410]);
 
 
-        %catch
+        catch
             %Don't do anything if xPos/yPos doesn't exist
-        %end
+        end
     end
 
     function clearFigure(~, ~)
