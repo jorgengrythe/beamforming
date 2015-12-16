@@ -1,7 +1,5 @@
 function [] = plotBeamPattern3D(xPos, yPos, w)
 
-global cm
-
 displayStyle = '3D';
 displayTheme = 'black';
 maxDynamicRange = 50;
