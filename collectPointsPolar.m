@@ -35,7 +35,7 @@ axArray.YTick = [-1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1];
 grid(axArray, 'on')
 grid(axArray,'minor')
 title(axArray,'Microphone positions', 'fontweight', 'normal');
-axis(axArray, 'square')
+axis(axArray, 'equal')
       
 
 %Axis for beampattern
@@ -132,6 +132,7 @@ uimenu('Parent',cmNor848A4,'Label','Weighted', 'Callback', { @changeArray, 'Nor8
 uimenu('Parent',cmNor848A4,'Label','Unweighted', 'Callback', { @changeArray, 'Nor848A-4', 'unweighted' });
 uimenu('Parent',cmNor848A10,'Label','Weighted', 'Callback', { @changeArray, 'Nor848A-10', 'weighted' });
 uimenu('Parent',cmNor848A10,'Label','Unweighted', 'Callback', { @changeArray, 'Nor848A-10', 'unweighted' });
+uimenu('Parent',cmFigure,'Label','Ring-32', 'Callback', { @changeArray, 'Ring-32', 'unweighted' });
 uimenu('Parent',cmFigure,'Label','Ring-72', 'Callback', { @changeArray, 'Ring-72', 'unweighted' });
 uimenu('Parent',cmFigure,'Label','Clear all', 'Callback', { @clearFigure });
 axArray.UIContextMenu = cmFigure;
