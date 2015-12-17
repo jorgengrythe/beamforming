@@ -162,7 +162,6 @@ bpPlot.UIContextMenu = cm;
         
         maxHeight = max(max(zz));
         bpPlot = surf(ax, xx, yy, zz, 'edgecolor', 'none');
-        
 
         
         

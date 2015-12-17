@@ -35,7 +35,7 @@ axArray.YTick = [-1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1];
 grid(axArray, 'on')
 grid(axArray,'minor')
 title(axArray,'Microphone positions', 'fontweight', 'normal');
-axis(axArray, 'equal')
+axis(axArray, 'square')
       
 
 %Axis for beampattern
