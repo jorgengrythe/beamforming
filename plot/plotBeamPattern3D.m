@@ -1,7 +1,7 @@
 function [] = plotBeamPattern3D(xPos, yPos, w)
 
 displayStyle = '3D';
-displayTheme = 'black';
+displayTheme = 'Black';
 maxDynamicRange = 50;
 
 f = 3e3;
@@ -10,7 +10,7 @@ c = 340;
 thetaSteeringAngle = 0;
 phiSteeringAngle = 0;
 thetaScanningAngles = -90:1:90;
-phiScanningAngles = 0:1:180;
+phiScanningAngles = 0:2:180;
 beamPattern = 0;
 thetaScanningAnglesRadians = 0;
 phiScanningAnglesRadians = 0;
@@ -54,6 +54,8 @@ uimenu('Parent',topMenuTheme, 'Label', 'White', 'Callback',{ @setTheme, 'White' 
 %Plot the beampattern
 calculateBeamPattern(fig, fig, 'init')
 
+setTheme(fig, fig, displayTheme);
+setOrientation(fig, fig, displayStyle)
 
 %Create sliders to change dynamic range, scanning angle and frequency
 thetaAngleSlider = uicontrol('style', 'slider', ...
@@ -92,14 +94,6 @@ dynamicRangeSlider = uicontrol('style', 'slider', ...
 addlistener(dynamicRangeSlider, 'ContinuousValueChange', @(obj,evt) calculateBeamPattern(obj, evt, 'dynamicRange') );
 txtdB = annotation('textbox', [0.5, 0.065, 0, 0], 'string', 'dB');
 
-%Set color theme
-if isequal(displayTheme,'black')
-    setTheme(fig, fig, 'Black');
-elseif isequal(displayTheme,'white')
-    setTheme(fig, fig, 'White');
-else
-    error('Use black or white for displayStyle')
-end
 
 
 %Enable the context menu regardless of right clicking on figure, axes or plot
@@ -161,20 +155,19 @@ bpPlot.UIContextMenu = cm;
         
         
         maxHeight = max(max(zz));
-        bpPlot = surf(ax, xx, yy, zz, 'edgecolor', 'none');
-
         
+        bpPlot = surf(ax, xx, yy, zz);
+        bpPlot.EdgeColor = 'none';
         
         spherePlot.UIContextMenu = cm;
         circlePlot.UIContextMenu = cm;
         bpPlot.UIContextMenu = cm;
         
-        caxis(ax, [0 maxHeight])
+        caxis(ax, [0 maxHeight]) %should work from origin to maxDynamicRange and at an angle
         ax.ZLim = [0 maxDynamicRange];
         ax.XLim = [-maxDynamicRange maxDynamicRange];
         ax.YLim = [-maxDynamicRange maxDynamicRange];
         
-        setOrientation(fig, fig, displayStyle)
         
         t = title(ax, ['Dynamic range: ' sprintf('%0.1f', maxDynamicRange) ...
             ' dB, \theta = ' sprintf('%0.0f', thetaSteeringAngle) ...
