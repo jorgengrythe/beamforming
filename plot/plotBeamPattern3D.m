@@ -1,4 +1,18 @@
-function [] = plotBeamPattern3D(xPos, yPos, w)
+function [] = plotBeampattern3D(xPos, yPos, w)
+%plotBeampattern3D - plots the beampattern for various frequencies
+%
+%plotBeampattern3D(xPos, yPos, w)
+%
+%IN
+%xPos                - 1xP vector of x-positions [m]
+%yPos                - 1xP vector of y-positions [m]
+%w                   - 1xP vector of element weights
+%
+%OUT
+%[]                  - The figure plot
+%
+%Created by Jørgen Grythe, Norsonic AS
+%Last updated 2016-01-04
 
 displayStyle = '3D';
 displayTheme = 'Black';
@@ -10,7 +24,7 @@ c = 340;
 thetaSteeringAngle = 0;
 phiSteeringAngle = 0;
 thetaScanningAngles = -90:1:90;
-phiScanningAngles = 0:2:180;
+phiScanningAngles = 0:1:180;
 beamPattern = 0;
 thetaScanningAnglesRadians = 0;
 phiScanningAnglesRadians = 0;
@@ -54,9 +68,6 @@ uimenu('Parent',topMenuTheme, 'Label', 'White', 'Callback',{ @setTheme, 'White' 
 %Plot the beampattern
 calculateBeamPattern(fig, fig, 'init')
 
-setTheme(fig, fig, displayTheme);
-setOrientation(fig, fig, displayStyle)
-
 %Create sliders to change dynamic range, scanning angle and frequency
 thetaAngleSlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
@@ -94,6 +105,9 @@ dynamicRangeSlider = uicontrol('style', 'slider', ...
 addlistener(dynamicRangeSlider, 'ContinuousValueChange', @(obj,evt) calculateBeamPattern(obj, evt, 'dynamicRange') );
 txtdB = annotation('textbox', [0.5, 0.065, 0, 0], 'string', 'dB');
 
+%Set default theme and orientation of the figure
+setTheme(fig, fig, displayTheme);
+setOrientation(fig, fig, displayStyle)
 
 
 %Enable the context menu regardless of right clicking on figure, axes or plot
@@ -103,6 +117,7 @@ spherePlot.UIContextMenu = cm;
 circlePlot.UIContextMenu = cm;
 bpPlot.UIContextMenu = cm;
 
+    %Function to calculate and plot the beampattern
     function calculateBeamPattern(obj, evt, type)
         
         if ~strcmp(type, 'init')
@@ -146,6 +161,7 @@ bpPlot.UIContextMenu = cm;
         yy = (beamPatternDynamicRange) .* sin(thetaScanningAnglesRadians) .* sin(phiScanningAnglesRadians);
         zz = (beamPatternDynamicRange) .* cos(thetaScanningAnglesRadians);
         
+        %Interpolate for increased resolution
         interpolationFactor = 2;
         interpolationMethod = 'spline';
         
@@ -153,17 +169,17 @@ bpPlot.UIContextMenu = cm;
         yy = interp2(yy, interpolationFactor, interpolationMethod);
         zz = interp2(zz, interpolationFactor, interpolationMethod);
         
-        
-        maxHeight = max(max(zz));
-        
+        %Plot the beampattern        
         bpPlot = surf(ax, xx, yy, zz);
         bpPlot.EdgeColor = 'none';
         
+        %Enable contextmenu
         spherePlot.UIContextMenu = cm;
         circlePlot.UIContextMenu = cm;
         bpPlot.UIContextMenu = cm;
         
-        caxis(ax, [0 maxHeight]) %should work from origin to maxDynamicRange and at an angle
+        maxHeight = max(max(zz));
+        caxis(ax, [0 maxHeight])
         ax.ZLim = [0 maxDynamicRange];
         ax.XLim = [-maxDynamicRange maxDynamicRange];
         ax.YLim = [-maxDynamicRange maxDynamicRange];
@@ -178,7 +194,7 @@ bpPlot.UIContextMenu = cm;
 
 
 
-    %Function to change between 2D and 3D in plot
+    %Function to change between 2D and 3D orientation
     function setOrientation(~, ~, selectedOrientation)
         displayStyle = selectedOrientation;
         if strcmp(selectedOrientation, '2D')
@@ -227,7 +243,7 @@ bpPlot.UIContextMenu = cm;
             ax.ZColor = [0 0 0];
             ax.MinorGridColor = [0 0 0];
             fColor = [0 0 0];
-            fAlpha = 0.1;
+            fAlpha = 0.05;
             spherePlot.FaceColor = fColor;
             spherePlot.FaceAlpha = fAlpha;
             circlePlot.Color = fColor;
