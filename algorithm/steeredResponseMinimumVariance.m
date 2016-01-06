@@ -17,7 +17,7 @@ function [S, kx, ky] = steeredResponseMinimumVariance(xPos, yPos, inputSignal, f
 %phiScanningAngles   - 1xM vector of phi scanning angles [degrees]
 %
 %OUT
-%S                   - NxM matrix of delay-and-sum steered response power
+%S                   - NxM matrix of minimum variance steered response power
 %kx                  - 1xN vector of theta scanning angles in polar coordinates
 %ky                  - 1xM vector of phi scanning angles in polar coordinates
 %
