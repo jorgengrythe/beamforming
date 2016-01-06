@@ -12,7 +12,8 @@ function [] = plotBeampattern3D(xPos, yPos, w)
 %[]                  - The figure plot
 %
 %Created by Jørgen Grythe, Norsonic AS
-%Last updated 2016-01-04
+%Last updated 2016-01-06
+
 
 displayStyle = '3D';
 displayTheme = 'Black';
@@ -30,7 +31,7 @@ thetaScanningAnglesRadians = 0;
 phiScanningAnglesRadians = 0;
 
 
-%Plot the steered response
+%Prepare the figure
 fig = figure;
 ax = axes;
 t = title(['Dynamic range: ' sprintf('%0.2f', maxDynamicRange) ...
@@ -44,7 +45,6 @@ ax.ZMinorGrid = 'on';
 ax.Box = 'on';
 ax.XTickLabel = [];
 ax.YTickLabel = [];
-%ax.ZTickLabel = [];
 ax.NextPlot = 'replacechildren';
 axis(ax, 'equal')
 hold(ax, 'on')
@@ -62,11 +62,8 @@ uimenu('Parent',topMenuOrientation, 'Label', '3D', 'Callback',{ @setOrientation,
 uimenu('Parent',topMenuTheme, 'Label', 'Black', 'Callback',{ @setTheme, 'Black' });
 uimenu('Parent',topMenuTheme, 'Label', 'White', 'Callback',{ @setTheme, 'White' });
 
-
+%Generate a sphere to be displayed over the beampattern
 [sx, sy, sz] = sphere(100);
-
-%Plot the beampattern
-calculateBeamPattern(fig, fig, 'init')
 
 %Create sliders to change dynamic range, scanning angle and frequency
 thetaAngleSlider = uicontrol('style', 'slider', ...
@@ -105,6 +102,10 @@ dynamicRangeSlider = uicontrol('style', 'slider', ...
 addlistener(dynamicRangeSlider, 'ContinuousValueChange', @(obj,evt) calculateBeamPattern(obj, evt, 'dynamicRange') );
 txtdB = annotation('textbox', [0.5, 0.065, 0, 0], 'string', 'dB');
 
+
+%Plot the beampattern
+calculateBeamPattern(fig, fig, 'init')
+
 %Set default theme and orientation of the figure
 setTheme(fig, fig, displayTheme);
 setOrientation(fig, fig, displayStyle)
@@ -117,12 +118,18 @@ spherePlot.UIContextMenu = cm;
 circlePlot.UIContextMenu = cm;
 bpPlot.UIContextMenu = cm;
 
+
+
+
+
+
     %Function to calculate and plot the beampattern
     function calculateBeamPattern(obj, evt, type)
         
         if ~strcmp(type, 'init')
             delete(bpPlot)
         else
+            %Plot the half sphere and a circle (at the bottom)
             spherePlot = surf(ax, sx*maxDynamicRange,sy*maxDynamicRange,sz*maxDynamicRange, ...
                 'edgecolor','none', 'FaceColor', fColor, 'FaceAlpha', fAlpha);
             circlePlot = plot(ax, cos(0:pi/50:2*pi)*maxDynamicRange, sin(0:pi/50:2*pi)*maxDynamicRange, ...
@@ -138,6 +145,7 @@ bpPlot.UIContextMenu = cm;
                 phiSteeringAngle = obj.Value;
             end
             
+            %Calculating the beampattern
             [beamPattern, thetaScanningAnglesRadians, phiScanningAnglesRadians] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, ...
                 phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
             [phiScanningAnglesRadians, thetaScanningAnglesRadians] = meshgrid(phiScanningAnglesRadians, thetaScanningAnglesRadians);
@@ -152,7 +160,6 @@ bpPlot.UIContextMenu = cm;
             circlePlot = plot(ax, cos(0:pi/50:2*pi)*maxDynamicRange, sin(0:pi/50:2*pi)*maxDynamicRange, ...
                 'Color', fColor);
         end
-        
         
         
         beamPatternDynamicRange = beamPattern + maxDynamicRange;
@@ -178,6 +185,7 @@ bpPlot.UIContextMenu = cm;
         circlePlot.UIContextMenu = cm;
         bpPlot.UIContextMenu = cm;
         
+        %Scale the figure
         maxHeight = max(max(zz));
         caxis(ax, [0 maxHeight])
         ax.ZLim = [0 maxDynamicRange];
@@ -185,6 +193,19 @@ bpPlot.UIContextMenu = cm;
         ax.YLim = [-maxDynamicRange maxDynamicRange];
         
         
+        %Make dynamic ZTicks and show as decreasing dB
+        if maxDynamicRange > 30
+            ax.ZTick = fliplr(maxDynamicRange:-10:0);
+            ax.ZTickLabel = -fliplr(0:10:maxDynamicRange);
+        elseif maxDynamicRange > 15
+            ax.ZTick = fliplr(maxDynamicRange:-5:0);
+            ax.ZTickLabel = -fliplr(0:5:maxDynamicRange);
+        else
+            ax.ZTick = fliplr(maxDynamicRange:-2:0);
+            ax.ZTickLabel = -fliplr(0:2:maxDynamicRange);
+        end
+        
+        %Change title to display frequency, dynamic range and angle
         t = title(ax, ['Dynamic range: ' sprintf('%0.1f', maxDynamicRange) ...
             ' dB, \theta = ' sprintf('%0.0f', thetaSteeringAngle) ...
             ', \phi = ' sprintf('%0.0f', phiSteeringAngle) ...
@@ -206,6 +227,7 @@ bpPlot.UIContextMenu = cm;
         end
         
     end
+
 
 
     %Function to change between black and white theme
