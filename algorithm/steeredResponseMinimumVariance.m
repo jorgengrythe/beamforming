@@ -22,7 +22,7 @@ function [S, kx, ky] = steeredResponseMinimumVariance(xPos, yPos, inputSignal, f
 %ky                  - 1xM vector of phi scanning angles in polar coordinates
 %
 %Created by Jørgen Grythe, Norsonic AS
-%Last updated 2015-10-27
+%Last updated 2016-01-06
 
 
 %Set up variables
@@ -46,6 +46,7 @@ nPhiAngles = numel(phiScanningAngles);
 R = inputSignal*inputSignal';
 R = R + trace(R)/(nSensors^2)*eye(nSensors, nSensors);
 R = R/nSamples;
+R = inv(R);
 
 %Calculate power as a function of scanning angle (minimum variance)
 S = zeros(nThetaAngles,nPhiAngles);
@@ -56,6 +57,6 @@ for angleTheta = 1:nThetaAngles
         ee = squeeze(e(angleTheta,anglePhi,:));
         
         %Calculate power from that scanning point
-        S(angleTheta,anglePhi) = 1./(ee'*(R\ee));
+        S(angleTheta,anglePhi) = 1./(ee'*R*ee);
     end
 end
