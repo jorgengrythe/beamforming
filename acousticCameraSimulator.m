@@ -1,4 +1,4 @@
-function [] = scanningTest()
+function [] = acousticCameraSimulator()
 
 c = 340;
 fs = 44.1e3;
@@ -8,6 +8,7 @@ array = load('data/arrays/Nor848A-10.mat');
 w = array.hiResWeights;
 xPos = array.xPos;
 yPos = array.yPos;
+algorithm = 'DAS';
 
 imageFileColor = imread('data/fig/room.jpg');
 imageFileGray = imread('data/fig/roombw.jpg');
@@ -125,6 +126,7 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
     function S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY)
         
         nSamples = numel(inputSignal);
+        nSensors = numel(xPos);
         
         %Get scanning angles from scanning points
         [thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
@@ -135,17 +137,34 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         % Multiply input signal by weighting vector
         inputSignal = diag(w)*inputSignal;
         
-        %Calculate correlation matrix
-        R = inputSignal*inputSignal';
-        R = R/nSamples;
+        if strcmp('DAS', algorithm)
+            % Multiply input signal by weighting vector
+            inputSignal = diag(w)*inputSignal;
+            
+            %Calculate correlation matrix
+            R = inputSignal*inputSignal';
+            R = R/nSamples;
+            useDAS = 1;
+        else
+            %Calculate correlation matrix
+            R = inputSignal*inputSignal';
+            R = R + trace(R)/(nSensors^2)*eye(nSensors, nSensors);
+            R = R/nSamples;
+            R = inv(R);
+            useDAS = 0;
+        end
         
-        %Calculate power as a function of steering vector/scanning angle (delay-and-sum)
+        %Calculate power as a function of steering vector/scanning angle
+        %with either delay-and-sum or minimum variance algorithm
         S = zeros(numberOfScanningPointsY,numberOfScanningPointsX);
-        
         for scanningPointY = 1:numberOfScanningPointsY
             for scanningPointX = 1:numberOfScanningPointsX
                 ee = e(:,scanningPointX+(scanningPointY-1)*numberOfScanningPointsX);
-                S(scanningPointY,scanningPointX) = ee'*R*ee;
+                if useDAS
+                    S(scanningPointY,scanningPointX) = ee'*R*ee;
+                else
+                    S(scanningPointY,scanningPointX) = 1./(ee'*R*ee);
+                end
             end
         end
         
@@ -201,19 +220,25 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         
         %Context menu to change frequency, background color and array
         cmFigure = uicontextmenu;
-        topMenuArray = uimenu('Parent',cmFigure,'Label','Array');
-        topMenuTheme = uimenu('Parent',cmFigure,'Label','Background');
+        topMenuArray = uimenu('Parent', cmFigure, 'Label', 'Array');
+        topMenuAlgorithm = uimenu('Parent', cmFigure, 'Label', 'Algorithm');
+        topMenuTheme = uimenu('Parent', cmFigure, 'Label', 'Background');
+        
                      
         %Array
-        uimenu('Parent',topMenuArray, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
-        uimenu('Parent',topMenuArray, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
-        uimenu('Parent',topMenuArray, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
-        uimenu('Parent',topMenuArray, 'Label', 'Ring-48', 'Callback',{ @changeArray, 'Ring-48', steeredResponsePlot });
-        uimenu('Parent',topMenuArray, 'Label', 'Ring-72', 'Callback',{ @changeArray, 'Ring-72', steeredResponsePlot });
+        uimenu('Parent', topMenuArray, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
+        uimenu('Parent', topMenuArray, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
+        uimenu('Parent', topMenuArray, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
+        uimenu('Parent', topMenuArray, 'Label', 'Ring-48', 'Callback',{ @changeArray, 'Ring-48', steeredResponsePlot });
+        uimenu('Parent', topMenuArray, 'Label', 'Ring-72', 'Callback',{ @changeArray, 'Ring-72', steeredResponsePlot });
+        
+        %Algorithm
+        uimenu('Parent', topMenuAlgorithm, 'Label', 'Delay-and-sum', 'Callback',{ @changeAlgorithm, 'DAS', steeredResponsePlot });
+        uimenu('Parent', topMenuAlgorithm, 'Label', 'Minimum variance', 'Callback',{ @changeAlgorithm, 'MV', steeredResponsePlot });
         
         %Theme
-        uimenu('Parent',topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
-        uimenu('Parent',topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
+        uimenu('Parent', topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
+        uimenu('Parent', topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
         
         steeredResponsePlot.UIContextMenu = cmFigure;
         
@@ -306,11 +331,16 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
     end
 
 
+    function changeAlgorithm(~, ~, selectedAlgorithm, steeredResponsePlot)
+        algorithm = selectedAlgorithm;
+        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
+        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+        steeredResponsePlot.CData = S;
+    end
 
-
-    function changeFrequencyOfSource(~, ~, frequency, steeredResponsePlot)
+    function changeFrequencyOfSource(~, ~, selectedFrequency, steeredResponsePlot)
         
-        f = frequency;
+        f = selectedFrequency;
         inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         steeredResponsePlot.CData = S;
