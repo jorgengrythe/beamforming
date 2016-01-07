@@ -333,7 +333,6 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
 
     function changeAlgorithm(~, ~, selectedAlgorithm, steeredResponsePlot)
         algorithm = selectedAlgorithm;
-        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         steeredResponsePlot.CData = S;
     end
