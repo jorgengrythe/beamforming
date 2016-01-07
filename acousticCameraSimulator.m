@@ -226,11 +226,22 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
         
                      
         %Array
-        uimenu('Parent', topMenuArray, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
-        uimenu('Parent', topMenuArray, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
-        uimenu('Parent', topMenuArray, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
-        uimenu('Parent', topMenuArray, 'Label', 'Ring-48', 'Callback',{ @changeArray, 'Ring-48', steeredResponsePlot });
-        uimenu('Parent', topMenuArray, 'Label', 'Ring-72', 'Callback',{ @changeArray, 'Ring-72', steeredResponsePlot });
+        arrayMenuNorsonic = uimenu('Parent', topMenuArray, 'Label', 'Norsonic');
+        arrayMenuBK = uimenu('Parent', topMenuArray, 'Label', 'B/&K');
+        arrayMenuCAE = uimenu('Parent', topMenuArray, 'Label', 'CAE');
+        uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
+        uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
+        uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-16', 'Callback',{ @changeArray, 'Nor848A-16', steeredResponsePlot });
+        uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
+        uimenu('Parent', arrayMenuBK, 'Label', 'Ring-48', 'Callback',{ @changeArray, 'Ring-48', steeredResponsePlot });
+        uimenu('Parent', arrayMenuBK, 'Label', 'Ring-72', 'Callback',{ @changeArray, 'Ring-72', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE XS', 'Callback',{ @changeArray, 'CAE_XS', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE S', 'Callback',{ @changeArray, 'CAE_S', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE Bionic M', 'Callback',{ @changeArray, 'CAE_bionic_m', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE L', 'Callback',{ @changeArray, 'CAE_L', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE XL', 'Callback',{ @changeArray, 'CAE_XL', steeredResponsePlot });
+        uimenu('Parent', topMenuArray, 'Label', 'SeeSV', 'Callback',{ @changeArray, 'SeesV', steeredResponsePlot });
+        uimenu('Parent', topMenuArray, 'Label', 'Head', 'Callback',{ @changeArray, 'head', steeredResponsePlot });
         
         %Algorithm
         uimenu('Parent', topMenuAlgorithm, 'Label', 'Delay-and-sum', 'Callback',{ @changeAlgorithm, 'DAS', steeredResponsePlot });
@@ -367,7 +378,7 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
             w = ones(1,32)/32;
         else
             array = load(['data/arrays/' arrayClicked '.mat']);
-            if strcmp(arrayClicked,'Nor848A-4') || strcmp(arrayClicked,'Nor848A-10')
+            if strncmp(arrayClicked, 'Nor', 3)
                 w = array.hiResWeights;
             else
                 w = array.w;
