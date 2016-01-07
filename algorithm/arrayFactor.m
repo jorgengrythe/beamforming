@@ -1,8 +1,8 @@
 function [W, thetaScanningAngles, phiScanningAngles, kx, ky] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
-%array_factor - Calculate array factor of 2D array
+%arrayFactor - Calculate array factor of 1D or 2D array
 %
-%This matlab function calculates the array factor of a 2D array based on
-%the position of the elements/sensors and the weight associated with
+%This matlab function calculates the array factor of a 1D or 2D array based
+%on the position of the elements/sensors and the weight associated with
 %each sensor. If no angle is given as input, the scanning angle is theta
 %from -90 to 90, and phi from 0 to 360 degrees with 1 degree resolution
 %
