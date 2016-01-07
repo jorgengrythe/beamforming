@@ -227,12 +227,13 @@ plotImage(imageFileColor, S, amplitudes, xPosSource, yPosSource, scanningPointsX
                      
         %Array
         arrayMenuNorsonic = uimenu('Parent', topMenuArray, 'Label', 'Norsonic');
-        arrayMenuBK = uimenu('Parent', topMenuArray, 'Label', 'B/&K');
+        arrayMenuBK = uimenu('Parent', topMenuArray, 'Label', 'GfaI');
         arrayMenuCAE = uimenu('Parent', topMenuArray, 'Label', 'CAE');
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-16', 'Callback',{ @changeArray, 'Nor848A-16', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
+        uimenu('Parent', arrayMenuBK, 'Label', 'Ring-32', 'Callback',{ @changeArray, 'Ring-32', steeredResponsePlot });
         uimenu('Parent', arrayMenuBK, 'Label', 'Ring-48', 'Callback',{ @changeArray, 'Ring-48', steeredResponsePlot });
         uimenu('Parent', arrayMenuBK, 'Label', 'Ring-72', 'Callback',{ @changeArray, 'Ring-72', steeredResponsePlot });
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE XS', 'Callback',{ @changeArray, 'CAE_XS', steeredResponsePlot });
