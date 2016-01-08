@@ -3,10 +3,14 @@
 %% Create 2D array
 
 % Position of sensors and weighting of 2D array
-[x, y] = meshgrid(-0.5:0.25:0.5,-0.5:0.25:0.5);
-xPos = x(:)'; % 1xP vector of x-positions
-yPos = y(:)'; % 1xP vector of y-positions
-w = ones(1,length(xPos)); % 1xP vector of weighting factors
+% Create circular array
+
+nElements = 20;
+radius = 0.6;
+
+[xPos, yPos] = pol2cart(linspace(0,2*pi-2*pi/nElements,nElements),ones(1,nElements)*radius);
+w = ones(1,numel(xPos))/numel(xPos);
+
 
 %% Plot array geometry and array factor for different frequencies
 
@@ -21,9 +25,10 @@ phiScanningAngles = 0;
 %Calculate and plot the array pattern for various frequencies
 figure(1);clf
 subplot(121)
-scatter(xPos, yPos,'filled')
+plot(xPos, yPos,'.')
 title('Array geometry','FontWeight','Normal')
-axis square
+axis([-radius-0.1 radius+0.1 -radius-0.1 radius+0.1])
+axis square; grid minor
 for ff = f
     W = arrayFactor(xPos, yPos, w, ff, c, thetaScanningAngles, phiScanningAngles);
     W = 20*log10(W);
@@ -101,9 +106,9 @@ colorbar('northoutside','direction','reverse')
 
 %% Plot the beampattern for various frequencies with plotBeampattern()
 
-f = [0.5e3 0.7e3 1e3];
+f = [0.5e3 1e3 3e3];
 c = 340;
-thetaSteeringAngle = 10;
+thetaSteeringAngle = -10;
 dynRange = 50;
 
 plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle)
