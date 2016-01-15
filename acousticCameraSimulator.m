@@ -229,6 +229,7 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         arrayMenuNorsonic = uimenu('Parent', topMenuArray, 'Label', 'Norsonic');
         arrayMenuGfai = uimenu('Parent', topMenuArray, 'Label', 'GfaI');
         arrayMenuCAE = uimenu('Parent', topMenuArray, 'Label', 'CAE');
+        arrayBK= uimenu('Parent', topMenuArray, 'Label', 'B&K');
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-16', 'Callback',{ @changeArray, 'Nor848A-16', steeredResponsePlot });
@@ -241,6 +242,8 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE Bionic M', 'Callback',{ @changeArray, 'CAE_bionic_m', steeredResponsePlot });
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE L', 'Callback',{ @changeArray, 'CAE_L', steeredResponsePlot });
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE XL', 'Callback',{ @changeArray, 'CAE_XL', steeredResponsePlot });
+        uimenu('Parent', arrayBK, 'Label', 'B&K Wheel', 'Callback',{ @changeArray, 'bk', steeredResponsePlot });
+        uimenu('Parent', arrayBK, 'Label', 'B&K Half Wheel', 'Callback',{ @changeArray, 'bk_half', steeredResponsePlot });
         uimenu('Parent', topMenuArray, 'Label', 'SeeSV', 'Callback',{ @changeArray, 'SeesV', steeredResponsePlot });
         uimenu('Parent', topMenuArray, 'Label', 'Head', 'Callback',{ @changeArray, 'head', steeredResponsePlot });
         
