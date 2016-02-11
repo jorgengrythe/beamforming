@@ -202,7 +202,8 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         %Coloring of sources
         steeredResponsePlot = imagesc(scanningPointsX, scanningPointsY, S);
         steeredResponsePlot.AlphaData = 0.4;
-        cmap = colormap;
+        cmap = colormap('jet');
+        cmap = cmap(20:57,:);
         cmap(1,:) = [1 1 1]*0.8;
         colormap(cmap);
         
@@ -254,6 +255,9 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         %Theme
         uimenu('Parent', topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
         uimenu('Parent', topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
+        
+        %Export of steered response to .mat file
+        uimenu('Parent', cmFigure, 'Label', 'Export response', 'Callback',{ @(hObject, eventdata) assignin('base','S',steeredResponsePlot.CData) });
         
         steeredResponsePlot.UIContextMenu = cmFigure;
         

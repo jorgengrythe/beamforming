@@ -83,11 +83,13 @@ ylabel('dB')
 
 %% 2D-array case, spectrum in linear scale
 
-% Create vectors of x- and y-coordinates of microphone positions 
-[x, y] = meshgrid(-1:0.25:1,-1:0.25:1);
-xPos = x(:)'; % 1xP vector of x-positions
-yPos = y(:)'; % 1xP vector of y-positions
-w = ones(1,numel(xPos))/numel(xPos); % 1xP vector of weighting
+% Position of sensors and weighting of 2D array
+% Create circular array
+nElements = 20;
+radius = 0.6;
+
+[xPos, yPos] = pol2cart((0:1/nElements:1-1/nElements)*2*pi,ones(1,nElements)*radius);
+w = ones(1,numel(xPos))/numel(xPos);
 
 % Define arriving angles of input signals
 thetaArrivalAngles = [30 20 30];
