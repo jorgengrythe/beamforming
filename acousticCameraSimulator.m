@@ -11,11 +11,12 @@ xPos = array.xPos;
 yPos = array.yPos;
 algorithm = 'DAS';
 dynamicRange = 10;
+maxDynamicRange = 50;
 
 imageFileColor = imread('data/fig/room.jpg');
 imageFileGray = imread('data/fig/roombw.jpg');
 
-fig = figure(1);
+fig = figure;
 ax = axes('Parent', fig);
 
 % Acoustical coverage / listening points
@@ -35,10 +36,20 @@ scanningAxisY = -maxScanningPlaneExtentY:2*maxScanningPlaneExtentY/(numberOfScan
 [scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
 
 %(x,y) position of sources
-xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0 0.37 1.32 2.18 2.18 2.18];
-yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 0.5 1.47 -0.33 0.26 -0.15 -0.55];
-amplitudes = [0 -100 0 -100 0 -100 -100 0 -100 -100 -100];
+%Loudspeakers
+xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0.37 1.32 2.18 2.18 2.18];
+yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 1.47 -0.33 0.26 -0.15 -0.55];
+amplitudes = [0 -100 0 -100 0 -100 0 -100 -100 -100];
 zPosSource = distanceToScanningPlane*ones(1,length(xPosSource));
+
+% Line sources for the tv?
+% [a, b] = meshgrid(0.1:0.1:1, [-0.8 0.8]);
+% xPosSource = [xPosSource b(:)'];
+% yPosSource = [yPosSource a(:)'];
+% amplitudes = [amplitudes zeros(1,numel(a))];
+
+
+
 
 %Default colormap
 cmap = [0    0.7500    1.0000
@@ -228,8 +239,8 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         
         fig.Name = 'Acoustic camera test';
         fig.NumberTitle = 'off';
-%         fig.ToolBar = 'none';
-%         fig.MenuBar = 'none';
+        fig.ToolBar = 'none';
+        fig.MenuBar = 'none';
         fig.Color = [0 0 0];
         fig.Resize = 'off';
         
@@ -253,7 +264,6 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         colormap(cmap);
 
         %Add dynamic range slider
-        maxDynamicRange = 60;
         range = [0.01 maxDynamicRange];  
         dynamicRangeSlider = uicontrol('style', 'slider', ...
             'Units', 'normalized',...
@@ -290,7 +300,7 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         
         
         %Set defaults
-        changeView(ax, ax, '3D')
+        changeView(ax, ax, '2D')
         changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
         addContextMenu(ax, ax, imagePlot, amplitudes, xPosSource, yPosSource, steeredResponsePlot)
         
@@ -302,6 +312,7 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
     function changeDynamicRange(~, ~, selectedDynamicRange, steeredResponsePlot)
         dynamicRange = selectedDynamicRange;
         steeredResponsePlot.ZData = S+distanceToScanningPlane+dynamicRange;
+        
         caxis(ax, [distanceToScanningPlane distanceToScanningPlane+dynamicRange]);
         title(ax, ['Dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[1 1 1]);
     end
@@ -310,7 +321,8 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
     function changeAlgorithm(~, ~, selectedAlgorithm, steeredResponsePlot)
         algorithm = selectedAlgorithm;
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        steeredResponsePlot.CData = S;
+                
+        changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
     end
 
 
@@ -319,27 +331,8 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         f = selectedFrequency;
         inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        steeredResponsePlot.CData = S;
-    end
-
-
-    function changeView(~, ~, selectedView)
-        if strcmp(selectedView,'2D')
-            view(ax, [0 90])
-        else
-            ax.CameraPosition = [20, 12, 700];
-            ax.CameraUpVector = [0 1 0];
-        end
-    end
-
-
-    function changeBackgroundColor(~, ~, color, imagePlot)
         
-        if strcmp(color, 'color')
-            imagePlot.CData = flipud(imageFileColor);
-        else
-            imagePlot.CData = flipud(imageFileGray);
-        end
+        changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
     end
 
 
@@ -363,7 +356,6 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         
         inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        steeredResponsePlot.CData = S;
         
         changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
     end
@@ -399,55 +391,53 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         
         inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        steeredResponsePlot.CData = S;
+        
+        changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
     end
 
 
     function addContextMenu(~, ~, imagePlot, amplitudes, xPosSource, yPosSource, steeredResponsePlot)
+        
         %Context menu to change frequency, background color and array
         cmFigure = uicontextmenu;
-        topMenuArray = uimenu('Parent', cmFigure, 'Label', 'Array');
-        topMenuAlgorithm = uimenu('Parent', cmFigure, 'Label', 'Algorithm');
-        topMenuTheme = uimenu('Parent', cmFigure, 'Label', 'Background');
-        topMenuView = uimenu('Parent', cmFigure, 'Label', 'View');
-        
         
         %Array
+        topMenuArray = uimenu('Parent', cmFigure, 'Label', 'Array');
         arrayMenuNorsonic = uimenu('Parent', topMenuArray, 'Label', 'Norsonic');
-        arrayMenuGfai = uimenu('Parent', topMenuArray, 'Label', 'GfaI');
-        arrayMenuCAE = uimenu('Parent', topMenuArray, 'Label', 'CAE');
-        arrayBK= uimenu('Parent', topMenuArray, 'Label', 'B&K');
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-16', 'Callback',{ @changeArray, 'Nor848A-16', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
+        arrayMenuGfai = uimenu('Parent', topMenuArray, 'Label', 'GfaI');
         uimenu('Parent', arrayMenuGfai, 'Label', 'Ring-32', 'Callback',{ @changeArray, 'Ring-32', steeredResponsePlot });
         uimenu('Parent', arrayMenuGfai, 'Label', 'Ring-48', 'Callback',{ @changeArray, 'Ring-48', steeredResponsePlot });
         uimenu('Parent', arrayMenuGfai, 'Label', 'Ring-72', 'Callback',{ @changeArray, 'Ring-72', steeredResponsePlot });
+        arrayMenuCAE = uimenu('Parent', topMenuArray, 'Label', 'CAE');
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE XS', 'Callback',{ @changeArray, 'CAE_XS', steeredResponsePlot });
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE S', 'Callback',{ @changeArray, 'CAE_S', steeredResponsePlot });
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE Bionic M', 'Callback',{ @changeArray, 'CAE_bionic_m', steeredResponsePlot });
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE L', 'Callback',{ @changeArray, 'CAE_L', steeredResponsePlot });
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE XL', 'Callback',{ @changeArray, 'CAE_XL', steeredResponsePlot });
+        arrayBK= uimenu('Parent', topMenuArray, 'Label', 'B&K');
         uimenu('Parent', arrayBK, 'Label', 'B&K Wheel', 'Callback',{ @changeArray, 'bk', steeredResponsePlot });
         uimenu('Parent', arrayBK, 'Label', 'B&K Half Wheel', 'Callback',{ @changeArray, 'bk_half', steeredResponsePlot });
         uimenu('Parent', topMenuArray, 'Label', 'SeeSV', 'Callback',{ @changeArray, 'SeesV', steeredResponsePlot });
         uimenu('Parent', topMenuArray, 'Label', 'Head', 'Callback',{ @changeArray, 'head', steeredResponsePlot });
         
         %Algorithm
+        topMenuAlgorithm = uimenu('Parent', cmFigure, 'Label', 'Algorithm');
         uimenu('Parent', topMenuAlgorithm, 'Label', 'Delay-and-sum', 'Callback',{ @changeAlgorithm, 'DAS', steeredResponsePlot });
         uimenu('Parent', topMenuAlgorithm, 'Label', 'Minimum variance', 'Callback',{ @changeAlgorithm, 'MV', steeredResponsePlot });
         
-        %Theme
-        uimenu('Parent', topMenuTheme, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
-        uimenu('Parent', topMenuTheme, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
-        
-        %View
+        %View/background
+        topMenuView = uimenu('Parent', cmFigure, 'Label', 'View');
         uimenu('Parent', topMenuView, 'Label', '2D', 'Callback',{ @changeView, '2D' });
         uimenu('Parent', topMenuView, 'Label', '3D', 'Callback',{ @changeView, '3D' });
+        uimenu('Parent', topMenuView, 'Label', 'Color', 'Callback',{ @changeBackgroundColor, 'color', imagePlot });
+        uimenu('Parent', topMenuView, 'Label', 'Gray', 'Callback',{ @changeBackgroundColor, 'gray', imagePlot });
         
-        %Export of steered response to .mat file
-        uimenu('Parent', cmFigure, 'Label', 'Export response', 'Callback',{ @(hObject, eventdata) assignin('base','S',steeredResponsePlot.CData) });
+%         %Export of steered response to .mat file
+%         uimenu('Parent', cmFigure, 'Label', 'Export response', 'Callback',{ @(hObject, eventdata) assignin('base','S',steeredResponsePlot.CData) });
         
         imagePlot.UIContextMenu = cmFigure;
         steeredResponsePlot.UIContextMenu = cmFigure;
@@ -455,7 +445,7 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         
         %Plot sources with context menu (to enable/disable and change power)
         for sourceNumber = 1:numel(amplitudes)
-            sourcePlot(sourceNumber) = scatter3(xPosSource(sourceNumber), yPosSource(sourceNumber),distanceToScanningPlane, 300, [1 1 1]*0.4);
+            sourcePlot(sourceNumber) = scatter3(xPosSource(sourceNumber), yPosSource(sourceNumber),distanceToScanningPlane+maxDynamicRange, 300, [1 1 1]*0.4);
             
             cmSourcePower = uicontextmenu;
             if amplitudes(sourceNumber) == -100
@@ -476,6 +466,25 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         
     end
     
+
+    function changeView(~, ~, selectedView)
+        if strcmp(selectedView,'2D')
+            view(ax, [0 90])
+        else
+            ax.CameraPosition = [20, 12, 700];
+            ax.CameraUpVector = [0 1 0];
+        end
+    end
+
+
+    function changeBackgroundColor(~, ~, color, imagePlot)
+        
+        if strcmp(color, 'color')
+            imagePlot.CData = flipud(imageFileColor);
+        else
+            imagePlot.CData = flipud(imageFileGray);
+        end
+    end
 
 
 end
