@@ -262,8 +262,8 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         ax.YColor = [1 1 1];
         ax.ZColor = [1 1 1];
         
-        ax.XTick = [];
-        ax.YTick = [];
+        %ax.XTick = [];
+        %ax.YTick = [];
         ax.ZTick = 0:10:maxDynamicRange;
         
         axis(ax,'equal')
@@ -414,6 +414,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         uimenu('Parent', arrayBK, 'Label', 'B&K Half Wheel', 'Callback',{ @changeArray, 'bk_half', steeredResponsePlot });
         uimenu('Parent', topMenuArray, 'Label', 'SeeSV', 'Callback',{ @changeArray, 'SeesV', steeredResponsePlot });
         uimenu('Parent', topMenuArray, 'Label', 'Head', 'Callback',{ @changeArray, 'head', steeredResponsePlot });
+        uimenu('Parent', topMenuArray, 'Label', 'Underbrink', 'Callback',{ @changeArray, 'underbrink', steeredResponsePlot });
         
         %Algorithm
         topMenuAlgorithm = uimenu('Parent', cmFigure, 'Label', 'Algorithm');
