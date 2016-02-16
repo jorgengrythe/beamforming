@@ -17,8 +17,8 @@ phiSteeringAngle = 0;
 amplitudes = [0 0 0];
 
 %Load array
-load ../../data/arrays/S2.mat
-w = hiResWeights;
+load ../../data/arrays/ring-48.mat
+%w = hiResWeights;
 
 %Create signal hitting the array
 inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
