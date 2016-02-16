@@ -13,6 +13,8 @@ algorithm = 'DAS';
 dynamicRange = 10;
 maxDynamicRange = 50;
 
+display = '2D';
+
 imageFileColor = imread('data/fig/room.jpg');
 imageFileGray = imread('data/fig/roombw.jpg');
 
@@ -42,55 +44,6 @@ yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 1.47 -0.33 0.26 -0.15 -0.55];
 amplitudes = [0 -100 0 -100 0 -100 0 -100 -100 -100];
 zPosSource = distanceToScanningPlane*ones(1,length(xPosSource));
 
-% Line sources for the tv?
-% [a, b] = meshgrid(0.1:0.1:1, [-0.8 0.8]);
-% xPosSource = [xPosSource b(:)'];
-% yPosSource = [yPosSource a(:)'];
-% amplitudes = [amplitudes zeros(1,numel(a))];
-
-
-
-
-%Default colormap
-cmap = [0    0.7500    1.0000
-         0    0.8125    1.0000
-         0    0.8750    1.0000
-         0    0.9375    1.0000
-         0    1.0000    1.0000
-    0.0625    1.0000    0.9375
-    0.1250    1.0000    0.8750
-    0.1875    1.0000    0.8125
-    0.2500    1.0000    0.7500
-    0.3125    1.0000    0.6875
-    0.3750    1.0000    0.6250
-    0.4375    1.0000    0.5625
-    0.5000    1.0000    0.5000
-    0.5625    1.0000    0.4375
-    0.6250    1.0000    0.3750
-    0.6875    1.0000    0.3125
-    0.7500    1.0000    0.2500
-    0.8125    1.0000    0.1875
-    0.8750    1.0000    0.1250
-    0.9375    1.0000    0.0625
-    1.0000    1.0000         0
-    1.0000    0.9375         0
-    1.0000    0.8750         0
-    1.0000    0.8125         0
-    1.0000    0.7500         0
-    1.0000    0.6875         0
-    1.0000    0.6250         0
-    1.0000    0.5625         0
-    1.0000    0.5000         0
-    1.0000    0.4375         0
-    1.0000    0.3750         0
-    1.0000    0.3125         0
-    1.0000    0.2500         0
-    1.0000    0.1875         0
-    1.0000    0.1250         0
-    1.0000    0.0625         0
-    1.0000         0         0
-    0.9375         0         0];
-
 
 %Create input signal
 inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
@@ -99,7 +52,7 @@ inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSou
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
 
 %Plot image and steered response
-plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX, scanningPointsY, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
+plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
 
 
 
@@ -116,8 +69,6 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         thetaAngles(isnan(thetaAngles)) = 0;
         phiAngles(isnan(phiAngles)) = 0;
     end
-
-
 
     %Calculate steering vector for various angles
     function [e, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
@@ -142,8 +93,6 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         e = exp(1j*k*(kxx+kyy));
         
     end
-
-
 
     %Generate input signal to all sensors
     function inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes)
@@ -172,9 +121,6 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         
     end
 
-        
-        
-        
     %Calculate delay-and-sum power at scanning points
     function S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY)
         
@@ -231,13 +177,11 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         S = 10*log10(S);
     end
 
-
-
     %Plot the image with overlaid steered response power
-    function plotImage(imageFile, S, amplitudes, xPosSource, yPosSource, scanningPointsX, scanningPointsY, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
+    function plotImage(imageFile, S, xPosSource, yPosSource, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
 
         
-        fig.Name = 'Acoustic camera test';
+        fig.Name = 'Acoustic camera simulation - Nor848A-10';
         fig.NumberTitle = 'off';
         fig.ToolBar = 'none';
         fig.MenuBar = 'none';
@@ -249,7 +193,7 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         [x, y] = meshgrid(linspace(-maxScanningPlaneExtentX,maxScanningPlaneExtentX,size(S,2)), ...
             linspace(-maxScanningPlaneExtentY,maxScanningPlaneExtentY,size(S,1)));
         
-        imagePlot = surf(ax, x, y, ones(size(x))*distanceToScanningPlane,...
+        imagePlot = surf(ax, x, y, zeros(size(x)),...
             'edgecolor','none',...
             'CData',flipud(imageFile),...
             'FaceColor','TextureMap');
@@ -257,12 +201,73 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         hold(ax, 'on')
         
         %Coloring of sources
-        steeredResponsePlot = surf(ax, x, y, S+distanceToScanningPlane+dynamicRange,...
+        steeredResponsePlot = surf(ax, x, y, S,...
             'EdgeColor','none',...
             'FaceAlpha',0.5);
                 
+        %Default colormap
+        cmap = [0    0.7500    1.0000
+            0    0.8125    1.0000
+            0    0.8750    1.0000
+            0    0.9375    1.0000
+            0    1.0000    1.0000
+            0.0625    1.0000    0.9375
+            0.1250    1.0000    0.8750
+            0.1875    1.0000    0.8125
+            0.2500    1.0000    0.7500
+            0.3125    1.0000    0.6875
+            0.3750    1.0000    0.6250
+            0.4375    1.0000    0.5625
+            0.5000    1.0000    0.5000
+            0.5625    1.0000    0.4375
+            0.6250    1.0000    0.3750
+            0.6875    1.0000    0.3125
+            0.7500    1.0000    0.2500
+            0.8125    1.0000    0.1875
+            0.8750    1.0000    0.1250
+            0.9375    1.0000    0.0625
+            1.0000    1.0000         0
+            1.0000    0.9375         0
+            1.0000    0.8750         0
+            1.0000    0.8125         0
+            1.0000    0.7500         0
+            1.0000    0.6875         0
+            1.0000    0.6250         0
+            1.0000    0.5625         0
+            1.0000    0.5000         0
+            1.0000    0.4375         0
+            1.0000    0.3750         0
+            1.0000    0.3125         0
+            1.0000    0.2500         0
+            1.0000    0.1875         0
+            1.0000    0.1250         0
+            1.0000    0.0625         0
+            1.0000         0         0
+            0.9375         0         0];
+        
         colormap(cmap);
-
+        
+                %Axes
+        box(ax, 'off')    
+        xlabel(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz'],'fontweight','normal')
+        zlabel(ax,'dB');
+        
+        ylim(ax, [-maxScanningPlaneExtentY maxScanningPlaneExtentY])
+        xlim(ax, [-maxScanningPlaneExtentX maxScanningPlaneExtentX])
+        zlim(ax, [0 maxDynamicRange])
+        
+        ax.Color = [0 0 0];
+        ax.XColor = [1 1 1];
+        ax.YColor = [1 1 1];
+        ax.ZColor = [1 1 1];
+        
+        ax.XTick = [];
+        ax.YTick = [];
+        ax.ZTick = 0:10:maxDynamicRange;
+        
+        axis(ax,'equal')
+        daspect(ax,[1 1 maxDynamicRange/2])
+        
         %Add dynamic range slider
         range = [0.01 maxDynamicRange];  
         dynamicRangeSlider = uicontrol('style', 'slider', ...
@@ -284,36 +289,20 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value, steeredResponsePlot) );
         addlistener(frequencySlider,'ContinuousValueChange',@(obj,evt) xlabel(ax, ['Frequency: ' sprintf('%0.1f', obj.Value*1e-3) ' kHz'],'fontweight','normal'));
         
-        %Axes
-        box(ax, 'on')    
-        xlabel(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz'],'fontweight','normal')
-        ylim(ax, [-maxScanningPlaneExtentY maxScanningPlaneExtentY])
-        xlim(ax, [-maxScanningPlaneExtentX maxScanningPlaneExtentX])
-        zlim(ax, [-maxDynamicRange maxDynamicRange])
-        ax.Color = [0 0 0];
-        ax.XColor = [1 1 1];
-        ax.YColor = [1 1 1];
-%         ax.XTick = [];
-%         ax.YTick = [];
-        axis(ax,'equal')
-        daspect(ax,[1 1 30])
-        
-        
         %Set defaults
-        changeView(ax, ax, '2D')
+        changeView(ax, ax, display)
         changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
         addContextMenu(ax, ax, imagePlot, amplitudes, xPosSource, yPosSource, steeredResponsePlot)
         
     end
 
-
-    
     
     function changeDynamicRange(~, ~, selectedDynamicRange, steeredResponsePlot)
         dynamicRange = selectedDynamicRange;
-        steeredResponsePlot.ZData = S+distanceToScanningPlane+dynamicRange;
+        steeredResponsePlot.ZData = S+dynamicRange;
         
-        caxis(ax, [distanceToScanningPlane distanceToScanningPlane+dynamicRange]);
+        caxis(ax, [0 dynamicRange]);
+        zlim(ax, [0 maxDynamicRange])
         title(ax, ['Dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[1 1 1]);
     end
 
@@ -358,6 +347,7 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         
         changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
+        fig.Name = ['Acoustic camera simulation - ' arrayClicked];
     end
 
 
@@ -445,7 +435,7 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
         
         %Plot sources with context menu (to enable/disable and change power)
         for sourceNumber = 1:numel(amplitudes)
-            sourcePlot(sourceNumber) = scatter3(xPosSource(sourceNumber), yPosSource(sourceNumber),distanceToScanningPlane+maxDynamicRange, 300, [1 1 1]*0.4);
+            sourcePlot(sourceNumber) = scatter3(xPosSource(sourceNumber), yPosSource(sourceNumber),maxDynamicRange, 300, [1 1 1]*0.4);
             
             cmSourcePower = uicontextmenu;
             if amplitudes(sourceNumber) == -100
@@ -468,11 +458,13 @@ plotImage(imageFileGray, S, amplitudes, xPosSource, yPosSource, scanningPointsX,
     
 
     function changeView(~, ~, selectedView)
-        if strcmp(selectedView,'2D')
+        display = selectedView;
+        if strcmp(display,'2D')
             view(ax, [0 90])
         else
-            ax.CameraPosition = [20, 12, 700];
-            ax.CameraUpVector = [0 1 0];
+            %ax.CameraPosition = [20, 12, 700];
+            %ax.CameraUpVector = [0 1 0];
+            view(ax, [30 30])
         end
     end
 
