@@ -9,10 +9,10 @@ array = load('data/arrays/Nor848A-10.mat');
 w = array.hiResWeights;
 xPos = array.xPos;
 yPos = array.yPos;
+
 algorithm = 'DAS';
 dynamicRange = 10;
 maxDynamicRange = 50;
-
 display = '2D';
 
 imageFileColor = imread('data/fig/room.jpg');
@@ -21,7 +21,8 @@ imageFileGray = imread('data/fig/roombw.jpg');
 fig = figure;
 ax = axes('Parent', fig);
 
-% Acoustical coverage / listening points
+
+% Acoustical coverage / listening directions
 maxAcousticalCoveringAngleHorizontal = 42;
 maxAcousticalCoveringAngleVertical = 30;
 distanceToScanningPlane = 3; %[m]
@@ -34,11 +35,10 @@ maxScanningPlaneExtentY = tan(maxAcousticalCoveringAngleVertical*pi/180)*distanc
 scanningAxisX = -maxScanningPlaneExtentX:2*maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX;
 scanningAxisY = -maxScanningPlaneExtentY:2*maxScanningPlaneExtentY/(numberOfScanningPointsY-1):maxScanningPlaneExtentY;
 
-% Get all (x,y) points
+% Get all (x,y) scanning points
 [scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
 
 %(x,y) position of sources
-%Loudspeakers
 xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0.37 1.32 2.18 2.18 2.18];
 yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 1.47 -0.33 0.26 -0.15 -0.55];
 amplitudes = zeros(1,numel(xPosSource));
@@ -190,7 +190,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         fig.Resize = 'off';
         
         
-        %Background image
+        %Background image and steered respone
         [x, y] = meshgrid(linspace(-maxScanningPlaneExtentX,maxScanningPlaneExtentX,size(S,2)), ...
             linspace(-maxScanningPlaneExtentY,maxScanningPlaneExtentY,size(S,1)));
         
@@ -201,10 +201,10 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
 
         hold(ax, 'on')
         
-        %Coloring of sources
         steeredResponsePlot = surf(ax, x, y, S,...
             'EdgeColor','none',...
-            'FaceAlpha',0.5);
+            'FaceAlpha',0.5, ...
+            'PickAbleParts', 'none');
                 
         %Default colormap
         cmap = [0    0.7500    1.0000
@@ -248,8 +248,8 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         
         colormap(cmap);
         
-                %Axes
-        box(ax, 'off')    
+        %Axes
+        box(ax, 'off')
         xlabel(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz'],'fontweight','normal')
         zlabel(ax,'dB');
         
@@ -344,7 +344,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
             yPos = array.yPos;
         end
         
-        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
+        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource(enabledSources), yPosSource(enabledSources), zPosSource(enabledSources), amplitudes(enabledSources));
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         
         changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
@@ -354,8 +354,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
 
     function changeDbOfSource(~, ~, dBVal, sourceClicked, steeredResponsePlot, sourcePlot)
         
-        %Generate a new context menu for the source if it is
-        %enabled/disabled
+        %Generate a new context menu for the source if it is enabled/disabled
         if ischar(dBVal)
             
             cmSourcePower = uicontextmenu;
@@ -432,12 +431,12 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
 %         uimenu('Parent', cmFigure, 'Label', 'Export response', 'Callback',{ @(hObject, eventdata) assignin('base','S',steeredResponsePlot.CData) });
         
         imagePlot.UIContextMenu = cmFigure;
-        steeredResponsePlot.UIContextMenu = cmFigure;
+        ax.UIContextMenu = cmFigure;
         
         
         %Plot sources with context menu (to enable/disable and change power)
         for sourceNumber = 1:numel(amplitudes)
-            sourcePlot(sourceNumber) = scatter3(xPosSource(sourceNumber), yPosSource(sourceNumber), maxDynamicRange, 300, [1 1 1]*0.4);
+            sourcePlot(sourceNumber) = scatter(xPosSource(sourceNumber), yPosSource(sourceNumber), 300, [1 1 1]*0.4);
             
             cmSourcePower = uicontextmenu;
             
