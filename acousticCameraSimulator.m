@@ -41,12 +41,13 @@ scanningAxisY = -maxScanningPlaneExtentY:2*maxScanningPlaneExtentY/(numberOfScan
 %Loudspeakers
 xPosSource = [-2.147 -2.147 -2.147 -1.28 -0.3 0.37 1.32 2.18 2.18 2.18];
 yPosSource = [0.26 -0.15 -0.55 -0.34 1.47 1.47 -0.33 0.26 -0.15 -0.55];
-amplitudes = [0 -100 0 -100 0 -100 0 -100 -100 -100];
+amplitudes = zeros(1,numel(xPosSource));
 zPosSource = distanceToScanningPlane*ones(1,length(xPosSource));
+enabledSources = logical([0 0 0 1 0 0 1 0 0 0]);
 
 
 %Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
+inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource(enabledSources), yPosSource(enabledSources), zPosSource(enabledSources), amplitudes(enabledSources));
 
 %Calculate steered response
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
@@ -121,7 +122,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         
     end
 
-    %Calculate delay-and-sum power at scanning points
+    %Calculate delay-and-sum or minimum variance power at scanning points
     function S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY)
         
         nSamples = numel(inputSignal);
@@ -318,7 +319,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
     function changeFrequencyOfSource(~, ~, selectedFrequency, steeredResponsePlot)
         
         f = selectedFrequency;
-        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
+        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource(enabledSources), yPosSource(enabledSources), zPosSource(enabledSources), amplitudes(enabledSources));
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         
         changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
@@ -359,6 +360,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
             
             cmSourcePower = uicontextmenu;
             if strcmp(dBVal,'enable')
+                enabledSources(sourceClicked) = 1;
                 amplitudes(sourceClicked) = 0;
                 uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceClicked, steeredResponsePlot, sourcePlot });
                 for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
@@ -370,7 +372,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
                     end
                 end
             else
-                amplitudes(sourceClicked) = -100;
+                enabledSources(sourceClicked) = 0;
                 uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceClicked, steeredResponsePlot, sourcePlot });
             end
             sourcePlot(sourceClicked).UIContextMenu = cmSourcePower;
@@ -379,7 +381,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
             amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
         end
         
-        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes);
+        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource(enabledSources), yPosSource(enabledSources), zPosSource(enabledSources), amplitudes(enabledSources));
         S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
         
         changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
@@ -435,12 +437,11 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         
         %Plot sources with context menu (to enable/disable and change power)
         for sourceNumber = 1:numel(amplitudes)
-            sourcePlot(sourceNumber) = scatter3(xPosSource(sourceNumber), yPosSource(sourceNumber),maxDynamicRange, 300, [1 1 1]*0.4);
+            sourcePlot(sourceNumber) = scatter3(xPosSource(sourceNumber), yPosSource(sourceNumber), maxDynamicRange, 300, [1 1 1]*0.4);
             
             cmSourcePower = uicontextmenu;
-            if amplitudes(sourceNumber) == -100
-                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceNumber, steeredResponsePlot, sourcePlot });
-            else
+            
+            if enabledSources(sourceNumber)
                 uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceNumber, steeredResponsePlot, sourcePlot });
                 for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
                     if dBVal > 0
@@ -450,6 +451,8 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
                         uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, steeredResponsePlot });
                     end
                 end
+            else
+                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceNumber, steeredResponsePlot, sourcePlot });
             end
             sourcePlot(sourceNumber).UIContextMenu = cmSourcePower;
         end
