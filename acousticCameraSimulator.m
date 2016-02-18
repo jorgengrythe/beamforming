@@ -194,10 +194,11 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         [x, y] = meshgrid(linspace(-maxScanningPlaneExtentX,maxScanningPlaneExtentX,size(S,2)), ...
             linspace(-maxScanningPlaneExtentY,maxScanningPlaneExtentY,size(S,1)));
         
-        imagePlot = surf(ax, x, y, zeros(size(x)),...
+        imagePlot = surf(ax, x, y, ones(size(x))*0.1,...
             'edgecolor','none',...
             'CData',flipud(imageFile),...
-            'FaceColor','TextureMap');
+            'FaceColor','TextureMap', ...
+            'PickAbleParts', 'none');
 
         hold(ax, 'on')
         
@@ -267,6 +268,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         ax.ZTick = 0:10:maxDynamicRange;
         
         axis(ax,'equal')
+        grid(ax, 'minor')
         daspect(ax,[1 1 maxDynamicRange/2])
         
         %Add dynamic range slider
@@ -352,41 +354,6 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
     end
 
 
-    function changeDbOfSource(~, ~, dBVal, sourceClicked, steeredResponsePlot, sourcePlot)
-        
-        %Generate a new context menu for the source if it is enabled/disabled
-        if ischar(dBVal)
-            
-            cmSourcePower = uicontextmenu;
-            if strcmp(dBVal,'enable')
-                enabledSources(sourceClicked) = 1;
-                amplitudes(sourceClicked) = 0;
-                uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceClicked, steeredResponsePlot, sourcePlot });
-                for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
-                    if dBVal > 0
-                        uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, steeredResponsePlot, sourcePlot  });
-                    else
-                        
-                        uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, steeredResponsePlot, sourcePlot  });
-                    end
-                end
-            else
-                enabledSources(sourceClicked) = 0;
-                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceClicked, steeredResponsePlot, sourcePlot });
-            end
-            sourcePlot(sourceClicked).UIContextMenu = cmSourcePower;
-            
-        else
-            amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
-        end
-        
-        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource(enabledSources), yPosSource(enabledSources), zPosSource(enabledSources), amplitudes(enabledSources));
-        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
-        
-        changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
-    end
-
-
     function addContextMenu(~, ~, imagePlot, amplitudes, xPosSource, yPosSource, steeredResponsePlot)
         
         %Context menu to change frequency, background color and array
@@ -442,7 +409,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
             cmSourcePower = uicontextmenu;
             
             if enabledSources(sourceNumber)
-                uimenu('Parent',cmSourcePower,'Label','disable','Callback', { @changeDbOfSource, 'disable', sourceNumber, steeredResponsePlot, sourcePlot });
+                uimenu('Parent',cmSourcePower,'Label','Off','Callback', { @changeDbOfSource, 'Off', sourceNumber, steeredResponsePlot, sourcePlot });
                 for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
                     if dBVal > 0
                         uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceNumber, steeredResponsePlot });
@@ -452,11 +419,45 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
                     end
                 end
             else
-                uimenu('Parent',cmSourcePower,'Label','enable','Callback', { @changeDbOfSource, 'enable', sourceNumber, steeredResponsePlot, sourcePlot });
+                uimenu('Parent',cmSourcePower,'Label','On','Callback', { @changeDbOfSource, 'On', sourceNumber, steeredResponsePlot, sourcePlot });
             end
             sourcePlot(sourceNumber).UIContextMenu = cmSourcePower;
         end
         
+    end
+
+    function changeDbOfSource(~, ~, dBVal, sourceClicked, steeredResponsePlot, sourcePlot)
+        
+        %Generate a new context menu for the source if it is enabled/disabled
+        if ischar(dBVal)
+            
+            cmSourcePower = uicontextmenu;
+            if strcmp(dBVal,'On')
+                enabledSources(sourceClicked) = 1;
+                amplitudes(sourceClicked) = 0;
+                uimenu('Parent',cmSourcePower,'Label','Off','Callback', { @changeDbOfSource, 'Off', sourceClicked, steeredResponsePlot, sourcePlot });
+                for dBVal = [-10 -5 -4 -3 -2 -1 1 2 3 4 5 10]
+                    if dBVal > 0
+                        uimenu('Parent',cmSourcePower,'Label',['+' num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, steeredResponsePlot, sourcePlot  });
+                    else
+                        
+                        uimenu('Parent',cmSourcePower,'Label',[num2str(dBVal) 'dB'],'Callback', { @changeDbOfSource, dBVal, sourceClicked, steeredResponsePlot, sourcePlot  });
+                    end
+                end
+            else
+                enabledSources(sourceClicked) = 0;
+                uimenu('Parent',cmSourcePower,'Label','On','Callback', { @changeDbOfSource, 'On', sourceClicked, steeredResponsePlot, sourcePlot });
+            end
+            sourcePlot(sourceClicked).UIContextMenu = cmSourcePower;
+            
+        else
+            amplitudes(sourceClicked) = amplitudes(sourceClicked)+dBVal;
+        end
+        
+        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource(enabledSources), yPosSource(enabledSources), zPosSource(enabledSources), amplitudes(enabledSources));
+        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+        
+        changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
     end
     
 
