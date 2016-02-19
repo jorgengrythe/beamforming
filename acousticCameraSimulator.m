@@ -23,17 +23,15 @@ ax = axes('Parent', fig);
 
 
 % Acoustical coverage / listening directions
-maxAcousticalCoveringAngleHorizontal = 42;
-maxAcousticalCoveringAngleVertical = 30;
-distanceToScanningPlane = 3; %[m]
+distanceToScanningPlane = 3;
+maxScanningPlaneExtentX = 5.5;
+maxScanningPlaneExtentY = 3.5;
+
 numberOfScanningPointsX = 40;
 numberOfScanningPointsY = 30;
 
-maxScanningPlaneExtentX = tan(maxAcousticalCoveringAngleHorizontal*pi/180)*distanceToScanningPlane;
-maxScanningPlaneExtentY = tan(maxAcousticalCoveringAngleVertical*pi/180)*distanceToScanningPlane;
-
-scanningAxisX = -maxScanningPlaneExtentX:2*maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX;
-scanningAxisY = -maxScanningPlaneExtentY:2*maxScanningPlaneExtentY/(numberOfScanningPointsY-1):maxScanningPlaneExtentY;
+scanningAxisX = -maxScanningPlaneExtentX/2:maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX/2;
+scanningAxisY = -maxScanningPlaneExtentY/2:maxScanningPlaneExtentY/(numberOfScanningPointsY-1):maxScanningPlaneExtentY/2;
 
 % Get all (x,y) scanning points
 [scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
@@ -53,8 +51,7 @@ inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource(enabledSources), yPo
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
 
 %Plot image and steered response
-plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
-
+plotImage(imageFileGray)
 
 
 
@@ -179,7 +176,7 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
     end
 
     %Plot the image with overlaid steered response power
-    function plotImage(imageFile, S, xPosSource, yPosSource, maxScanningPlaneExtentX, maxScanningPlaneExtentY)
+    function plotImage(backgroundImage)
 
         
         fig.Name = 'Acoustic camera simulation - Nor848A-10';
@@ -191,12 +188,12 @@ plotImage(imageFileGray, S, xPosSource, yPosSource, maxScanningPlaneExtentX, max
         
         
         %Background image and steered respone
-        [x, y] = meshgrid(linspace(-maxScanningPlaneExtentX,maxScanningPlaneExtentX,size(S,2)), ...
-            linspace(-maxScanningPlaneExtentY,maxScanningPlaneExtentY,size(S,1)));
+        [x, y] = meshgrid(linspace(-maxScanningPlaneExtentX/2,maxScanningPlaneExtentX/2,size(S,2)), ...
+            linspace(-maxScanningPlaneExtentY/2,maxScanningPlaneExtentY/2,size(S,1)));
         
         imagePlot = surf(ax, x, y, ones(size(x))*0.1,...
             'edgecolor','none',...
-            'CData',flipud(imageFile),...
+            'CData',flipud(backgroundImage),...
             'FaceColor','TextureMap', ...
             'PickAbleParts', 'none');
 
