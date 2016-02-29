@@ -23,7 +23,7 @@ ax = axes('Parent', fig);
 
 
 % Acoustical coverage / listening directions
-distanceToScanningPlane = 3;
+distanceToScanningPlane = 2;
 maxScanningPlaneExtentX = 5.5;
 maxScanningPlaneExtentY = 3.5;
 
@@ -253,7 +253,6 @@ plotImage(imageFileGray)
         
         ylim(ax, [-maxScanningPlaneExtentY maxScanningPlaneExtentY])
         xlim(ax, [-maxScanningPlaneExtentX maxScanningPlaneExtentX])
-        zlim(ax, [0 maxDynamicRange])
         
         ax.Color = [0 0 0];
         ax.XColor = [1 1 1];
@@ -363,16 +362,16 @@ plotImage(imageFileGray)
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-16', 'Callback',{ @changeArray, 'Nor848A-16', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
+        arrayMenuCAE = uimenu('Parent', topMenuArray, 'Label', 'CAE');
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE S', 'Callback',{ @changeArray, 'CAE_S', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE Bionic S-112', 'Callback',{ @changeArray, 'CAE_bionic_s-112', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE Bionic M-112', 'Callback',{ @changeArray, 'CAE_bionic_m-112', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE Bionic L-112', 'Callback',{ @changeArray, 'CAE_bionic_l-112', steeredResponsePlot });
+        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE L', 'Callback',{ @changeArray, 'CAE_L', steeredResponsePlot });
         arrayMenuGfai = uimenu('Parent', topMenuArray, 'Label', 'GfaI');
         uimenu('Parent', arrayMenuGfai, 'Label', 'Ring-32', 'Callback',{ @changeArray, 'Ring-32', steeredResponsePlot });
         uimenu('Parent', arrayMenuGfai, 'Label', 'Ring-48', 'Callback',{ @changeArray, 'Ring-48', steeredResponsePlot });
         uimenu('Parent', arrayMenuGfai, 'Label', 'Ring-72', 'Callback',{ @changeArray, 'Ring-72', steeredResponsePlot });
-        arrayMenuCAE = uimenu('Parent', topMenuArray, 'Label', 'CAE');
-        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE XS', 'Callback',{ @changeArray, 'CAE_XS', steeredResponsePlot });
-        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE S', 'Callback',{ @changeArray, 'CAE_S', steeredResponsePlot });
-        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE Bionic M', 'Callback',{ @changeArray, 'CAE_bionic_m', steeredResponsePlot });
-        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE L', 'Callback',{ @changeArray, 'CAE_L', steeredResponsePlot });
-        uimenu('Parent', arrayMenuCAE, 'Label', 'CAE XL', 'Callback',{ @changeArray, 'CAE_XL', steeredResponsePlot });
         arrayBK= uimenu('Parent', topMenuArray, 'Label', 'B&K');
         uimenu('Parent', arrayBK, 'Label', 'B&K Wheel', 'Callback',{ @changeArray, 'bk', steeredResponsePlot });
         uimenu('Parent', arrayBK, 'Label', 'B&K Half Wheel', 'Callback',{ @changeArray, 'bk_half', steeredResponsePlot });
