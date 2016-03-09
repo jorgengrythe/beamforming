@@ -18,7 +18,7 @@ phiArrivalAngles = [0 0];
 amplitudes = [0 2]; %difference in dB levels
 
 %Load array
-load ../../data/arrays/S1.mat
+load ../../data/arrays/Nor848A-10.mat
 w = hiResWeights;
 
 inputSignal = 0;

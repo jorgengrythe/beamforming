@@ -34,7 +34,8 @@ thetaScanningAngles = -90:0.1:90;
 lwidth = 1;
 
 % Plot beampattern
-bpFig = figure;clf
+bpFig = figure;
+bpFig.Color = [1 1 1];
 
 %Rectangular plot axis
 axRectangular = subplot(211);
@@ -125,7 +126,7 @@ for ff = f
     plot(axPolar, xx, yy, 'linewidth', lwidth);
 end
 
-legend(axRectangular, 'show','Location','NorthEast')
+legend(axRectangular, 'show','Location','SouthEast')
 
 
 set(bpFig,'position',[500 200 540 600])
