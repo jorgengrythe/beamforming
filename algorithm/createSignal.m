@@ -5,7 +5,7 @@ function signalTotal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, ph
 %in space of the microphones and the arrival angle and amplitude of
 %the individual sources
 %
-%signalTotal = createSignal(x_pos, y_pos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, nSamples, coherence)
+%signalTotal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, nSamples, coherence)
 %
 %IN
 %xPos               - 1xP vector of x-positions [m]
@@ -23,7 +23,7 @@ function signalTotal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, ph
 %signalTotal        - PxN matrix of input signal to individual sensors
 %
 %Created by Jørgen Grythe, Norsonic AS
-%Last updated 2015-09-30
+%Last updated 2016-03-16
 
 if ~exist('coherence', 'var')
     coherence = false;
