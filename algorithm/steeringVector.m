@@ -6,12 +6,12 @@ function [ee, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
 %[ee, kx, ky] = steeringVector(xPos, yPos, f, c, theta, phi)
 %
 %IN
-%xPos	- 1xP vector of x-positions [m]
-%yPos	- 1xP vector of y-positions [m]
-%f      - Wave frequency [Hz]
-%c      - Speed of sound [m/s]
-%theta  - 1xM vector of theta angles [degrees]
-%phi    - 1xN vecor of phi angles [degrees]
+%xPos         - 1xP vector of x-positions [m]
+%yPos         - 1xP vector of y-positions [m]
+%f            - Wave frequency [Hz]
+%c            - Speed of sound [m/s]
+%thetaAngles  - 1xM vector of theta angles [degrees]
+%phiAngles    - 1xN vecor of phi angles [degrees]
 %
 %OUT
 %ee     - MxNxP matrix of steering vectors
@@ -19,7 +19,7 @@ function [ee, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
 %ky 	- phi scanning angles in polar coordinates
 %
 %Created by Jørgen Grythe, Norsonic AS
-%Last updated 2015-10-27
+%Last updated 2016-03-16
 
 if ~isvector(xPos)
     error('X-positions of array elements must be a 1xP vector where P is number of elements')
