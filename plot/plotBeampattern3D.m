@@ -6,15 +6,22 @@ function [] = plotBeampattern3D(xPos, yPos, w)
 %IN
 %xPos                - 1xP vector of x-positions [m]
 %yPos                - 1xP vector of y-positions [m]
-%w                   - 1xP vector of element weights
+%w                   - 1xP vector of element weights (optional)
 %
 %OUT
 %[]                  - The figure plot
 %
-%Created by Jørgen Grythe, Norsonic AS
-%Last updated 2016-01-06
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-05-04
 
 
+%If no weights are given use uniform weighting
+if ~exist('w','var')
+    nMics = size(xPos,2);
+    w = ones(1,nMics)/nMics;
+end
+
+%Default values
 displayStyle = '3D';
 displayTheme = 'Black';
 maxDynamicRange = 50;
@@ -88,8 +95,8 @@ frequencySlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
     'position', [0.55 0.06 0.3 0.04],...
     'value', f,...
-    'min', 0.2e3,...
-    'max', 10e3);
+    'min', 0.1e3,...
+    'max', 20e3);
 addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) calculateBeamPattern(obj, evt, 'frequency') );
 txtF = annotation('textbox', [0.52, 0.115, 0, 0], 'string', 'f');
 

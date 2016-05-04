@@ -12,12 +12,12 @@ function [] = plotBeampatternDynamic(xPos, yPos, w)
 %OUT
 %[]                  - The figure plot
 %
-%Created by Jørgen Grythe, Squarehead Technology
+%Created by J?rgen Grythe, Squarehead Technology
 %Last updated 2016-05-02
 
 %If no weights are given use uniform weighting
-nMics = size(xPos,2);
 if ~exist('w','var')
+    nMics = size(xPos,2);
     w = ones(1,nMics)/nMics;
 end
 
@@ -65,11 +65,8 @@ hold(axResponse, 'on');
 grid(axResponse, 'on')
 axResponse.NextPlot = 'replacechildren';
 
-plot(axArray,xPos, yPos, '.')
-plotBeampattern1D
 
-
-%Add frequency slider
+%Add frequency slider to figure
 frequencySlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
     'position', [0.935 0.11 0.035 0.34],...
@@ -79,7 +76,7 @@ frequencySlider = uicontrol('style', 'slider', ...
 addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value) );
 addlistener(frequencySlider,'ContinuousValueChange',@(obj,evt) title(axResponse, ['Beampattern @ ' sprintf('%0.2f', obj.Value*1e-3) ' kHz'],'fontweight','normal'));
 
-%Add steering angle slider
+%Add steering angle slider to figure
 angleSlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
     'position', [0.13 0.04 0.78 0.025],...
@@ -89,22 +86,29 @@ angleSlider = uicontrol('style', 'slider', ...
 addlistener(angleSlider, 'ContinuousValueChange', @(obj,evt) changeAngleOfSource(obj, evt, obj.Value) );
 
 
+%Plot array geometry and beampattern
+scatter(axArray, xPos, yPos, 20, [0    0.4470    0.7410], 'filled')
+plotBeampattern1D
+
+    %Function used by frequency slider
     function changeFrequencyOfSource(~, ~, selectedFrequency)
         f = selectedFrequency;
         plotBeampattern1D
     end
-
+    
+    %Function used by steering angle slider
     function changeAngleOfSource(~, ~, selectedAngle)
         thetaSteeringAngle = selectedAngle;
         plotBeampattern1D
     end
-
+    
+    %Calculating the beampattern and updating beampattern plot
     function plotBeampattern1D
         beamPattern = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, ...
             phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
         beamPattern = 20*log10(beamPattern);
         
-        plot(axResponse, thetaScanningAngles, beamPattern)
+        plot(axResponse, thetaScanningAngles, beamPattern,'LineWidth',1)
     end
 
 
