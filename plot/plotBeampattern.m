@@ -15,7 +15,7 @@ function [] = plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle, dynRange)
 %OUT
 %[]                  - The figure plot
 %
-%Created by Jørgen Grythe, Norsonic AS
+%Created by J?rgen Grythe, Norsonic AS
 %Last updated 2016-01-04
 
 
@@ -52,7 +52,7 @@ axPolar = subplot(212);
 axPolar.Visible = 'off';
 hold(axPolar, 'on')
 axis(axPolar, 'equal')
-ylim(axPolar,[0 dynRange])
+ylim(axPolar, [0 dynRange])
 xlim(axPolar, [-dynRange dynRange])
 
 

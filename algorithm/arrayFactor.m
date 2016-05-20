@@ -1,4 +1,4 @@
-function [W, thetaScanningAngles, phiScanningAngles, kx, ky] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
+function [W, kx, ky] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
 %arrayFactor - Calculate array factor of 1D or 2D array
 %
 %This matlab function calculates the array factor of a 1D or 2D array based
@@ -21,14 +21,12 @@ function [W, thetaScanningAngles, phiScanningAngles, kx, ky] = arrayFactor(xPos,
 %
 %OUT
 %W                   - calculated array factor
-%thetaScanningAngles - theta scanning angles in radians
-%phiScanningAngles   - phi scanning angles in radians
 %kx                  - theta scanning angles in polar coordinates
 %ky                  - phi scanning angles in polar coordinates
 %
 %
-%Created by Jørgen Grythe, Norsonic AS
-%Last updated 2015-02-15
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-05-20
 
 
 if ~isvector(xPos)
@@ -92,8 +90,8 @@ ky = sin(thetaScanningAngles)'*sin(phiScanningAngles);
 % Apply steering (if present)
 phiSteeringAngle = phiSteeringAngle*pi/180;
 thetaSteeringAngle = thetaSteeringAngle*pi/180;
-kxs = kx - sin(thetaSteeringAngle)'*cos(phiSteeringAngle);
-kys = ky - sin(thetaSteeringAngle)'*sin(phiSteeringAngle);
+kxs = kx - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
+kys = ky - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
 
 %Calculate array factor
 kxx = bsxfun(@times, kxs, reshape(xPos, 1, 1, P));
