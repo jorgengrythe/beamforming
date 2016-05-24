@@ -153,9 +153,9 @@ bpPlot.UIContextMenu = cm;
             end
             
             %Calculating the beampattern
-            [beamPattern, thetaScanningAnglesRadians, phiScanningAnglesRadians] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, ...
+            [beamPattern] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, ...
                 phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
-            [phiScanningAnglesRadians, thetaScanningAnglesRadians] = meshgrid(phiScanningAnglesRadians, thetaScanningAnglesRadians);
+            [phiScanningAnglesRadians, thetaScanningAnglesRadians] = meshgrid(phiScanningAngles*pi/180, thetaScanningAngles*pi/180);
             beamPattern = 20*log10(beamPattern);
             
         else
