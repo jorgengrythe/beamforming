@@ -1,44 +1,49 @@
 function beampattern2D
 
 %Default values
+projection = 'xy';
+coveringAngle = 60;
+sourceAngleX = 30;
+sourceAngleY = 20;
+
+
+dynamicRange = 15;
+maxDynamicRange = 60;
 c = 340;
 fs = 44.1e3;
 f = 5e3;
-dynamicRange = 15;
-maxDynamicRange = 60;
-
 array = load('data/arrays/Nor848A-10.mat');
 xPos = array.xPos;
 yPos = array.yPos;
 w = array.hiResWeights;
-%w = ones(1, numel(xPos));
 
 
 
-% Acoustical coverage / listening directions
-coveringAngle = 45;
 
+
+
+
+
+
+
+
+%(x,y) position of scanning points
 distanceToScanningPlane = 1;
 maxScanningPlaneExtentX = tan(coveringAngle*pi/180)*2;
 maxScanningPlaneExtentY = tan(coveringAngle*pi/180)*2;
 
-numberOfScanningPointsX = 300;
-numberOfScanningPointsY = 300;
+numberOfScanningPointsX = coveringAngle*4;
+numberOfScanningPointsY = coveringAngle*4;
 
 scanningAxisX = -maxScanningPlaneExtentX/2:maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX/2;
 scanningAxisY = maxScanningPlaneExtentY/2:-maxScanningPlaneExtentY/(numberOfScanningPointsY-1):-maxScanningPlaneExtentY/2;
 
-% Get all (x,y) scanning points
 [scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
 
 
-
-
 %(x,y) position of sources
-steeringAngleX = 30;
-steeringAngleY = 20;
-xPosSource = tan(steeringAngleX*pi/180);
-yPosSource = tan(steeringAngleY*pi/180);
+xPosSource = tan(sourceAngleX*pi/180);
+yPosSource = tan(sourceAngleY*pi/180);
 amplitudes = 0;
 
 
@@ -50,19 +55,14 @@ S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, 
 
 %Convert plotting grid to uniformely spaced angles
 [x, y] = meshgrid(scanningAxisX, scanningAxisY);
-x = atan(x)*180/pi;
-y = atan(y)*180/pi;
 
-
-
-
-%Interpolate for higher resolution
-interpolationFactor = 2;
-interpolationMethod = 'spline';
-
-S = interp2(S, interpolationFactor, interpolationMethod);
-x = interp2(x, interpolationFactor, interpolationMethod);
-y = interp2(y, interpolationFactor, interpolationMethod);
+% %Interpolate for higher resolution
+% interpolationFactor = 2;
+% interpolationMethod = 'spline';
+% 
+% S = interp2(S, interpolationFactor, interpolationMethod);
+% x = interp2(x, interpolationFactor, interpolationMethod);
+% y = interp2(y, interpolationFactor, interpolationMethod);
 
 
 
@@ -70,19 +70,33 @@ y = interp2(y, interpolationFactor, interpolationMethod);
 figure(11); clf
 ax = axes;
 
-steeredResponsePlot = surf(ax, x, y, S, ...
+
+tickAngles = -coveringAngle:10:coveringAngle;
+switch projection
+    case 'angles'
+        x = atan(x)*180/pi;
+        y = atan(y)*180/pi;
+        steeredResponsePlot = surf(ax, x, y, S, ...
             'EdgeColor','none',...
             'FaceAlpha',0.6);
-grid on
+        ax.XTick = tickAngles;
+        ax.YTick = tickAngles;
+        axis([-coveringAngle coveringAngle -coveringAngle coveringAngle])
+    case 'xy'
+        steeredResponsePlot = surf(ax, x, y, S, ...
+            'EdgeColor','none',...
+            'FaceAlpha',0.6);
+        coveringAngle = tan(coveringAngle*pi/180);
+        ax.XTick = tan(tickAngles*pi/180);
+        ax.XTickLabel = tickAngles;
+        ax.YTick = tan(tickAngles*pi/180);
+        ax.YTickLabel = tickAngles;
+        axis([-coveringAngle coveringAngle -coveringAngle coveringAngle])
+end
 view(0, 90)
-tickAngles = -75:5:75;
-ax.XTick = tickAngles;
-ax.YTick = tickAngles;
 xlabel(ax, 'Angle in degree');
 
-axis([-coveringAngle coveringAngle -coveringAngle coveringAngle])
 
-%axis equal
 
 %Default colormap
 cmap = [0    0.7500    1.0000
