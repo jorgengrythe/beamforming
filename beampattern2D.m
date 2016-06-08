@@ -3,9 +3,9 @@ function beampattern2D
 %Default values
 c = 340;
 fs = 44.1e3;
-f = 3e3;
-dynamicRange = 48;
-maxDynamicRange = 50;
+f = 5e3;
+dynamicRange = 15;
+maxDynamicRange = 60;
 
 array = load('data/arrays/Nor848A-10.mat');
 xPos = array.xPos;
@@ -14,21 +14,16 @@ w = array.hiResWeights;
 %w = ones(1, numel(xPos));
 
 
-%Istedenfor un
-
-
-
-
 
 % Acoustical coverage / listening directions
-coverageAngle = 45;
+coveringAngle = 45;
 
 distanceToScanningPlane = 1;
-maxScanningPlaneExtentX = tan(coverageAngle*pi/180)*2;
-maxScanningPlaneExtentY = tan(coverageAngle*pi/180)*2;
+maxScanningPlaneExtentX = tan(coveringAngle*pi/180)*2;
+maxScanningPlaneExtentY = tan(coveringAngle*pi/180)*2;
 
-numberOfScanningPointsX = 150;
-numberOfScanningPointsY = 100;
+numberOfScanningPointsX = 300;
+numberOfScanningPointsY = 300;
 
 scanningAxisX = -maxScanningPlaneExtentX/2:maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX/2;
 scanningAxisY = maxScanningPlaneExtentY/2:-maxScanningPlaneExtentY/(numberOfScanningPointsY-1):-maxScanningPlaneExtentY/2;
@@ -40,50 +35,54 @@ scanningAxisY = maxScanningPlaneExtentY/2:-maxScanningPlaneExtentY/(numberOfScan
 
 
 %(x,y) position of sources
-steeringAngleX = 0;
-steeringAngleY = 0;
-xPosSource = tan(steeringAngleX*pi/180)
+steeringAngleX = 30;
+steeringAngleY = 20;
+xPosSource = tan(steeringAngleX*pi/180);
 yPosSource = tan(steeringAngleY*pi/180);
+amplitudes = 0;
 
 
 %Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, distanceToScanningPlane, 0);
+inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, distanceToScanningPlane, amplitudes);
 
 %Calculate steered response
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
 
-% %Interpolate for higher resolution
-% interpolationFactor = 3;
-% interpolationMethod = 'spline';
-% 
-% S = interp2(S, interpolationFactor, interpolationMethod);
-% scanningPointsX = interp2(scanningPointsX, interpolationFactor, interpolationMethod);
-% scanningPointsY = interp2(scanningPointsY, interpolationFactor, interpolationMethod);
+%Convert plotting grid to uniformely spaced angles
+[x, y] = meshgrid(scanningAxisX, scanningAxisY);
+x = atan(x)*180/pi;
+y = atan(y)*180/pi;
+
+
+
+
+%Interpolate for higher resolution
+interpolationFactor = 2;
+interpolationMethod = 'spline';
+
+S = interp2(S, interpolationFactor, interpolationMethod);
+x = interp2(x, interpolationFactor, interpolationMethod);
+y = interp2(y, interpolationFactor, interpolationMethod);
+
+
+
 
 figure(11); clf
 ax = axes;
 
-
-%M? mappe scanningpoints x, y over til vinkler. Med en slags max som er i
-%grader, kanskje normalisere p? et vis eller lignende? At max ?pningsvinkel
-%er max punkter i x, setter max = 60 og regner seg tilbake eller lignende
-
-
-%steeredResponsePlot = imagesc(scanningAxisX, scanningAxisY, S);
-
-steeredResponsePlot = surf(ax, S, ...
+steeredResponsePlot = surf(ax, x, y, S, ...
             'EdgeColor','none',...
             'FaceAlpha',0.6);
-
 grid on
 view(0, 90)
-%tickAngles = [-45 -30 -15 0 15 30 45 60];
-%ax.XTick = sin(tickAngles*pi/180)/sin(60*pi/180)*(maxScanningPlaneExtentX/2);
-%ax.XTickLabel = tickAngles;
+tickAngles = -75:5:75;
+ax.XTick = tickAngles;
+ax.YTick = tickAngles;
 xlabel(ax, 'Angle in degree');
-%ax.YTick = sin(tickAngles*pi/180);
-%ax.YTickLabel = tickAngles;
 
+axis([-coveringAngle coveringAngle -coveringAngle coveringAngle])
+
+%axis equal
 
 %Default colormap
 cmap = [0    0.7500    1.0000
@@ -137,21 +136,9 @@ dynamicRangeSlider = uicontrol('style', 'slider', ...
     'min', log10(range(1)),...
     'max', log10(range(2)));
 addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, 10^obj.Value, steeredResponsePlot));
-        
+
+%Change dynamic range to default
 changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
-
-
-    function changeDynamicRange(~, ~, selectedDynamicRange, steeredResponsePlot)
-        dynamicRange = selectedDynamicRange;
-        steeredResponsePlot.ZData = S+dynamicRange;
-        
-        caxis(ax, [0 dynamicRange]);
-        zlim(ax, [0 dynamicRange+0.1])
-        title(ax, ['Dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
-    end
-
-
-
 
 
     % Convert from cartesian points to polar angles
@@ -253,6 +240,14 @@ changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
         S = abs(S)/max(max(abs(S)));
         S = 10*log10(S);
     end
-
-
+    
+    %Function to be used by dynamic range slider
+    function changeDynamicRange(~, ~, selectedDynamicRange, steeredResponsePlot)
+        dynamicRange = selectedDynamicRange;
+        steeredResponsePlot.ZData = S+dynamicRange;
+        
+        caxis(ax, [0 dynamicRange]);
+        zlim(ax, [0 dynamicRange+0.1])
+        title(ax, ['Dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
+    end
 end

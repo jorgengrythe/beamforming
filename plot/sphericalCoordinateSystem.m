@@ -1,7 +1,7 @@
 %% Help figure to visualise vectors in spherical coordinates
 
-theta = 35;
-phi = 60;
+theta = 26;
+phi = 0;
 
 %Vector coordinates
 lx = sin(theta*pi/180)*cos(phi*pi/180);
@@ -15,7 +15,7 @@ sz(find(sz < 0)) = 0;
 %Set color for lines ++
 cmap = [1 1 1];
 
-h = figure(1);
+h = figure(1); clf
 set(gcf,'color','w')
 hold on
 
@@ -47,7 +47,7 @@ text(lx/10,ly/10,0.2,'\theta','color',cmap)
 text(0.1,0.2,0,'\phi','color',cmap)
 
 %Set colors and view axis ++
-view(30,30)
+view(30, 30)
 set(gca,'color',[0 0 0],'xcolor',cmap,'ycolor',cmap,'zcolor',cmap)
 set(gca,'XTickLabel',[],'YTickLabel',[],'ZTickLabel',[])
 set(gca,'XMinorGrid','on','YMinorGrid','on','ZMinorGrid','on','MinorGridColor',cmap,'MinorGridLineStyle','-')

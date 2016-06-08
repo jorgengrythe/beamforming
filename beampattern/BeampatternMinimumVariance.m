@@ -1,4 +1,3 @@
-clear all
 
 c = 340;
 fs = 44e3;
@@ -17,7 +16,7 @@ phiSteeringAngle = 0;
 amplitudes = [0 0 0];
 
 %Load array
-load ../../data/arrays/ring-48.mat
+%load ../../data/arrays/ring-48.mat
 %w = hiResWeights;
 
 %Create signal hitting the array
