@@ -1,10 +1,10 @@
-function beampattern2D(xPos, yPos, w, f, coveringAngle, sourceAngleX, sourceAngleY, amplitudes)
+function beampattern2D(xPos, yPos, w, f, sourceAngleX, sourceAngleY, coveringAngle)
 
 
 %Default values
 projection = 'angles';
 dynamicRange = 15;
-maxDynamicRange = 30;
+maxDynamicRange = 60;
 c = 340;
 fs = 44.1e3;
 
@@ -37,7 +37,6 @@ scanningAxisY = maxScanningPlaneExtentY/2:-maxScanningPlaneExtentY/(numberOfScan
 
 [scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
 
-
 %(x,y) position of sources
 if ~exist('sourceAngleX', 'var')
     xPosSource = 0;
@@ -61,9 +60,8 @@ inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, distanc
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
 
 %Convert plotting grid to uniformely spaced angles
-%[x, y] = meshgrid(scanningAxisX, scanningAxisY);
-[x, y] = meshgrid(linspace(-maxScanningPlaneExtentX/2,maxScanningPlaneExtentX/2,size(S,2)), ...
-    linspace(-maxScanningPlaneExtentY/2,maxScanningPlaneExtentY/2,size(S,1)));
+[x, y] = meshgrid(linspace(scanningAxisX(1), scanningAxisX(end), size(S,2)), ...
+    linspace(scanningAxisY(1), scanningAxisY(end), size(S,1)));
 
 fig = figure;
 fig.Color = 'w';
@@ -75,7 +73,10 @@ xlabel(ax, 'Angle in degree');
 steeredResponsePlot = surf(ax, S, ...
                     'EdgeColor','none',...
                     'FaceAlpha',0.6);
+
                 
+daspect(ax,[1 1 maxDynamicRange])
+
 %Change projection
 changeProjection(ax, ax, 'angles')
 
