@@ -1,31 +1,16 @@
-function beampattern2D
+function beampattern2D(xPos, yPos, w, f, coveringAngle, sourceAngleX, sourceAngleY, amplitudes)
+
 
 %Default values
-projection = 'xy';
-coveringAngle = 60;
-sourceAngleX = 30;
-sourceAngleY = 20;
-
-
+projection = 'angles';
 dynamicRange = 15;
 maxDynamicRange = 60;
 c = 340;
 fs = 44.1e3;
-f = 5e3;
-array = load('data/arrays/Nor848A-10.mat');
-xPos = array.xPos;
-yPos = array.yPos;
-w = array.hiResWeights;
 
-
-
-
-
-
-
-
-
-
+if ~exist('coveringAngle', 'var')
+    coveringAngle = 45;
+end
 
 %(x,y) position of scanning points
 distanceToScanningPlane = 1;
@@ -42,9 +27,19 @@ scanningAxisY = maxScanningPlaneExtentY/2:-maxScanningPlaneExtentY/(numberOfScan
 
 
 %(x,y) position of sources
-xPosSource = tan(sourceAngleX*pi/180);
-yPosSource = tan(sourceAngleY*pi/180);
-amplitudes = 0;
+if ~exist('sourceAngleX', 'var')
+    xPosSource = 0;
+else
+    xPosSource = tan(sourceAngleX*pi/180);
+end
+if ~exist('sourceAngleY', 'var')
+    yPosSource = 0;
+else
+    yPosSource = tan(sourceAngleY*pi/180);
+end
+if ~exist('amplitudes', 'var')
+    amplitudes = zeros(1, numel(xPos));
+end
 
 
 %Create input signal
@@ -56,45 +51,30 @@ S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, 
 %Convert plotting grid to uniformely spaced angles
 [x, y] = meshgrid(scanningAxisX, scanningAxisY);
 
-% %Interpolate for higher resolution
-% interpolationFactor = 2;
-% interpolationMethod = 'spline';
-% 
-% S = interp2(S, interpolationFactor, interpolationMethod);
-% x = interp2(x, interpolationFactor, interpolationMethod);
-% y = interp2(y, interpolationFactor, interpolationMethod);
+%Interpolate for higher resolution
+interpolationFactor = 2;
+interpolationMethod = 'spline';
+
+S = interp2(S, interpolationFactor, interpolationMethod);
+x = interp2(x, interpolationFactor, interpolationMethod);
+y = interp2(y, interpolationFactor, interpolationMethod);
 
 
 
 
-figure(11); clf
+fig = figure;
+fig.Color = 'w';
+
 ax = axes;
-
-
-tickAngles = -coveringAngle:10:coveringAngle;
-switch projection
-    case 'angles'
-        x = atan(x)*180/pi;
-        y = atan(y)*180/pi;
-        steeredResponsePlot = surf(ax, x, y, S, ...
-            'EdgeColor','none',...
-            'FaceAlpha',0.6);
-        ax.XTick = tickAngles;
-        ax.YTick = tickAngles;
-        axis([-coveringAngle coveringAngle -coveringAngle coveringAngle])
-    case 'xy'
-        steeredResponsePlot = surf(ax, x, y, S, ...
-            'EdgeColor','none',...
-            'FaceAlpha',0.6);
-        coveringAngle = tan(coveringAngle*pi/180);
-        ax.XTick = tan(tickAngles*pi/180);
-        ax.XTickLabel = tickAngles;
-        ax.YTick = tan(tickAngles*pi/180);
-        ax.YTickLabel = tickAngles;
-        axis([-coveringAngle coveringAngle -coveringAngle coveringAngle])
-end
-view(0, 90)
 xlabel(ax, 'Angle in degree');
+
+%Plot the response
+steeredResponsePlot = surf(ax, S, ...
+                    'EdgeColor','none',...
+                    'FaceAlpha',0.6);
+                
+%Change projection
+changeProjection(ax, ax, 'angles')
 
 
 
@@ -145,14 +125,28 @@ colorbar
 range = [0.01 maxDynamicRange];
 dynamicRangeSlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
-    'position', [0.92 0.18 0.03 0.6],...
+    'position', [0.92 0.1 0.03 0.8],...
     'value', log10(dynamicRange),...
     'min', log10(range(1)),...
     'max', log10(range(2)));
 addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, 10^obj.Value, steeredResponsePlot));
 
+%Create context menu (for easy switching between orientation and projection)
+cm = uicontextmenu;
+topMenuProjection = uimenu('Parent',cm,'Label','Projection');
+topMenuOrientation = uimenu('Parent',cm,'Label','Orientation');
+uimenu('Parent',topMenuProjection, 'Label', 'angles', 'Callback',{ @changeProjection, 'angles' });
+uimenu('Parent',topMenuProjection, 'Label', 'xy', 'Callback',{ @changeProjection, 'xy' });
+uimenu('Parent',topMenuOrientation, 'Label', '2D', 'Callback',{ @changeOrientation, '2D' });
+uimenu('Parent',topMenuOrientation, 'Label', '3D', 'Callback',{ @changeOrientation, '3D' });
+ax.UIContextMenu = cm;
+steeredResponsePlot.UIContextMenu = cm;
+
 %Change dynamic range to default
 changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
+
+%Set orientation
+changeOrientation(ax, ax, '2D')
 
 
     % Convert from cartesian points to polar angles
@@ -263,5 +257,58 @@ changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
         caxis(ax, [0 dynamicRange]);
         zlim(ax, [0 dynamicRange+0.1])
         title(ax, ['Dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
+        
+        %Make dynamic ZTicks and show as decreasing dB
+        if dynamicRange >= 30
+            ax.ZTick = fliplr(dynamicRange:-10:0);
+            ax.ZTickLabel = -fliplr(0:10:dynamicRange);
+        elseif dynamicRange >= 15
+            ax.ZTick = fliplr(dynamicRange:-5:0);
+            ax.ZTickLabel = -fliplr(0:5:dynamicRange);
+        else
+            ax.ZTick = fliplr(dynamicRange:-2:0);
+            ax.ZTickLabel = -fliplr(0:2:dynamicRange);
+        end
     end
+
+    %Function to change between 2D and 3D orientation
+    function changeOrientation(~, ~, selectedOrientation)
+        if strcmp(selectedOrientation, '2D')
+            view(ax, 0, 90)
+        else
+            view(ax, 30, 20)
+        end
+    end
+
+    function changeProjection(~, ~, selectedProjection)
+        projection = selectedProjection;
+        tickAngles = -coveringAngle:5:coveringAngle;
+        
+        switch projection
+            case 'angles'
+                xAngles = atan(x)*180/pi;
+                yAngles = atan(y)*180/pi;
+                steeredResponsePlot.XData = xAngles;
+                steeredResponsePlot.YData = yAngles;
+
+                ax.XTick = tickAngles;
+                ax.YTick = tickAngles;
+                
+                axis([-coveringAngle coveringAngle -coveringAngle coveringAngle])
+                
+            case 'xy'
+                steeredResponsePlot.XData = x;
+                steeredResponsePlot.YData = y;
+
+                ax.XTick = tan(tickAngles*pi/180);
+                ax.XTickLabel = tickAngles;
+                ax.YTick = tan(tickAngles*pi/180);
+                ax.YTickLabel = tickAngles;
+                
+                coveringAngleXY = tan(coveringAngle*pi/180);
+                axis([-coveringAngleXY coveringAngleXY -coveringAngleXY coveringAngleXY])
+        end
+    end
+        
+
 end
