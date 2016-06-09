@@ -4,21 +4,33 @@ function beampattern2D(xPos, yPos, w, f, coveringAngle, sourceAngleX, sourceAngl
 %Default values
 projection = 'angles';
 dynamicRange = 15;
-maxDynamicRange = 60;
+maxDynamicRange = 30;
 c = 340;
 fs = 44.1e3;
 
+if ~exist('w', 'var')
+    w = ones(1, numel(xPos));
+end
+
+if ~exist('f', 'var')
+    f = 3e3;
+end
+
 if ~exist('coveringAngle', 'var')
-    coveringAngle = 45;
+    coveringAngleX = 45;
+    coveringAngleY = 45;
+else
+    coveringAngleX = coveringAngle(1);
+    coveringAngleY = coveringAngle(2);
 end
 
 %(x,y) position of scanning points
 distanceToScanningPlane = 1;
-maxScanningPlaneExtentX = tan(coveringAngle*pi/180)*2;
-maxScanningPlaneExtentY = tan(coveringAngle*pi/180)*2;
+maxScanningPlaneExtentX = tan(coveringAngleX*pi/180)*2;
+maxScanningPlaneExtentY = tan(coveringAngleY*pi/180)*2;
 
-numberOfScanningPointsX = coveringAngle*4;
-numberOfScanningPointsY = coveringAngle*4;
+numberOfScanningPointsX = coveringAngleX*3;
+numberOfScanningPointsY = coveringAngleY*3;
 
 scanningAxisX = -maxScanningPlaneExtentX/2:maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX/2;
 scanningAxisY = maxScanningPlaneExtentY/2:-maxScanningPlaneExtentY/(numberOfScanningPointsY-1):-maxScanningPlaneExtentY/2;
@@ -49,18 +61,9 @@ inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, distanc
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
 
 %Convert plotting grid to uniformely spaced angles
-[x, y] = meshgrid(scanningAxisX, scanningAxisY);
-
-%Interpolate for higher resolution
-interpolationFactor = 2;
-interpolationMethod = 'spline';
-
-S = interp2(S, interpolationFactor, interpolationMethod);
-x = interp2(x, interpolationFactor, interpolationMethod);
-y = interp2(y, interpolationFactor, interpolationMethod);
-
-
-
+%[x, y] = meshgrid(scanningAxisX, scanningAxisY);
+[x, y] = meshgrid(linspace(-maxScanningPlaneExtentX/2,maxScanningPlaneExtentX/2,size(S,2)), ...
+    linspace(-maxScanningPlaneExtentY/2,maxScanningPlaneExtentY/2,size(S,1)));
 
 fig = figure;
 fig.Color = 'w';
@@ -126,11 +129,23 @@ range = [0.01 maxDynamicRange];
 dynamicRangeSlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
     'position', [0.92 0.1 0.03 0.8],...
-    'value', log10(dynamicRange),...
-    'min', log10(range(1)),...
-    'max', log10(range(2)));
-addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, 10^obj.Value, steeredResponsePlot));
+    'value', dynamicRange,...
+    'min', range(1),...
+    'max', range(2));
+addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, obj.Value, steeredResponsePlot));
 
+
+%Add frequency slider
+frequencySlider = uicontrol('style', 'slider', ...
+    'Units', 'normalized',...
+    'position', [0.13 0.03 0.78 0.02],...
+    'value', f,...
+    'min', 0.1e3,...
+    'max', 20e3);
+addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value, steeredResponsePlot) );
+
+        
+        
 %Create context menu (for easy switching between orientation and projection)
 cm = uicontextmenu;
 topMenuProjection = uimenu('Parent',cm,'Label','Projection');
@@ -247,6 +262,13 @@ changeOrientation(ax, ax, '2D')
         
         S = abs(S)/max(max(abs(S)));
         S = 10*log10(S);
+        
+        %Interpolate for higher resolution
+        interpolationFactor = 2;
+        interpolationMethod = 'spline';
+        
+        S = interp2(S, interpolationFactor, interpolationMethod);
+        
     end
     
     %Function to be used by dynamic range slider
@@ -256,7 +278,7 @@ changeOrientation(ax, ax, '2D')
         
         caxis(ax, [0 dynamicRange]);
         zlim(ax, [0 dynamicRange+0.1])
-        title(ax, ['Dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
+        title(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz, dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
         
         %Make dynamic ZTicks and show as decreasing dB
         if dynamicRange >= 30
@@ -279,10 +301,12 @@ changeOrientation(ax, ax, '2D')
             view(ax, 30, 20)
         end
     end
-
+    
+    %Function to switch between uniformly spaced angles or xy
     function changeProjection(~, ~, selectedProjection)
         projection = selectedProjection;
-        tickAngles = -coveringAngle:5:coveringAngle;
+        tickAnglesX = -coveringAngleX:5:coveringAngleX;
+        tickAnglesY = -coveringAngleY:5:coveringAngleY;
         
         switch projection
             case 'angles'
@@ -291,24 +315,34 @@ changeOrientation(ax, ax, '2D')
                 steeredResponsePlot.XData = xAngles;
                 steeredResponsePlot.YData = yAngles;
 
-                ax.XTick = tickAngles;
-                ax.YTick = tickAngles;
+                ax.XTick = tickAnglesX;
+                ax.YTick = tickAnglesY;
                 
-                axis([-coveringAngle coveringAngle -coveringAngle coveringAngle])
+                axis equal
+                axis([-coveringAngleX coveringAngleX -coveringAngleY coveringAngleY])
                 
             case 'xy'
                 steeredResponsePlot.XData = x;
                 steeredResponsePlot.YData = y;
 
-                ax.XTick = tan(tickAngles*pi/180);
-                ax.XTickLabel = tickAngles;
-                ax.YTick = tan(tickAngles*pi/180);
-                ax.YTickLabel = tickAngles;
+                ax.XTick = tan(tickAnglesX*pi/180);
+                ax.XTickLabel = tickAnglesX;
+                ax.YTick = tan(tickAnglesY*pi/180);
+                ax.YTickLabel = tickAnglesY;
                 
-                coveringAngleXY = tan(coveringAngle*pi/180);
-                axis([-coveringAngleXY coveringAngleXY -coveringAngleXY coveringAngleXY])
+                axis equal
+                axis([-tan(coveringAngleX*pi/180) tan(coveringAngleX*pi/180) -tan(coveringAngleY*pi/180) tan(coveringAngleY*pi/180)])
         end
     end
+    
+    %Function to change frequency
+    function changeFrequencyOfSource(~, ~, selectedFrequency, steeredResponsePlot)
         
+        f = selectedFrequency;
+        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, distanceToScanningPlane, amplitudes);
+        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+        
+        changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
+    end
 
 end
