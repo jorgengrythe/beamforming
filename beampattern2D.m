@@ -1,4 +1,4 @@
-function beampattern2D(xPos, yPos, w, f, sourceAngleX, sourceAngleY, coveringAngle)
+function beampattern2D(xPos, yPos, w, f, sourceAngles, coveringAngles)
 
 
 %Default values
@@ -8,6 +8,7 @@ maxDynamicRange = 60;
 c = 340;
 fs = 44.1e3;
 
+
 if ~exist('w', 'var')
     w = ones(1, numel(xPos));
 end
@@ -16,12 +17,12 @@ if ~exist('f', 'var')
     f = 3e3;
 end
 
-if ~exist('coveringAngle', 'var')
+if ~exist('coveringAngles', 'var')
     coveringAngleX = 45;
     coveringAngleY = 45;
 else
-    coveringAngleX = coveringAngle(1);
-    coveringAngleY = coveringAngle(2);
+    coveringAngleX = coveringAngles(1);
+    coveringAngleY = coveringAngles(2);
 end
 
 %(x,y) position of scanning points
@@ -37,16 +38,14 @@ scanningAxisY = maxScanningPlaneExtentY/2:-maxScanningPlaneExtentY/(numberOfScan
 
 [scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
 
+
 %(x,y) position of sources
-if ~exist('sourceAngleX', 'var')
+if ~exist('sourceAngles', 'var')
     xPosSource = 0;
-else
-    xPosSource = tan(sourceAngleX*pi/180);
-end
-if ~exist('sourceAngleY', 'var')
     yPosSource = 0;
 else
-    yPosSource = tan(sourceAngleY*pi/180);
+    xPosSource = tan(sourceAngles(1)*pi/180);
+    yPosSource = tan(sourceAngles(2)*pi/180);
 end
 if ~exist('amplitudes', 'var')
     amplitudes = zeros(1, numel(xPos));
@@ -59,26 +58,21 @@ inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, distanc
 %Calculate steered response
 S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
 
-%Convert plotting grid to uniformely spaced angles
-[x, y] = meshgrid(linspace(scanningAxisX(1), scanningAxisX(end), size(S,2)), ...
-    linspace(scanningAxisY(1), scanningAxisY(end), size(S,1)));
 
 fig = figure;
 fig.Color = 'w';
 
 ax = axes;
-xlabel(ax, 'Angle in degree');
 
 %Plot the response
 steeredResponsePlot = surf(ax, S, ...
                     'EdgeColor','none',...
                     'FaceAlpha',0.6);
 
-                
-daspect(ax,[1 1 maxDynamicRange])
+%xlabel(ax, 'Angle in degree');
 
 %Change projection
-changeProjection(ax, ax, 'angles')
+changeProjection(ax, ax, 'xy')
 
 
 
@@ -139,7 +133,7 @@ addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamic
 %Add frequency slider
 frequencySlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
-    'position', [0.13 0.03 0.78 0.02],...
+    'position', [0.13 0.03 0.7 0.02],...
     'value', f,...
     'min', 0.1e3,...
     'max', 20e3);
@@ -264,12 +258,6 @@ changeOrientation(ax, ax, '2D')
         S = abs(S)/max(max(abs(S)));
         S = 10*log10(S);
         
-        %Interpolate for higher resolution
-        interpolationFactor = 2;
-        interpolationMethod = 'spline';
-        
-        S = interp2(S, interpolationFactor, interpolationMethod);
-        
     end
     
     %Function to be used by dynamic range slider
@@ -311,8 +299,8 @@ changeOrientation(ax, ax, '2D')
         
         switch projection
             case 'angles'
-                xAngles = atan(x)*180/pi;
-                yAngles = atan(y)*180/pi;
+                xAngles = atan(scanningPointsX')*180/pi;
+                yAngles = atan(scanningPointsY')*180/pi;
                 steeredResponsePlot.XData = xAngles;
                 steeredResponsePlot.YData = yAngles;
 
@@ -322,9 +310,11 @@ changeOrientation(ax, ax, '2D')
                 axis equal
                 axis([-coveringAngleX coveringAngleX -coveringAngleY coveringAngleY])
                 
+                daspect(ax,[1 1 1])
+                
             case 'xy'
-                steeredResponsePlot.XData = x;
-                steeredResponsePlot.YData = y;
+                steeredResponsePlot.XData = scanningPointsX';
+                steeredResponsePlot.YData = scanningPointsY';
 
                 ax.XTick = tan(tickAnglesX*pi/180);
                 ax.XTickLabel = tickAnglesX;
@@ -333,6 +323,9 @@ changeOrientation(ax, ax, '2D')
                 
                 axis equal
                 axis([-tan(coveringAngleX*pi/180) tan(coveringAngleX*pi/180) -tan(coveringAngleY*pi/180) tan(coveringAngleY*pi/180)])
+                
+                
+                daspect(ax,[1 1 maxDynamicRange])
         end
     end
     
