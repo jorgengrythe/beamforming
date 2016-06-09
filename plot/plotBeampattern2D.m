@@ -1,4 +1,4 @@
-function beampattern2D(xPos, yPos, w, f, sourceAngles, coveringAngles)
+function plotBeampattern2D(xPos, yPos, w, f, sourceAngles, coveringAngles)
 
 
 %Default values
