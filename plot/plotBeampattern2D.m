@@ -212,9 +212,7 @@ changeProjection(ax, ax, projection)
                 beampatternPlot.YData = scanningPointsY;
 
                 ax.XTick = tan(tickAnglesX*pi/180);
-                ax.XTickLabel = tickAnglesX;
                 ax.YTick = tan(tickAnglesY*pi/180);
-                ax.YTickLabel = tickAnglesY;
                 
                 axis equal
                 axis([-tan(coveringAngleX*pi/180) tan(coveringAngleX*pi/180) -tan(coveringAngleY*pi/180) tan(coveringAngleY*pi/180)])
@@ -222,6 +220,9 @@ changeProjection(ax, ax, projection)
                 
                 daspect(ax,[1 1 maxDynamicRange])
         end
+        
+        ax.XTickLabel = tickAnglesX;
+        ax.YTickLabel = tickAnglesY;
     end
     
     %Function to change frequency
