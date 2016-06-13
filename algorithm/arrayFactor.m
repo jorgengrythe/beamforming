@@ -60,7 +60,7 @@ else
     phiScanningAngles = phiScanningAngles*pi/180;
 end
 
-%Scanning angles in theta, phi
+%theta, phi steering angles
 if ~exist('thetaSteeringAngle', 'var')
     thetaSteeringAngle = 0;
 else
@@ -82,25 +82,23 @@ k = 2*pi*f/c;
 %Number of elements/sensors in the array
 P = length(xPos);
 
-
+%Calculating wave vector in spherical coordinates
 if isvector(thetaScanningAngles)
-    %Size of vector containing theta angles
-    M = length(thetaScanningAngles);
     
-    %Size of vector containing phi angles
+    %Size of vectors containing theta and phi angles
+    M = length(thetaScanningAngles);
     N = length(phiScanningAngles);
     
-    %Changing wave vector to spherical coordinates (with steering)
     kx = sin(thetaScanningAngles)'*cos(phiScanningAngles) ...
         - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
     ky = sin(thetaScanningAngles)'*sin(phiScanningAngles) ...
         - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
     
 else
-    %Size of matrix containing theta angles
+    
+    %Size of matrix containing theta and phi angles
     [M, N] = size(thetaScanningAngles);
     
-    %Changing wave vector to spherical coordinates
     kx = sin(thetaScanningAngles).*cos(phiScanningAngles) ...
         - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
     ky = sin(thetaScanningAngles).*sin(phiScanningAngles) ...
