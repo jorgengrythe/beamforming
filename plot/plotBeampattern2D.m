@@ -1,4 +1,4 @@
-function plotBeampattern2D(xPos, yPos, w, steeringAngles, coveringAngles)
+function plotBeampattern2D(xPos, yPos, w, coveringAngles, resolution)
 %plotBeampattern2D - plots the beampattern for various frequencies
 %
 %plotBeampattern2D(xPos, yPos, w, sourceAngles, coveringAngles)
@@ -7,8 +7,8 @@ function plotBeampattern2D(xPos, yPos, w, steeringAngles, coveringAngles)
 %xPos                - 1xP vector of x-positions [m]
 %yPos                - 1xP vector of y-positions [m]
 %w                   - 1xP vector of element weights (optional)
-%sourceAngles        - 1x2 vector of x-angle, y-angle positions (optional)
 %coveringAngles      - 1x2 vector of max x,y scanning angle (optional)
+%resolution          - image resolution in degrees (optional)
 %
 %OUT
 %[]                  - The figure plot
@@ -17,12 +17,12 @@ function plotBeampattern2D(xPos, yPos, w, steeringAngles, coveringAngles)
 %Last updated 2016-06-13
 
 %Default values
-projection = 'xy';
 dynamicRange = 15;
 maxDynamicRange = 60;
 c = 340;
 f = 3e3;
-resolution = 0.5; %in degrees
+xPosSource = 0;
+yPosSource = 0;
 
 if ~exist('w', 'var')
     w = ones(1, numel(xPos));
@@ -36,19 +36,21 @@ else
     coveringAngleY = coveringAngles(2);
 end
 
-%(x,y) position of sources
-if ~exist('steeringAngles', 'var')
-    xPosSource = 0;
-    yPosSource = 0;
+if max(coveringAngleX, coveringAngleY) > 60
+    projection = 'angles';
 else
-    xPosSource = tan(steeringAngles(1)*pi/180);
-    yPosSource = tan(steeringAngles(2)*pi/180);
+    projection = 'xy';
 end
+
+if ~exist('resolution', 'var')
+    resolution = 0.5;
+end
+
 
 %Scanning points and steering angle
 distanceToScanningPlane = 1;
 scanningAxisX = tan((-coveringAngleX:resolution:coveringAngleX)*pi/180);
-scanningAxisY = tan((-coveringAngleX:resolution:coveringAngleY)*pi/180);
+scanningAxisY = tan((-coveringAngleY:resolution:coveringAngleY)*pi/180);
 [scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
 
 [thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
@@ -144,8 +146,6 @@ uimenu('Parent',topMenuProjection, 'Label', 'angles', 'Callback',{ @changeProjec
 uimenu('Parent',topMenuProjection, 'Label', 'xy', 'Callback',{ @changeProjection, 'xy' });
 uimenu('Parent',topMenuOrientation, 'Label', '2D', 'Callback',{ @changeOrientation, '2D' });
 uimenu('Parent',topMenuOrientation, 'Label', '3D', 'Callback',{ @changeOrientation, '3D' });
-ax.UIContextMenu = cm;
-beampatternPlot.UIContextMenu = cm;
 
 %Change dynamic range to default
 changeDynamicRange(ax, ax, dynamicRange, beampatternPlot)
@@ -155,6 +155,11 @@ changeOrientation(ax, ax, '2D')
 
 %Change projection
 changeProjection(ax, ax, projection)
+
+%Enable context menu and button down for axes and plot
+ax.UIContextMenu = cm;
+beampatternPlot.UIContextMenu = cm;
+ax.ButtonDownFcn = {@changeSteeringAngles};
 
     
     %Function to be used by dynamic range slider
@@ -226,17 +231,36 @@ changeProjection(ax, ax, projection)
     end
     
     %Function to change frequency
-    function changeFrequencyOfSource(~, ~, selectedFrequency, steeredResponsePlot)
+    function changeFrequencyOfSource(~, ~, selectedFrequency, beampatternPlot)
         
         f = selectedFrequency;
         W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
         W = 20*log10(W);
         
-        steeredResponsePlot.ZData = W+dynamicRange;
+        beampatternPlot.ZData = W+dynamicRange;
         title(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz, dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
     end
 
-
+    function changeSteeringAngles(obj, eventData)
+        
+        if ~strcmp(obj.Parent.SelectionType,'alt')
+            
+            switch projection
+                case 'xy'
+                    xPosSource = eventData.IntersectionPoint(1);
+                    yPosSource = eventData.IntersectionPoint(2);
+                    
+                case 'angles'
+                    xPosSource = tan(eventData.IntersectionPoint(1)*pi/180);
+                    yPosSource = tan(eventData.IntersectionPoint(2)*pi/180);
+            end
+            
+            [thetaSteeringAngle, phiSteeringAngle] = convertCartesianToPolar(xPosSource, yPosSource, distanceToScanningPlane);        W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+            W = 20*log10(W);
+            
+            beampatternPlot.ZData = W+dynamicRange;
+        end
+    end
 
 
 
