@@ -234,6 +234,7 @@ changeProjection(ax, ax, projection)
         W = 20*log10(W);
         
         steeredResponsePlot.ZData = W+dynamicRange;
+        title(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz, dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
     end
 
 
