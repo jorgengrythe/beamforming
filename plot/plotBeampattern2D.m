@@ -55,8 +55,8 @@ scanningAxisY = tan((-coveringAngleX:resolution:coveringAngleY)*pi/180);
 [thetaSteeringAngle, phiSteeringAngle] = convertCartesianToPolar(xPosSource, yPosSource, distanceToScanningPlane);
 
 %Calculate beampattern
-S = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
-S = 20*log10(S);
+W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+W = 20*log10(W);
 
 
 fig = figure;
@@ -65,7 +65,7 @@ fig.Color = 'w';
 ax = axes;
 
 %Plot the response
-steeredResponsePlot = surf(ax, S, ...
+beampatternPlot = surf(ax, W, ...
                     'EdgeColor','none',...
                     'FaceAlpha',0.6);
 
@@ -122,7 +122,7 @@ dynamicRangeSlider = uicontrol('style', 'slider', ...
     'value', dynamicRange,...
     'min', range(1),...
     'max', range(2));
-addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, obj.Value, steeredResponsePlot));
+addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, obj.Value, beampatternPlot));
 
 
 %Add frequency slider
@@ -132,7 +132,7 @@ frequencySlider = uicontrol('style', 'slider', ...
     'value', f,...
     'min', 0.1e3,...
     'max', 20e3);
-addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value, steeredResponsePlot) );
+addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value, beampatternPlot) );
 
         
         
@@ -145,10 +145,10 @@ uimenu('Parent',topMenuProjection, 'Label', 'xy', 'Callback',{ @changeProjection
 uimenu('Parent',topMenuOrientation, 'Label', '2D', 'Callback',{ @changeOrientation, '2D' });
 uimenu('Parent',topMenuOrientation, 'Label', '3D', 'Callback',{ @changeOrientation, '3D' });
 ax.UIContextMenu = cm;
-steeredResponsePlot.UIContextMenu = cm;
+beampatternPlot.UIContextMenu = cm;
 
 %Change dynamic range to default
-changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
+changeDynamicRange(ax, ax, dynamicRange, beampatternPlot)
 
 %Set orientation
 changeOrientation(ax, ax, '2D')
@@ -160,7 +160,7 @@ changeProjection(ax, ax, projection)
     %Function to be used by dynamic range slider
     function changeDynamicRange(~, ~, selectedDynamicRange, steeredResponsePlot)
         dynamicRange = selectedDynamicRange;
-        steeredResponsePlot.ZData = S+dynamicRange;
+        steeredResponsePlot.ZData = W+dynamicRange;
         
         caxis(ax, [0 dynamicRange]);
         zlim(ax, [0 dynamicRange+0.1])
@@ -198,8 +198,8 @@ changeProjection(ax, ax, projection)
             case 'angles'
                 xAngles = atan(scanningPointsX)*180/pi;
                 yAngles = atan(scanningPointsY)*180/pi;
-                steeredResponsePlot.XData = xAngles;
-                steeredResponsePlot.YData = yAngles;
+                beampatternPlot.XData = xAngles;
+                beampatternPlot.YData = yAngles;
 
                 ax.XTick = tickAnglesX;
                 ax.YTick = tickAnglesY;
@@ -210,8 +210,8 @@ changeProjection(ax, ax, projection)
                 daspect(ax,[1 1 1])
                 
             case 'xy'
-                steeredResponsePlot.XData = scanningPointsX;
-                steeredResponsePlot.YData = scanningPointsY;
+                beampatternPlot.XData = scanningPointsX;
+                beampatternPlot.YData = scanningPointsY;
 
                 ax.XTick = tan(tickAnglesX*pi/180);
                 ax.XTickLabel = tickAnglesX;
@@ -230,10 +230,10 @@ changeProjection(ax, ax, projection)
     function changeFrequencyOfSource(~, ~, selectedFrequency, steeredResponsePlot)
         
         f = selectedFrequency;
-        S = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
-        S = 20*log10(S);
+        W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+        W = 20*log10(W);
         
-        steeredResponsePlot.ZData = S+dynamicRange;
+        steeredResponsePlot.ZData = W+dynamicRange;
     end
 
 
