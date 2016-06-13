@@ -196,10 +196,8 @@ changeProjection(ax, ax, projection)
         
         switch projection
             case 'angles'
-                xAngles = atan(scanningPointsX)*180/pi;
-                yAngles = atan(scanningPointsY)*180/pi;
-                beampatternPlot.XData = xAngles;
-                beampatternPlot.YData = yAngles;
+                beampatternPlot.XData = atan(scanningPointsX)*180/pi;
+                beampatternPlot.YData = atan(scanningPointsY)*180/pi;
 
                 ax.XTick = tickAnglesX;
                 ax.YTick = tickAnglesY;
