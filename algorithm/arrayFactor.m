@@ -26,7 +26,7 @@ function [W, kx, ky] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phi
 %
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-05-20
+%Last updated 2016-06-13
 
 
 if ~isvector(xPos)
@@ -60,12 +60,17 @@ else
     phiScanningAngles = phiScanningAngles*pi/180;
 end
 
+%Scanning angles in theta, phi
 if ~exist('thetaSteeringAngle', 'var')
     thetaSteeringAngle = 0;
+else
+    thetaSteeringAngle = thetaSteeringAngle*pi/180;
 end
 
 if ~exist('phiSteeringAngle', 'var')
     phiSteeringAngle = 0;
+else
+    phiSteeringAngle = phiSteeringAngle*pi/180;
 end
 
 
@@ -77,32 +82,41 @@ k = 2*pi*f/c;
 %Number of elements/sensors in the array
 P = length(xPos);
 
-%Size of vector containing theta angles
-M = length(thetaScanningAngles);
 
-%Size of vector containing phi angles
-N = length(phiScanningAngles);
+if isvector(thetaScanningAngles)
+    %Size of vector containing theta angles
+    M = length(thetaScanningAngles);
+    
+    %Size of vector containing phi angles
+    N = length(phiScanningAngles);
+    
+    %Changing wave vector to spherical coordinates (with steering)
+    kx = sin(thetaScanningAngles)'*cos(phiScanningAngles) ...
+        - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
+    ky = sin(thetaScanningAngles)'*sin(phiScanningAngles) ...
+        - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
+    
+else
+    %Size of matrix containing theta angles
+    [M, N] = size(thetaScanningAngles);
+    
+    %Changing wave vector to spherical coordinates
+    kx = sin(thetaScanningAngles).*cos(phiScanningAngles) ...
+        - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
+    ky = sin(thetaScanningAngles).*sin(phiScanningAngles) ...
+        - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
+end
 
-%Changing wave vector to spherical coordinates
-kx = sin(thetaScanningAngles)'*cos(phiScanningAngles);
-ky = sin(thetaScanningAngles)'*sin(phiScanningAngles);
-
-% Apply steering (if present)
-phiSteeringAngle = phiSteeringAngle*pi/180;
-thetaSteeringAngle = thetaSteeringAngle*pi/180;
-kxs = kx - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
-kys = ky - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
 
 %Calculate array factor
-kxx = bsxfun(@times, kxs, reshape(xPos, 1, 1, P));
-kyy = bsxfun(@times, kys, reshape(yPos, 1, 1, P));
+kxx = bsxfun(@times, kx, reshape(xPos, 1, 1, P));
+kyy = bsxfun(@times, ky, reshape(yPos, 1, 1, P));
 ww = repmat(reshape(w, 1, 1, P), M, N);
 
 W = sum(ww.*exp(1j*k*(kxx+kyy)),3);
 
 %Normalising
 W = abs(W)./max(max(abs(W)));
-
 
 %
 %                 N
