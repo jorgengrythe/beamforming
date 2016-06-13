@@ -1,20 +1,31 @@
-function plotBeampattern2D(xPos, yPos, w, f, sourceAngles, coveringAngles)
-
+function plotBeampattern2D(xPos, yPos, w, steeringAngles, coveringAngles)
+%plotBeampattern2D - plots the beampattern for various frequencies
+%
+%plotBeampattern2D(xPos, yPos, w, sourceAngles, coveringAngles)
+%
+%IN
+%xPos                - 1xP vector of x-positions [m]
+%yPos                - 1xP vector of y-positions [m]
+%w                   - 1xP vector of element weights (optional)
+%sourceAngles        - 1x2 vector of x-angle, y-angle positions (optional)
+%coveringAngles      - 1x2 vector of max x,y scanning angle (optional)
+%
+%OUT
+%[]                  - The figure plot
+%
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-06-13
 
 %Default values
-projection = 'angles';
+projection = 'xy';
 dynamicRange = 15;
 maxDynamicRange = 60;
 c = 340;
-fs = 44.1e3;
-
+f = 3e3;
+resolution = 0.5; %in degrees
 
 if ~exist('w', 'var')
     w = ones(1, numel(xPos));
-end
-
-if ~exist('f', 'var')
-    f = 3e3;
 end
 
 if ~exist('coveringAngles', 'var')
@@ -25,38 +36,27 @@ else
     coveringAngleY = coveringAngles(2);
 end
 
-%(x,y) position of scanning points
-distanceToScanningPlane = 1;
-maxScanningPlaneExtentX = tan(coveringAngleX*pi/180)*2;
-maxScanningPlaneExtentY = tan(coveringAngleY*pi/180)*2;
-
-numberOfScanningPointsX = coveringAngleX*3;
-numberOfScanningPointsY = coveringAngleY*3;
-
-scanningAxisX = -maxScanningPlaneExtentX/2:maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX/2;
-scanningAxisY = maxScanningPlaneExtentY/2:-maxScanningPlaneExtentY/(numberOfScanningPointsY-1):-maxScanningPlaneExtentY/2;
-
-[scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
-
-
 %(x,y) position of sources
-if ~exist('sourceAngles', 'var')
+if ~exist('steeringAngles', 'var')
     xPosSource = 0;
     yPosSource = 0;
 else
-    xPosSource = tan(sourceAngles(1)*pi/180);
-    yPosSource = tan(sourceAngles(2)*pi/180);
-end
-if ~exist('amplitudes', 'var')
-    amplitudes = zeros(1, numel(xPos));
+    xPosSource = tan(steeringAngles(1)*pi/180);
+    yPosSource = tan(steeringAngles(2)*pi/180);
 end
 
+%Scanning points and steering angle
+distanceToScanningPlane = 1;
+scanningAxisX = tan((-coveringAngleX:resolution:coveringAngleX)*pi/180);
+scanningAxisY = tan((-coveringAngleX:resolution:coveringAngleY)*pi/180);
+[scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
 
-%Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, distanceToScanningPlane, amplitudes);
+[thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
+[thetaSteeringAngle, phiSteeringAngle] = convertCartesianToPolar(xPosSource, yPosSource, distanceToScanningPlane);
 
-%Calculate steered response
-S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+%Calculate beampattern
+S = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+S = 20*log10(S);
 
 
 fig = figure;
@@ -68,11 +68,6 @@ ax = axes;
 steeredResponsePlot = surf(ax, S, ...
                     'EdgeColor','none',...
                     'FaceAlpha',0.6);
-
-%xlabel(ax, 'Angle in degree');
-
-%Change projection
-changeProjection(ax, ax, 'xy')
 
 
 
@@ -158,107 +153,9 @@ changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
 %Set orientation
 changeOrientation(ax, ax, '2D')
 
+%Change projection
+changeProjection(ax, ax, projection)
 
-    % Convert from cartesian points to polar angles
-    function [thetaAngles, phiAngles] = convertCartesianToPolar(xPos, yPos, zPos)
-        thetaAngles = atan(sqrt(xPos.^2+yPos.^2)./zPos);
-        phiAngles = atan(yPos./xPos);
-        
-        thetaAngles = thetaAngles*180/pi;
-        phiAngles = phiAngles*180/pi;
-        phiAngles(xPos<0) = phiAngles(xPos<0) + 180;
-        
-        thetaAngles(isnan(thetaAngles)) = 0;
-        phiAngles(isnan(phiAngles)) = 0;
-    end
-
-    %Calculate steering vector for various angles
-    function [e, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
-        
-        %Change from degrees to radians
-        thetaAngles = thetaAngles*pi/180;
-        phiAngles = phiAngles*pi/180;
-        
-        %Wavenumber
-        k = 2*pi*f/c;
-        
-        %Number of elements/sensors in the array
-        P = size(xPos,2);
-        
-        %Changing wave vector to spherical coordinates
-        kx = sin(thetaAngles).*cos(phiAngles);
-        ky = sin(thetaAngles).*sin(phiAngles);
-        
-        %Calculate steering vector/matrix
-        kxx = bsxfun(@times,kx,reshape(xPos,P,1));
-        kyy = bsxfun(@times,ky,reshape(yPos,P,1));
-        e = exp(1j*k*(kxx+kyy));
-        
-    end
-
-    %Generate input signal to all sensors
-    function inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, zPosSource, amplitudes)
-        
-        %Get arrival angles from/to sources
-        [thetaArrivalAngles, phiArrivalAngles] = convertCartesianToPolar(xPosSource, yPosSource, zPosSource);
-        
-        %Number of samples to be used
-        nSamples = 1e3;
-        
-        T = nSamples/fs;
-        t = 0:1/fs:T-1/fs;
-        
-        inputSignal = 0;
-        for source = 1:numel(thetaArrivalAngles)
-            
-            %Calculate direction of arrival for the signal for each sensor
-            doa = steeringVector(xPos, yPos, f, c, thetaArrivalAngles(source), phiArrivalAngles(source));
-            
-            %Generate the signal at each microphone
-            signal = 10^(amplitudes(source)/20)*doa*exp(1j*2*pi*(f*t+randn(1,nSamples)));
-            
-            %Total signal equals sum of individual signals
-            inputSignal = inputSignal + signal;
-        end
-        
-    end
-
-    %Calculate delay-and-sum or minimum variance power at scanning points
-    function S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY)
-        
-        nSamples = numel(inputSignal);
-        
-        %Get scanning angles from scanning points
-        [thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX(:)', scanningPointsY(:)', distanceToScanningPlane);
-        
-
-        
-        %Get steering vector to each point
-        e = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
-        
-        % Multiply input signal by weighting vector
-        inputSignal = diag(w)*inputSignal;
-        
-        %Calculate correlation matrix
-        R = inputSignal*inputSignal';
-        R = R/nSamples;
-
-        
-        %Calculate power as a function of steering vector/scanning angle
-        %with either delay-and-sum or minimum variance algorithm
-        S = zeros(numberOfScanningPointsY,numberOfScanningPointsX);
-        for scanningPointY = 1:numberOfScanningPointsY
-            for scanningPointX = 1:numberOfScanningPointsX
-                ee = e(:,scanningPointX+(scanningPointY-1)*numberOfScanningPointsX);
-                S(scanningPointY,scanningPointX) = ee'*R*ee;
-            end
-        end
-       
-        
-        S = abs(S)/max(max(abs(S)));
-        S = 10*log10(S);
-        
-    end
     
     %Function to be used by dynamic range slider
     function changeDynamicRange(~, ~, selectedDynamicRange, steeredResponsePlot)
@@ -299,8 +196,8 @@ changeOrientation(ax, ax, '2D')
         
         switch projection
             case 'angles'
-                xAngles = atan(scanningPointsX')*180/pi;
-                yAngles = atan(scanningPointsY')*180/pi;
+                xAngles = atan(scanningPointsX)*180/pi;
+                yAngles = atan(scanningPointsY)*180/pi;
                 steeredResponsePlot.XData = xAngles;
                 steeredResponsePlot.YData = yAngles;
 
@@ -313,8 +210,8 @@ changeOrientation(ax, ax, '2D')
                 daspect(ax,[1 1 1])
                 
             case 'xy'
-                steeredResponsePlot.XData = scanningPointsX';
-                steeredResponsePlot.YData = scanningPointsY';
+                steeredResponsePlot.XData = scanningPointsX;
+                steeredResponsePlot.YData = scanningPointsY;
 
                 ax.XTick = tan(tickAnglesX*pi/180);
                 ax.XTickLabel = tickAnglesX;
@@ -333,10 +230,15 @@ changeOrientation(ax, ax, '2D')
     function changeFrequencyOfSource(~, ~, selectedFrequency, steeredResponsePlot)
         
         f = selectedFrequency;
-        inputSignal = createSignal(xPos, yPos, f, c, fs, xPosSource, yPosSource, distanceToScanningPlane, amplitudes);
-        S = calculateSteeredResponse(xPos, yPos, w, inputSignal, f, c, scanningPointsX, scanningPointsY, distanceToScanningPlane, numberOfScanningPointsX, numberOfScanningPointsY);
+        S = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+        S = 20*log10(S);
         
-        changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
+        steeredResponsePlot.ZData = S+dynamicRange;
     end
+
+
+
+
+
 
 end
