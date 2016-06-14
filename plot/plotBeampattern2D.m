@@ -14,7 +14,7 @@ function plotBeampattern2D(xPos, yPos, w, coveringAngles, resolution)
 %[]                  - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-06-13
+%Last updated 2016-06-14
 
 %Default values
 dynamicRange = 15;
@@ -124,7 +124,7 @@ dynamicRangeSlider = uicontrol('style', 'slider', ...
     'value', dynamicRange,...
     'min', range(1),...
     'max', range(2));
-addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, obj.Value, beampatternPlot));
+addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, obj.Value));
 
 
 %Add frequency slider
@@ -134,7 +134,7 @@ frequencySlider = uicontrol('style', 'slider', ...
     'value', f,...
     'min', 0.1e3,...
     'max', 20e3);
-addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value, beampatternPlot) );
+addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value) );
 
         
         
@@ -148,7 +148,7 @@ uimenu('Parent',topMenuOrientation, 'Label', '2D', 'Callback',{ @changeOrientati
 uimenu('Parent',topMenuOrientation, 'Label', '3D', 'Callback',{ @changeOrientation, '3D' });
 
 %Change dynamic range to default
-changeDynamicRange(ax, ax, dynamicRange, beampatternPlot)
+changeDynamicRange(ax, ax, dynamicRange)
 
 %Set orientation
 changeOrientation(ax, ax, '2D')
@@ -160,12 +160,11 @@ changeProjection(ax, ax, projection)
 ax.UIContextMenu = cm;
 beampatternPlot.UIContextMenu = cm;
 ax.ButtonDownFcn = {@changeSteeringAngles};
-
     
     %Function to be used by dynamic range slider
-    function changeDynamicRange(~, ~, selectedDynamicRange, steeredResponsePlot)
+    function changeDynamicRange(~, ~, selectedDynamicRange)
         dynamicRange = selectedDynamicRange;
-        steeredResponsePlot.ZData = W+dynamicRange;
+        beampatternPlot.ZData = W+dynamicRange;
         
         caxis(ax, [0 dynamicRange]);
         zlim(ax, [0 dynamicRange+0.1])
@@ -231,13 +230,11 @@ ax.ButtonDownFcn = {@changeSteeringAngles};
     end
     
     %Function to change frequency
-    function changeFrequencyOfSource(~, ~, selectedFrequency, beampatternPlot)
+    function changeFrequencyOfSource(~, ~, selectedFrequency)
         
         f = selectedFrequency;
-        W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
-        W = 20*log10(W);
+        updateBeampatternPlot()
         
-        beampatternPlot.ZData = W+dynamicRange;
         title(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz, dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
     end
 
@@ -255,14 +252,17 @@ ax.ButtonDownFcn = {@changeSteeringAngles};
                     yPosSource = tan(eventData.IntersectionPoint(2)*pi/180);
             end
             
-            [thetaSteeringAngle, phiSteeringAngle] = convertCartesianToPolar(xPosSource, yPosSource, distanceToScanningPlane);        W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
-            W = 20*log10(W);
-            
-            beampatternPlot.ZData = W+dynamicRange;
+            [thetaSteeringAngle, phiSteeringAngle] = convertCartesianToPolar(xPosSource, yPosSource, distanceToScanningPlane);
+            updateBeampatternPlot()
         end
     end
 
-
+    function updateBeampatternPlot()
+        W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+        W = 20*log10(W);
+        
+        beampatternPlot.ZData = W+dynamicRange;
+    end
 
 
 end
