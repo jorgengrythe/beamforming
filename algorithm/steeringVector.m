@@ -18,7 +18,7 @@ function [ee, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
 %kx 	- theta scanning angles in polar coordinates
 %ky 	- phi scanning angles in polar coordinates
 %
-%Created by Jørgen Grythe, Norsonic AS
+%Created by J?rgen Grythe, Norsonic AS
 %Last updated 2016-03-16
 
 if ~isvector(xPos)
@@ -48,14 +48,21 @@ end
 k = 2*pi*f/c;
 
 %Number of elements/sensors in the array
-P = size(xPos,2);
+P = size(xPos, 2);
 
-%Changing wave vector to spherical coordinates
-kx = sin(thetaAngles)'*cos(phiAngles);
-ky = sin(thetaAngles)'*sin(phiAngles);
+%Calculating wave vector in spherical coordinates
+if isvector(thetaAngles)
+    kx = sin(thetaAngles)'*cos(phiAngles);
+    ky = sin(thetaAngles)'*sin(phiAngles);
+    
+else
+    kx = sin(thetaAngles).*cos(phiAngles);
+    ky = sin(thetaAngles).*sin(phiAngles);
+end
+
 
 %Calculate steering vector/matrix 
-kxx = bsxfun(@times,kx,reshape(xPos,1,1,P));
-kyy = bsxfun(@times,ky,reshape(yPos,1,1,P));
+kxx = bsxfun(@times, kx, reshape(xPos, 1, 1, P));
+kyy = bsxfun(@times, ky, reshape(yPos, 1, 1, P));
 ee = exp(1j*k*(kxx+kyy));
 
