@@ -12,8 +12,8 @@ nSensors = numel(xPos);
 
 %Scanning points
 distanceToScanningPlane = 1.75; %[m]
-numberOfScanningPointsX = 40;
-numberOfScanningPointsY = 30;
+numberOfScanningPointsX = 80;
+numberOfScanningPointsY = 60;
 
 coveringAngleX = 48.5;
 coveringAngleY = 35;

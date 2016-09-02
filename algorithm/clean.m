@@ -1,12 +1,12 @@
 clear all
 c = 340;
 fs = 44.1e3;
-f = 3e3;
+f = 2.7e3;
 maxIterations = 100;
 % Load array
 load data/arrays/Nor848A-4.mat
-w = ones(1, numel(xPos))/numel(xPos);
-%w = hiResWeights;
+%w = ones(1, numel(xPos))/numel(xPos);
+w = hiResWeights;
 nSensors = numel(xPos);
 
 %Scanning points
@@ -49,7 +49,7 @@ e = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
 %Safety factor 0 < loopGain < 1
 loopGain = 0.9;
 
-%Initialise cross spectral matrix
+%Initialise cross spectral matrix (CSM)
 D = inputSignal*inputSignal';
 D(logical(eye(nSensors))) = 0;
 
@@ -71,7 +71,7 @@ for it = 1:maxIterations
     for scanningPointY = 1:numberOfScanningPointsY
         for scanningPointX = 1:numberOfScanningPointsX
             ee = reshape(e(scanningPointY, scanningPointX, :), nSensors, 1);
-            P(scanningPointY, scanningPointX) = (ee'.*w)*D*(w'.*ee);
+            P(scanningPointY, scanningPointX) = (w.*ee')*D*(ee.*w');
         end
     end
     
@@ -109,12 +109,13 @@ for it = 1:maxIterations
 %     for scanningPointY = 1:numberOfScanningPointsY
 %         for scanningPointX = 1:numberOfScanningPointsX
 %             ee = reshape(e(scanningPointY, scanningPointX, :), nSensors, 1);
-%             Pmax(scanningPointY, scanningPointX) = (ee'.*w)*G*(w'.*ee);
+%             Pmax(scanningPointY, scanningPointX) = (w.*ee')*G*(ee.*w');
+% 
 %         end
 %     end
 %     
 %     %Subtract PSF from peak source from dirty map
-%     P = P - maxSourcePower*Pmax;
+%     P = P - maxPeakValue*Pmax;
 %     
 %     if it==1
 %         plotSteeredResponseXY(P, scanningPointsX, scanningPointsY, 3)

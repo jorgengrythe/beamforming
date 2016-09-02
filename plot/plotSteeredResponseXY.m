@@ -1,0 +1,141 @@
+%Plot the image with overlaid steered response power
+function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, figNr)
+
+maxDynamicRange = 60;
+dynamicRange = 6;
+display = '2D';
+
+fig = figure(figNr);clf
+ax = axes('Parent', fig);
+fig.Name = 'Steered response';
+% fig.NumberTitle = 'off';
+% fig.ToolBar = 'none';
+% fig.MenuBar = 'none';
+% fig.Resize = 'off';
+
+
+%Interpolate for higher resolution
+interpolationFactor = 2;
+interpolationMethod = 'spline';
+
+S = interp2(S, interpolationFactor, interpolationMethod);
+scanningPointsX = interp2(scanningPointsX, interpolationFactor, interpolationMethod);
+scanningPointsY = interp2(scanningPointsY, interpolationFactor, interpolationMethod);
+
+S = abs(S)/max(max(abs(S)));
+S = 10*log10(S);
+
+
+steeredResponsePlot = surf(ax, scanningPointsX, scanningPointsY, S,...
+    'EdgeColor','none',...
+    'FaceAlpha',0.5, ...
+    'PickAbleParts', 'none');
+
+%Default colormap
+cmap = [0    0.7500    1.0000
+    0    0.8125    1.0000
+    0    0.8750    1.0000
+    0    0.9375    1.0000
+    0    1.0000    1.0000
+    0.0625    1.0000    0.9375
+    0.1250    1.0000    0.8750
+    0.1875    1.0000    0.8125
+    0.2500    1.0000    0.7500
+    0.3125    1.0000    0.6875
+    0.3750    1.0000    0.6250
+    0.4375    1.0000    0.5625
+    0.5000    1.0000    0.5000
+    0.5625    1.0000    0.4375
+    0.6250    1.0000    0.3750
+    0.6875    1.0000    0.3125
+    0.7500    1.0000    0.2500
+    0.8125    1.0000    0.1875
+    0.8750    1.0000    0.1250
+    0.9375    1.0000    0.0625
+    1.0000    1.0000         0
+    1.0000    0.9375         0
+    1.0000    0.8750         0
+    1.0000    0.8125         0
+    1.0000    0.7500         0
+    1.0000    0.6875         0
+    1.0000    0.6250         0
+    1.0000    0.5625         0
+    1.0000    0.5000         0
+    1.0000    0.4375         0
+    1.0000    0.3750         0
+    1.0000    0.3125         0
+    1.0000    0.2500         0
+    1.0000    0.1875         0
+    1.0000    0.1250         0
+    1.0000    0.0625         0
+    1.0000         0         0
+    0.9375         0         0];
+
+colormap(cmap);
+
+%Axes
+xlabel(ax, 'x [m]')
+ylabel(ax, 'y [m]')
+zlabel(ax, 'dB');
+
+ylim(ax, [min(scanningPointsY(:)) max(scanningPointsY(:))])
+xlim(ax, [min(scanningPointsX(:)) max(scanningPointsX(:))])
+zlim(ax, [0 maxDynamicRange])
+
+fig.Color = [1 1 1];
+ax.Color = [1 1 1];
+ax.XColor = [1 1 1]*0;
+ax.YColor = [1 1 1]*0;
+ax.ZColor = [1 1 1]*0;
+
+%ax.XTick = [];
+%ax.YTick = [];
+ax.ZTick = 0:10:maxDynamicRange;
+
+box(ax, 'off')
+axis(ax, 'equal')
+grid(ax, 'minor')
+daspect(ax,[1 1 maxDynamicRange/2])
+
+%Add dynamic range slider
+range = [0.01 maxDynamicRange];
+dynamicRangeSlider = uicontrol('style', 'slider', ...
+    'Units', 'normalized',...
+    'position', [0.92 0.18 0.03 0.6],...
+    'value', log10(dynamicRange),...
+    'min', log10(range(1)),...
+    'max', log10(range(2)));
+addlistener(dynamicRangeSlider,'ContinuousValueChange',@(obj, evt) changeDynamicRange(obj, evt, 10^obj.Value, steeredResponsePlot));
+
+%Set defaults
+changeView(ax, ax, display)
+changeDynamicRange(ax, ax, dynamicRange, steeredResponsePlot)
+
+%Context menu to change 2D/3D view
+cmFigure = uicontextmenu;
+uimenu('Parent', cmFigure, 'Label', '2D', 'Callback',{ @changeView, '2D' });
+uimenu('Parent', cmFigure, 'Label', '3D', 'Callback',{ @changeView, '3D' });
+ax.UIContextMenu = cmFigure;
+steeredResponsePlot.UIContextMenu = cmFigure;
+
+    function changeDynamicRange(~, ~, selectedDynamicRange, steeredResponsePlot)
+        dynamicRange = selectedDynamicRange;
+        steeredResponsePlot.ZData = S+dynamicRange;
+        
+        caxis(ax, [0 dynamicRange]);
+        zlim(ax, [0 maxDynamicRange])
+        title(ax, ['Dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
+    end
+
+    function changeView(~, ~, selectedView)
+        display = selectedView;
+        if strcmp(display,'2D')
+            view(ax, [0 90])
+        else
+            %ax.CameraPosition = [20, 12, 700];
+            %ax.CameraUpVector = [0 1 0];
+            view(ax, [30 30])
+        end
+    end
+
+end

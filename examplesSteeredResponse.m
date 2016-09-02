@@ -6,8 +6,8 @@ clear all
 
 % Create vectors of x- and y-coordinates of microphone positions 
 xPos = -1:0.2:1; % 1xP vector of x-positions in meters
-yPos = zeros(1,numel(xPos)); % 1xP vector of y-positions in meters
-w = ones(1,numel(xPos))/numel(xPos); % 1xP vector of weightings
+yPos = zeros(1, numel(xPos)); % 1xP vector of y-positions in meters
+w = ones(1, numel(xPos))/numel(xPos); % 1xP vector of weightings
 
 % Define arriving angles and frequency of input signals
 thetaArrivalAngles = [-30 10]; % degrees
@@ -36,14 +36,15 @@ spectrumLog = 10*log10(spectrumNormalized);
 
 %Plot steered response
 figure(1);clf
-plot(thetaScanningAngles,spectrumLog)
+plot(thetaScanningAngles, spectrumLog)
 grid on
 xlim([thetaScanningAngles(1) thetaScanningAngles(end)])
 
 yL = get(gca,'YLim');
 for j=1:numel(thetaArrivalAngles)
-    indx = find(thetaScanningAngles >= thetaArrivalAngles(j),1);
-    line([thetaScanningAngles(indx) thetaScanningAngles(indx)],yL,'LineWidth',1,'Color','r','LineStyle','--');
+    indx = find(thetaScanningAngles >= thetaArrivalAngles(j), 1);
+    line([thetaScanningAngles(indx) thetaScanningAngles(indx)], yL, ...
+        'LineWidth', 1, 'Color', 'r', 'LineStyle', '--');
 end
 xlabel('\theta')
 ylabel('dB')
@@ -67,15 +68,16 @@ spectrumNormalized = abs(S)/max(abs(S));
 spectrumLog = 10*log10(spectrumNormalized);
 
 %Plot steered response
-figure(2);clf
+figure(2)
 plot(thetaScanningAngles,spectrumLog)
 grid on
 xlim([thetaScanningAngles(1) thetaScanningAngles(end)])
 
 yL = get(gca,'YLim');
 for j=1:numel(thetaArrivalAngles)
-    indx = find(thetaScanningAngles >= thetaArrivalAngles(j),1);
-    line([thetaScanningAngles(indx) thetaScanningAngles(indx)],yL,'LineWidth',1,'Color','r','LineStyle','--');
+    indx = find(thetaScanningAngles >= thetaArrivalAngles(j), 1);
+    line([thetaScanningAngles(indx) thetaScanningAngles(indx)], yL, ...
+        'LineWidth', 1, 'Color', 'r', 'LineStyle', '--');
 end
 xlabel('\theta')
 ylabel('dB')
@@ -88,7 +90,7 @@ ylabel('dB')
 nElements = 20;
 radius = 0.6;
 
-[xPos, yPos] = pol2cart((0:1/nElements:1-1/nElements)*2*pi,ones(1,nElements)*radius);
+[xPos, yPos] = pol2cart((0:1/nElements:1-1/nElements)*2*pi, ones(1,nElements)*radius);
 w = ones(1,numel(xPos))/numel(xPos);
 
 % Define arriving angles of input signals
@@ -110,19 +112,19 @@ inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalA
 spectrumNormalized = abs(S)/max(max(abs(S)));
 
 %Plot steered response
-figure(3);clf
+figure(3)
 surf(kx, ky, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
 view(0, 90)
 axis square
 
 %Do some magic to make the figure look nice
-set(gcf,'color','k')
+set(gcf, 'color','k')
 cmap = colormap;
 cmap(1,:) = [1 1 1]*0.2;
 colormap(cmap);
-set(gca,'color',[0 0 0],'xcolor',[1 1 1],'ycolor',[1 1 1],'zcolor',[1 1 1])
-set(gca,'XTickLabel',[],'YTickLabel',[],'ZTickLabel',[])
-set(gca,'XMinorGrid','on','YMinorGrid','on','ZMinorGrid','on','MinorGridColor',[1 1 1],'MinorGridLineStyle','-')
+set(gca, 'color', [0 0 0], 'xcolor', [1 1 1], 'ycolor', [1 1 1], 'zcolor', [1 1 1])
+set(gca, 'XTickLabel', [], 'YTickLabel', [], 'ZTickLabel', [])
+set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridColor', [1 1 1], 'MinorGridLineStyle', '-')
 xlabel('k_x = sin(\theta)cos(\phi)')
 ylabel('k_y = sin(\theta)sin(\phi)')
 
@@ -149,13 +151,13 @@ view(0, 90)
 axis square
 
 %Do some magic to make the figure look nice
-set(gcf,'color','k')
+set(gcf, 'color','k')
 cmap = colormap;
 cmap(1,:) = [1 1 1]*0.2;
 colormap(cmap);
-set(gca,'color',[0 0 0],'xcolor',[1 1 1],'ycolor',[1 1 1],'zcolor',[1 1 1])
-set(gca,'XTickLabel',[],'YTickLabel',[],'ZTickLabel',[])
-set(gca,'XMinorGrid','on','YMinorGrid','on','ZMinorGrid','on','MinorGridColor',[1 1 1],'MinorGridLineStyle','-')
+set(gca, 'color', [0 0 0], 'xcolor', [1 1 1], 'ycolor', [1 1 1], 'zcolor', [1 1 1])
+set(gca, 'XTickLabel', [], 'YTickLabel', [], 'ZTickLabel', [])
+set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridColor', [1 1 1], 'MinorGridLineStyle', '-')
 xlabel('k_x = sin(\theta)cos(\phi)')
 ylabel('k_y = sin(\theta)sin(\phi)')
 
@@ -171,13 +173,13 @@ view(0, 90)
 axis square
 
 %Do some magic to make the figure look nice
-set(gcf,'color','k')
+set(gcf, 'color','k')
 cmap = colormap;
 cmap(1,:) = [1 1 1]*0.2;
 colormap(cmap);
-set(gca,'color',[0 0 0],'xcolor',[1 1 1],'ycolor',[1 1 1],'zcolor',[1 1 1])
-set(gca,'XTickLabel',[],'YTickLabel',[],'ZTickLabel',[])
-set(gca,'XMinorGrid','on','YMinorGrid','on','ZMinorGrid','on','MinorGridColor',[1 1 1],'MinorGridLineStyle','-')
+set(gca, 'color', [0 0 0], 'xcolor', [1 1 1], 'ycolor', [1 1 1], 'zcolor', [1 1 1])
+set(gca, 'XTickLabel', [], 'YTickLabel', [], 'ZTickLabel', [])
+set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridColor', [1 1 1], 'MinorGridLineStyle', '-')
 xlabel('k_x = sin(\theta)cos(\phi)')
 ylabel('k_y = sin(\theta)sin(\phi)')
 
@@ -193,13 +195,13 @@ view(0, 90)
 axis square
 
 %Do some magic to make the figure look nice
-set(gcf,'color','k')
+set(gcf, 'color','k')
 cmap = colormap;
 cmap(1,:) = [1 1 1]*0.2;
 colormap(cmap);
-set(gca,'color',[0 0 0],'xcolor',[1 1 1],'ycolor',[1 1 1],'zcolor',[1 1 1])
-set(gca,'XTickLabel',[],'YTickLabel',[],'ZTickLabel',[])
-set(gca,'XMinorGrid','on','YMinorGrid','on','ZMinorGrid','on','MinorGridColor',[1 1 1],'MinorGridLineStyle','-')
+set(gca, 'color', [0 0 0], 'xcolor', [1 1 1], 'ycolor', [1 1 1], 'zcolor', [1 1 1])
+set(gca, 'XTickLabel', [], 'YTickLabel', [], 'ZTickLabel', [])
+set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridColor', [1 1 1], 'MinorGridLineStyle', '-')
 xlabel('k_x = sin(\theta)cos(\phi)')
 ylabel('k_y = sin(\theta)sin(\phi)')
 
