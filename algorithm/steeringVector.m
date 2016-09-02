@@ -1,9 +1,9 @@
-function [ee, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
+function [ee, u, v] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
 %steeringVector - calculate steering vector of array
 %
 %Calculates the steering vector for different scanning angles
 %
-%[ee, kx, ky] = steeringVector(xPos, yPos, f, c, theta, phi)
+%[ee, u, v] = steeringVector(xPos, yPos, f, c, theta, phi)
 %
 %IN
 %xPos         - 1xP vector of x-positions [m]
@@ -15,11 +15,11 @@ function [ee, kx, ky] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
 %
 %OUT
 %ee     - MxNxP matrix of steering vectors
-%kx 	- theta scanning angles in polar coordinates
-%ky 	- phi scanning angles in polar coordinates
+%u      - u coordinates in UV-space [sin(theta)*cos(phi)]
+%v      - v coordinates in UV space [sin(theta)*sin(phi)]
 %
-%Created by J?rgen Grythe, Norsonic AS
-%Last updated 2016-03-16
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-09-02
 
 if ~isvector(xPos)
     error('X-positions of array elements must be a 1xP vector where P is number of elements')
@@ -52,17 +52,17 @@ P = size(xPos, 2);
 
 %Calculating wave vector in spherical coordinates
 if isvector(thetaAngles)
-    kx = sin(thetaAngles)'*cos(phiAngles);
-    ky = sin(thetaAngles)'*sin(phiAngles);
+    u = sin(thetaAngles)'*cos(phiAngles);
+    v = sin(thetaAngles)'*sin(phiAngles);
     
 else
-    kx = sin(thetaAngles).*cos(phiAngles);
-    ky = sin(thetaAngles).*sin(phiAngles);
+    u = sin(thetaAngles).*cos(phiAngles);
+    v = sin(thetaAngles).*sin(phiAngles);
 end
 
 
 %Calculate steering vector/matrix 
-kxx = bsxfun(@times, kx, reshape(xPos, 1, 1, P));
-kyy = bsxfun(@times, ky, reshape(yPos, 1, 1, P));
-ee = exp(1j*k*(kxx+kyy));
+uu = bsxfun(@times, u, reshape(xPos, 1, 1, P));
+vv = bsxfun(@times, v, reshape(yPos, 1, 1, P));
+ee = exp(1j*k*(uu+vv));
 
