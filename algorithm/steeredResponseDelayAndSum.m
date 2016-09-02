@@ -1,28 +1,30 @@
-function [S, kx, ky] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
+function [S, R, e, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
 %steeredResponseDelayAndSum - calculate delay and sum in frequency domain
 %
 %Calculates the steered response from the delay-and-sum algorithm in the
 %frequency domain based on sensor positions, input signal and scanning angles
 %
-%[S, kx, ky] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
+%[S, R, e, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
 %yPos                - 1xP vector of y-positions [m]
 %w                   - 1xP vector of element weights
-%inputSignal         - PxL vector of inputsignals consisting of L samples
+%inputSignal         - PxL vector of input signals consisting of L samples
 %f                   - Wave frequency [Hz]
 %c                   - Speed of sound [m/s]
-%thetaScanningAngles - 1xN vector of theta scanning angles [degrees]
-%phiScanningAngles   - 1xM vector of phi scanning angles [degrees]
+%thetaScanningAngles - 1xN vector or NxM matrix of theta scanning angles [degrees]
+%phiScanningAngles   - 1xM vector or NxM matrix of of phi scanning angles [degrees]
 %
 %OUT
 %S                   - NxM matrix of delay-and-sum steered response power
-%kx                  - 1xN vector of theta scanning angles in polar coordinates
-%ky                  - 1xM vector of phi scanning angles in polar coordinates
+%R                   - PxP correlation matrix / cross spectral matrix (CSM)
+%e                   - NxMxP steering vector/matrix 
+%u                   - 1xN vector or NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v                   - 1xM vector or NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
 %
-%Created by Jørgen Grythe, Norsonic AS
-%Last updated 2015-10-06
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-09-02
 
 
 if ~exist('thetaScanningAngles', 'var')
@@ -35,11 +37,9 @@ end
 
 nSensors = numel(xPos);
 nSamples = numel(inputSignal);
-nThetaAngles = numel(thetaScanningAngles);
-nPhiAngles = numel(phiScanningAngles);
 
 %Calculate steering vector for all scanning angles
-[e, kx, ky] = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
+[e, u, v] = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
 
 %Multiply input signal by weighting vector
 inputSignal = diag(w)*inputSignal;
@@ -50,10 +50,21 @@ R = R/nSamples;
 
 
 %Calculate power as a function of steering vector/scanning angle (delay-and-sum)
-S = zeros(nThetaAngles,nPhiAngles);
-for angleTheta = 1:nThetaAngles
-    for anglePhi = 1:nPhiAngles
-        ee = reshape(e(angleTheta, anglePhi,:), nSensors, 1);
-        S(angleTheta,anglePhi) = ee'*R*ee;
+%with scanning angles as either vectors or matrices
+if isvector(thetaScanningAngles);
+    numberOfRowsInS = numel(thetaScanningAngles);
+    numberOfColsInS = numel(phiScanningAngles);
+else
+    [numberOfRowsInS, numberOfColsInS] = size(thetaScanningAngles);
+end
+
+S = zeros(numberOfRowsInS, numberOfColsInS);
+for rowScanningPoint = 1:numberOfRowsInS
+    for colScanningPoint = 1:numberOfColsInS
+        ee = reshape(e(rowScanningPoint, colScanningPoint, :), nSensors, 1);
+        S(rowScanningPoint, colScanningPoint) = ee'*R*ee;
     end
 end
+
+
+
