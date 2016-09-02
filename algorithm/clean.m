@@ -6,18 +6,18 @@ maxIterations = 100;
 % Load array
 load data/arrays/Nor848A-4.mat
 w = ones(1, numel(xPos))/numel(xPos);
-w = hiResWeights;
+%w = hiResWeights;
 nSensors = numel(xPos);
 
 %Scanning points
-distanceToScanningPlane = 2; %[m]
+distanceToScanningPlane = 1.75; %[m]
 numberOfScanningPointsX = 40;
 numberOfScanningPointsY = 30;
 
 coveringAngleX = 48.5;
 coveringAngleY = 35;
-maxScanningPlaneExtentX = tan(coveringAngleX*pi/180);
-maxScanningPlaneExtentY = tan(coveringAngleY*pi/180);
+maxScanningPlaneExtentX = tan(coveringAngleX*pi/180)*distanceToScanningPlane;
+maxScanningPlaneExtentY = tan(coveringAngleY*pi/180)*distanceToScanningPlane;
 
 scanningAxisX = -maxScanningPlaneExtentX:2*maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX;
 scanningAxisY = -maxScanningPlaneExtentY:2*maxScanningPlaneExtentY/(numberOfScanningPointsY-1):maxScanningPlaneExtentY;
@@ -75,7 +75,7 @@ for it = 1:maxIterations
         end
     end
     
-    %Plot original delay-and-sum source distribution
+    % Plot original delay-and-sum source distribution (dirty map)
     if it==1
         plotSteeredResponseXY(P, scanningPointsX, scanningPointsY, 1)
         hold on
@@ -85,23 +85,24 @@ for it = 1:maxIterations
     
     % -------------------------------------------------------
     % 2. Find peak value and its position in dirty map
-    [maxSourcePower, maxSourcePowerIndex] = max(P(:));
-    [maxSourcePowerYIndx, maxSourcePowerXIndx] = ind2sub(size(P), maxSourcePowerIndex);
+    [maxPeakValue, maxPeakIndx] = max(P(:));
+    [maxPeakValueYIndx, maxPeakValueXIndx] = ind2sub(size(P), maxPeakIndx);
     
-    maxSourcePowerXLocation = scanningPointsX(maxSourcePowerXIndx);
-    maxSourcePowerYLocation = scanningPointsY(maxSourcePowerYIndx);
+    %maxPeakValueXLocation = scanningPointsX(maxPeakValueXIndx);
+    %maxPeakValueYLocation = scanningPointsY(maxPeakValueYIndx);
     
     
     
     % -------------------------------------------------------
-    % 3. Get the PSF from this location and subtract from dirty map
+    % 3. Calculate the CSM induced by the peak source
     
-    %Steering vector to location of peak source
-    g = squeeze(e(maxSourcePowerYIndx, maxSourcePowerXIndx, :));
+    % Steering vector to location of peak source
+    g = reshape(e(maxPeakValueYIndx, maxPeakValueXIndx, :), nSensors, 1);
     
-    %Cross spectral matrix induced by peak source in that direction (eq. 11)
+    % Cross spectral matrix induced by peak source in that direction (eq. 11)
     G = g*g';
     G(logical(eye(nSensors))) = 0;
+    
     
 %     %PSF from location of peak source
 %     Pmax = zeros(numberOfScanningPointsY,numberOfScanningPointsX);
@@ -112,10 +113,11 @@ for it = 1:maxIterations
 %         end
 %     end
 %     
+%     %Subtract PSF from peak source from dirty map
 %     P = P - maxSourcePower*Pmax;
 %     
 %     if it==1
-%         plotSteeredResponseXY(P, scanningPointsX, scanningPointsY, 2)
+%         plotSteeredResponseXY(P, scanningPointsX, scanningPointsY, 3)
 %         hold on
 %         plot3(xPosSource, yPosSource, ones(1, numel(xPosSource))*60, 'k+')
 %     end
@@ -124,23 +126,22 @@ for it = 1:maxIterations
     % -------------------------------------------------------
     % 4. New updated map with clean beam from peak source location (eq. 13)
     % Clean beam with specified width and max value of 1
-    
     PmaxCleanBeam = zeros(numberOfScanningPointsY, numberOfScanningPointsX);
-    PmaxCleanBeam(maxSourcePowerYIndx, maxSourcePowerXIndx) = 1;
+    PmaxCleanBeam(maxPeakValueYIndx, maxPeakValueXIndx) = 1;
     
     % Calculate the source strength distribution
-    Q = Q + loopGain*maxSourcePower*PmaxCleanBeam;
-    
+    Q = Q + loopGain*maxPeakValue*PmaxCleanBeam;
     
     
     % -------------------------------------------------------
     % 5. Calculate degraded cross spectral matrix (eq. 14)
-    %Basically removing the PSF from that location of the plot
-    D = D - loopGain*maxSourcePower*G;
+    % Basically removing the PSF from that location of the plot
+    D = D - loopGain*maxPeakValue*G;
     D(logical(eye(nSensors))) = 0;
     
     
-    % Check to see if break criterion is fulfilled
+    % Stop the iteration if the degraded CSM contains more information than
+    % in the previous iteration
     sumOfCSM = sum(sum(abs(D)));
     if sumOfCSM > sumOfDegradedCSM
         disp(['Converged after ' num2str(it) ' iterations'])
@@ -152,9 +153,7 @@ for it = 1:maxIterations
     
 end
 
-% 5. Source plot is written as summation of clean beams and rest of source
-% map
-
+% 6. Source plot is written as summation of clean beams and remaining dirty map
 Q = Q + P;
 
 
