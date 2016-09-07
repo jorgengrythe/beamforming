@@ -1,4 +1,4 @@
-function [S, R, e, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
+function [S, u, v, R, e] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
 %steeredResponseDelayAndSum - calculate delay and sum in frequency domain
 %
 %Calculates the steered response from the delay-and-sum algorithm in the
@@ -18,10 +18,10 @@ function [S, R, e, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal
 %
 %OUT
 %S                   - NxM matrix of delay-and-sum steered response power
+%u                   - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v                   - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
 %R                   - PxP correlation matrix / cross spectral matrix (CSM)
 %e                   - NxMxP steering vector/matrix 
-%u                   - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
-%v                   - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
 %Last updated 2016-09-07
