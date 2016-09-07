@@ -18,6 +18,11 @@ function Q = deconvolutionCleanSC(D, e, w)
 
 [numberOfScanningPointsY, numberOfScanningPointsX, nSensors] = size(e);
 
+%Make the weighting vector a column vector instead of row vector
+if isrow(w)
+    w = w';
+end
+
 %Maximum number of iterations to create the clean map
 maxIterations = 100;
 
@@ -43,7 +48,7 @@ for cleanMapIterations = 1:maxIterations
     for scanningPointY = 1:numberOfScanningPointsY
         for scanningPointX = 1:numberOfScanningPointsX
             ee = reshape(e(scanningPointY, scanningPointX, :), nSensors, 1);
-            P(scanningPointY, scanningPointX) = (w.*ee')*D*(ee.*w');
+            P(scanningPointY, scanningPointX) = (w.*ee)'*D*(ee.*w);
         end
     end
     
@@ -70,7 +75,7 @@ for cleanMapIterations = 1:maxIterations
         H = h*h';
         
         H(~logical(eye(nSensors))) = 0;
-        h = 1/sqrt(1+(w.*g')*H*(g.*w'))*(D*(g.*w')/maxPeakValue + H*(g.*w'));
+        h = 1/sqrt(1+(w.*g)'*H*(g.*w))*(D*(g.*w)/maxPeakValue + H*(g.*w));
         if norm(h-hOldValue) < 1e-6
             break;
         end

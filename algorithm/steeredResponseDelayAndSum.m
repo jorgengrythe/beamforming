@@ -36,18 +36,18 @@ if ~exist('phiScanningAngles', 'var')
 end
 
 nSensors = numel(xPos);
-nSamples = numel(inputSignal);
 
 %Calculate steering vector for all scanning angles
 [e, u, v] = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
 
-%Multiply input signal by weighting vector
-inputSignal = diag(w)*inputSignal;
 
 %Calculate correlation matrix
 R = inputSignal*inputSignal';
-R = R/nSamples;
 
+%Make the weighting vector a column vector instead of row vector
+if isrow(w)
+    w = w';
+end
 
 %Calculate power as a function of steering vector/scanning angle (delay-and-sum)
 %with scanning angles as either vectors or matrices
@@ -62,7 +62,7 @@ S = zeros(numberOfRowsInS, numberOfColsInS);
 for rowScanningPoint = 1:numberOfRowsInS
     for colScanningPoint = 1:numberOfColsInS
         ee = reshape(e(rowScanningPoint, colScanningPoint, :), nSensors, 1);
-        S(rowScanningPoint, colScanningPoint) = ee'*R*ee;
+        S(rowScanningPoint, colScanningPoint) = (w.*ee)'*R*(ee.*w);
     end
 end
 
