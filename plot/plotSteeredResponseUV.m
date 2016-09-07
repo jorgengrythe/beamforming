@@ -66,8 +66,8 @@ ax = axes;
 steeredResponsePlot = surf(ax, u, v, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
 
 
-xlabel(ax, 'k_x = sin(\theta)cos(\phi)')
-ylabel(ax, 'k_y = sin(\theta)sin(\phi)')
+xlabel(ax, 'u = sin(\theta)cos(\phi)')
+ylabel(ax, 'v = sin(\theta)sin(\phi)')
 t = title(['Dynamic range: ' sprintf('%0.2f', defaultDisplayValue) ' dB'], 'FontWeight', 'normal');
 axis square
 ax.MinorGridLineStyle = '-';
