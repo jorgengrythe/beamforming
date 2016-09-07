@@ -1,16 +1,16 @@
-function [] = plotSteeredResponse(S, kx, ky, maxDynamicRange, scaleView, displayTheme, displayStyle)
+function [] = plotSteeredResponseUV(S, u, v, maxDynamicRange, scaleView, displayTheme, displayStyle)
 %plotSteeredResponse - plot the steered response with dynamic range slider
 %
 %Plots the steered response with a slider bar in either linear or
 %logarithmic scale and in black or white theme. Right click anywhere in the
 %figure to change between 2D and 3D view and white or black theme.
 %
-%plotSteeredResponse(S, kx, ky, maxDynamicRange, scaleView, displayTheme, displayStyle)
+%plotSteeredResponse(S, u, v, maxDynamicRange, scaleView, displayTheme, displayStyle)
 %
 %IN
 %S               - NxM matrix of delay-and-sum steered response power
-%kx              - 1xN vector of theta scanning angles in polar coordinates
-%ky              - 1xM vector of phi scanning angles in polar coordinates
+%u               - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
 %maxDynamicRange - max dynamic range in decibels in the image (optional)
 %scaleView       - slider scale, use 'lin' or 'log' (optional)
 %displayTheme    - color theme, use 'white' or 'black' (optional)
@@ -19,8 +19,8 @@ function [] = plotSteeredResponse(S, kx, ky, maxDynamicRange, scaleView, display
 %OUT
 %[]              - The figure plot
 %
-%Created by Jørgen Grythe, Norsonic AS
-%Last updated 2015-10-08
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-09-07
 
 if ~exist('displayStyle','var')
     displayStyle = '2D';
@@ -38,6 +38,13 @@ if ~exist('maxDynamicRange','var')
     maxDynamicRange = 60;
 end
 
+%Interpolate for higher resolution
+interpolationFactor = 2;
+interpolationMethod = 'spline';
+
+S = interp2(S, interpolationFactor, interpolationMethod);
+u = interp2(u, interpolationFactor, interpolationMethod);
+v = interp2(v, interpolationFactor, interpolationMethod);
 
 %The input is a power signal, normalize and convert to decibel
 S = abs(S)/max(max(abs(S)));
@@ -54,9 +61,13 @@ end
 %Plot the steered response
 fig = figure;
 ax = axes;
-axPlot = surf(ax, kx, ky, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
-xlabel('k_x = sin(\theta)cos(\phi)')
-ylabel('k_y = sin(\theta)sin(\phi)')
+
+
+steeredResponsePlot = surf(ax, u, v, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
+
+
+xlabel(ax, 'k_x = sin(\theta)cos(\phi)')
+ylabel(ax, 'k_y = sin(\theta)sin(\phi)')
 t = title(['Dynamic range: ' sprintf('%0.2f', defaultDisplayValue) ' dB'], 'FontWeight', 'normal');
 axis square
 ax.MinorGridLineStyle = '-';
@@ -129,7 +140,7 @@ uimenu('Parent',topMenuTheme, 'Label', 'White', 'Callback',{ @setTheme, 'White' 
 
 %Enable the context menu regardless of right clicking on figure, axes or plot
 ax.UIContextMenu = cm;
-axPlot.UIContextMenu = cm;
+steeredResponsePlot.UIContextMenu = cm;
 fig.UIContextMenu = cm;
 
     %Function to change between 2D and 3D in plot

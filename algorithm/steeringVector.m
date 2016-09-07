@@ -1,25 +1,25 @@
-function [ee, u, v] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
+function [e, u, v] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
 %steeringVector - calculate steering vector of array
 %
 %Calculates the steering vector for different scanning angles
 %
-%[ee, u, v] = steeringVector(xPos, yPos, f, c, theta, phi)
+%[e, u, v] = steeringVector(xPos, yPos, f, c, theta, phi)
 %
 %IN
 %xPos         - 1xP vector of x-positions [m]
 %yPos         - 1xP vector of y-positions [m]
 %f            - Wave frequency [Hz]
 %c            - Speed of sound [m/s]
-%thetaAngles  - 1xM vector of theta angles [degrees]
-%phiAngles    - 1xN vecor of phi angles [degrees]
+%thetaAngles  - 1xN vector or NxM matrix of theta scanning angles [degrees]
+%phiAngles    - 1xM vector or NxM matrix of of phi scanning angles [degrees]
 %
 %OUT
-%ee     - MxNxP matrix of steering vectors
-%u      - u coordinates in UV-space [sin(theta)*cos(phi)]
-%v      - v coordinates in UV space [sin(theta)*sin(phi)]
+%ee           - MxNxP matrix of steering vectors
+%u            - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v            - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-02
+%Last updated 2016-09-07
 
 if ~isvector(xPos)
     error('X-positions of array elements must be a 1xP vector where P is number of elements')
@@ -64,5 +64,5 @@ end
 %Calculate steering vector/matrix 
 uu = bsxfun(@times, u, reshape(xPos, 1, 1, P));
 vv = bsxfun(@times, v, reshape(yPos, 1, 1, P));
-ee = exp(1j*k*(uu+vv));
+e = exp(1j*k*(uu+vv));
 

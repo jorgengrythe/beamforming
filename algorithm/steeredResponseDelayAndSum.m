@@ -20,11 +20,11 @@ function [S, R, e, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal
 %S                   - NxM matrix of delay-and-sum steered response power
 %R                   - PxP correlation matrix / cross spectral matrix (CSM)
 %e                   - NxMxP steering vector/matrix 
-%u                   - 1xN vector or NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
-%v                   - 1xM vector or NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
+%u                   - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v                   - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-02
+%Last updated 2016-09-07
 
 
 if ~exist('thetaScanningAngles', 'var')
@@ -60,9 +60,9 @@ end
 
 S = zeros(numberOfRowsInS, numberOfColsInS);
 for rowScanningPoint = 1:numberOfRowsInS
-    for colScanningPoint = 1:numberOfColsInS
-        ee = reshape(e(rowScanningPoint, colScanningPoint, :), nSensors, 1);
-        S(rowScanningPoint, colScanningPoint) = (w.*ee)'*R*(ee.*w);
+    for columnScanningPoint = 1:numberOfColsInS
+        ee = reshape(e(rowScanningPoint, columnScanningPoint, :), nSensors, 1);
+        S(rowScanningPoint, columnScanningPoint) = (w.*ee)'*R*(ee.*w);
     end
 end
 
