@@ -99,13 +99,13 @@ phiArrivalAngles = [10 70 210];
 
 % Define array scanning angles
 thetaScanningAngles = -90:0.5:90;
-phiScanningAngles = 0:180;
+phiScanningAngles = 0:1:180;
 
 % Create input signal
 inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
 
 % Calculate delay-and-sum steered response
-[S, kx, ky] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
+[S, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
    thetaScanningAngles, phiScanningAngles);
 
 %Normalise spectrum
@@ -113,7 +113,7 @@ spectrumNormalized = abs(S)/max(max(abs(S)));
 
 %Plot steered response
 figure(3)
-surf(kx, ky, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
+surf(u, v, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
 view(0, 90)
 axis square
 
@@ -138,7 +138,7 @@ amplitudes = [0 -2 -3];
 inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
 % Calculate delay-and-sum steered response
-[S, kx, ky] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
+[S, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
    thetaScanningAngles, phiScanningAngles);
 
 %Normalise spectrum
@@ -146,7 +146,7 @@ spectrumNormalized = abs(S)/max(max(abs(S)));
 
 % Plot the steered response
 figure(4);clf
-surf(kx, ky, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
+surf(u, v, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
 view(0, 90)
 axis square
 
@@ -168,7 +168,7 @@ spectrumLog = 10*log10(spectrumNormalized);
 
 % Plot the steered response
 figure(5);clf
-surf(kx, ky, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
+surf(u, v, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
 view(0, 90)
 axis square
 
@@ -186,11 +186,11 @@ ylabel('k_y = sin(\theta)sin(\phi)')
 %% 2D-array case, different source strengths, spectrum in logarithmic scale with dynamic range 
 
 %Dynamic range in decibels
-dynamicRange = 5;
+dynamicRange = 6;
 
 % Plot the steered response
 figure(6);clf
-surf(kx, ky, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
+surf(u, v, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
 view(0, 90)
 axis square
 
@@ -213,7 +213,16 @@ caxis([-dynamicRange 0])
 %Max range in decibels
 maxDynamicRange = 30;
 
+%The function interpolates the result, so can use fewer scanning
+%angles/points
+thetaScanningAngles = -90:2:90;
+phiScanningAngles = 0:2:180;
+
+% Calculate delay-and-sum steered response
+[S, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
+   thetaScanningAngles, phiScanningAngles);
+
 %Plot the steered response, no need to normalise the
 %spectrum or converting to decibel before input
-plotSteeredResponse(S, kx, ky, maxDynamicRange, 'lin', 'black', '3D')
+plotSteeredResponseUV(S, u, v, maxDynamicRange, 'lin', 'black', '2D')
 
