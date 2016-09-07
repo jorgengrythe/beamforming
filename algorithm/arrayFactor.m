@@ -1,4 +1,4 @@
-function [W, kx, ky] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
+function [W, u, v] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
 %arrayFactor - Calculate array factor of 1D or 2D array
 %
 %This matlab function calculates the array factor of a 1D or 2D array based
@@ -6,7 +6,7 @@ function [W, kx, ky] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phi
 %each sensor. If no angle is given as input, the scanning angle is theta
 %from -90 to 90, and phi from 0 to 360 degrees with 1 degree resolution
 %
-%[W, thetaScanningAngles, phiScanningAngles, kx, ky] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
+%[W, u, v] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
 %
 %IN
 %xPos                - 1xP vector of x-positions
@@ -21,12 +21,12 @@ function [W, kx, ky] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phi
 %
 %OUT
 %W                   - calculated array factor
-%kx                  - theta scanning angles in polar coordinates
-%ky                  - phi scanning angles in polar coordinates
+%u                   - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v                   - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
 %
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-06-13
+%Last updated 2016-09-07
 
 
 if ~isvector(xPos)
@@ -89,9 +89,9 @@ if isvector(thetaScanningAngles)
     M = length(thetaScanningAngles);
     N = length(phiScanningAngles);
     
-    kx = sin(thetaScanningAngles)'*cos(phiScanningAngles) ...
+    u = sin(thetaScanningAngles)'*cos(phiScanningAngles) ...
         - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
-    ky = sin(thetaScanningAngles)'*sin(phiScanningAngles) ...
+    v = sin(thetaScanningAngles)'*sin(phiScanningAngles) ...
         - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
     
 else
@@ -99,47 +99,47 @@ else
     %Size of matrix containing theta and phi angles
     [M, N] = size(thetaScanningAngles);
     
-    kx = sin(thetaScanningAngles).*cos(phiScanningAngles) ...
+    u = sin(thetaScanningAngles).*cos(phiScanningAngles) ...
         - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
-    ky = sin(thetaScanningAngles).*sin(phiScanningAngles) ...
+    v = sin(thetaScanningAngles).*sin(phiScanningAngles) ...
         - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
 end
 
 
 %Calculate array factor
-kxx = bsxfun(@times, kx, reshape(xPos, 1, 1, P));
-kyy = bsxfun(@times, ky, reshape(yPos, 1, 1, P));
+uu = bsxfun(@times, u, reshape(xPos, 1, 1, P));
+vv = bsxfun(@times, v, reshape(yPos, 1, 1, P));
 ww = repmat(reshape(w, 1, 1, P), M, N);
 
-W = sum(ww.*exp(1j*k*(kxx+kyy)),3);
+W = sum(ww.*exp(1j*k*(uu+vv)), 3);
 
 %Normalising
 W = abs(W)./max(max(abs(W)));
 
 %
 %                 N
-%W(theta, phi) = sum [ w_n * exp{jk(k_x*x_n + k_y*y_n)} ]
+%W(theta, phi) = sum [ w_n * exp{jk(u*x_n + v*y_n)} ]
 %                n=1
 %
-%k_x = 
+%u = 
 %|sin(theta_0)*cos(phi_0) sin(theta_0)*cos(phi_1) .. sin(theta_0)*cos(phi_N)|
 %|sin(theta_1)*cos(phi_0) sin(theta_1)*cos(phi_1) .. sin(theta_1)*cos(phi_N)|
 %|    .                           .                         .               |
 %|sin(theta_M)*cos(phi_0) sin(theta_M)*cos(phi_1) .. sin(theta_M)*cos(phi_N)|
 
-%k_y = 
+%v = 
 %|sin(theta_0)*sin(phi_0) sin(theta_0)*sin(phi_1) .. sin(theta_0)*sin(phi_N)|
 %|sin(theta_1)*sin(phi_0) sin(theta_1)*sin(phi_1) .. sin(theta_1)*sin(phi_N)|
 %|    .                           .                         .               |
 %|sin(theta_M)*sin(phi_0) sin(theta_M)*sin(phi_1) .. sin(theta_M)*sin(phi_N)|
 
-%k_xx = 
+%uu = 
 %   --------
 %  /       /|
-% / x_pos / |
+% / xPos  / |
 %---------  | M (length theta)
 %|       |  |
-%|  k_x  |  /
+%|   u   |  /
 %|       | / P (# elements)
 %---------/
 %   N (length phi)
