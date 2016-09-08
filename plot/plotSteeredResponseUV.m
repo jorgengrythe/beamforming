@@ -1,5 +1,5 @@
 function [] = plotSteeredResponseUV(S, u, v, maxDynamicRange, scaleView, displayTheme, displayStyle)
-%plotSteeredResponse - plot the steered response with dynamic range slider
+%plotSteeredResponseUV - plot the steered response in UV-space
 %
 %Plots the steered response with a slider bar in either linear or
 %logarithmic scale and in black or white theme. Right click anywhere in the

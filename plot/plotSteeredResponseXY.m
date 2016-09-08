@@ -1,21 +1,38 @@
-%Plot the image with overlaid steered response power
-function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, figNr)
+function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
+%plotSteeredResponseXY - plot the steered response in cartesian
+%
+%Plots the steered response with a slider bar in either linear or
+%logarithmic scale and in black or white theme. Right click anywhere in the
+%figure to change between 2D and 3D view and white or black theme.
+%
+%plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
+%
+%IN
+%S                   - NxM matrix of delay-and-sum steered response power
+%u                   - NxM matrix of x-coordinates  
+%v                   - NxM matrix of y-coordinates
+%interpolationFactor - 1x1 int to decide how much to interpolate the final image
+%
+%OUT
+%[]                  - The figure plot
+%
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-09-08
+
+if ~exist('interpolationFactor', 'var')
+    interpolationFactor = 2;
+end
 
 maxDynamicRange = 60;
 dynamicRange = 6;
 display = '2D';
 
-fig = figure(figNr);clf
+fig = figure;
 ax = axes('Parent', fig);
 fig.Name = 'Steered response';
-% fig.NumberTitle = 'off';
-% fig.ToolBar = 'none';
-% fig.MenuBar = 'none';
-% fig.Resize = 'off';
 
 
 %Interpolate for higher resolution
-interpolationFactor = 2;
 interpolationMethod = 'spline';
 
 S = interp2(S, interpolationFactor, interpolationMethod);

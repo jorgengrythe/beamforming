@@ -226,3 +226,39 @@ phiScanningAngles = 0:2:180;
 %spectrum or converting to decibel before input
 plotSteeredResponseUV(S, u, v, maxDynamicRange, 'lin', 'black', '2D')
 
+
+
+%% 2D-array case, scanning plane in cartesian coordinates
+
+%Define scanning grid
+distanceToScanningPlane = 1.8; %[m]
+maxScanningPlaneExtentX = 2;    %[m];
+maxScanningPlaneExtentY = 1.5;  %[m];
+numberOfScanningPointsX = 40;
+numberOfScanningPointsY = 30;
+
+%Define sources
+xPosSource = [-1 0 1];
+yPosSource = [-0.5 0.75 0.25];
+zPosSource = ones(1, numel(xPosSource))*distanceToScanningPlane;
+amplitudes = [-3 -2 0];
+
+%Create scanning points
+scanningAxisX = -maxScanningPlaneExtentX:2*maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX;
+scanningAxisY = -maxScanningPlaneExtentY:2*maxScanningPlaneExtentY/(numberOfScanningPointsY-1):maxScanningPlaneExtentY;
+[scanningPointsX, scanningPointsY] = meshgrid(scanningAxisX, scanningAxisY);
+
+%Get angles to scanning points and source positions
+[thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
+[thetaArrivalAngles, phiArrivalAngles] = convertCartesianToPolar(xPosSource, yPosSource, zPosSource);
+
+% Create input signal
+inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+
+% Calculate delay-and-sum steered response
+S = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
+   thetaScanningAngles, phiScanningAngles);
+
+%Plot the steered response in cartesian coordinate system rather than UV
+interpolationFactor = 2; %interpolate for higher resolution, 0 equals original
+plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)

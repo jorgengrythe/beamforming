@@ -4,7 +4,7 @@ function [S, u, v, R, e] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal
 %Calculates the steered response from the delay-and-sum algorithm in the
 %frequency domain based on sensor positions, input signal and scanning angles
 %
-%[S, R, e, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
+%[S, u, v, R, e] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
