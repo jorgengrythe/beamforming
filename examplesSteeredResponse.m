@@ -83,7 +83,7 @@ xlabel('\theta')
 ylabel('dB')
 
 
-%% 2D-array case, spectrum in linear scale
+%% 2D-array case, spectrum in linear scale in UV-space
 
 % Position of sensors and weighting of 2D array
 % Create circular array
@@ -128,7 +128,7 @@ set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridC
 xlabel('k_x = sin(\theta)cos(\phi)')
 ylabel('k_y = sin(\theta)sin(\phi)')
 
-%% 2D-array case, different source strengths, spectrum in linear scale
+%% 2D-array case, different source strengths, spectrum in linear scale in UV-space
 
 %Relative amplitude difference between sources in decibel,
 %could also have written amplitudes = [3 1 0]
@@ -161,7 +161,7 @@ set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridC
 xlabel('k_x = sin(\theta)cos(\phi)')
 ylabel('k_y = sin(\theta)sin(\phi)')
 
-%% 2D-array case, different source strengths, spectrum in logarithmic scale
+%% 2D-array case, different source strengths, spectrum in logarithmic scale in UV-space
 
 %Convert the delay-and-sum steered response to decibel
 spectrumLog = 10*log10(spectrumNormalized);
@@ -183,7 +183,7 @@ set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridC
 xlabel('k_x = sin(\theta)cos(\phi)')
 ylabel('k_y = sin(\theta)sin(\phi)')
 
-%% 2D-array case, different source strengths, spectrum in logarithmic scale with dynamic range 
+%% 2D-array case, different source strengths, spectrum in logarithmic scale with dynamic range in UV-space
 
 %Dynamic range in decibels
 dynamicRange = 6;
@@ -208,7 +208,7 @@ ylabel('k_y = sin(\theta)sin(\phi)')
 %Set the dynamic range
 caxis([-dynamicRange 0])
 
-%% 2D-array case, different source strengths, use plotSteeredResponse function
+%% 2D-array case, different source strengths, use plotSteeredResponseUV function
 
 %Max range in decibels
 maxDynamicRange = 30;
@@ -224,7 +224,7 @@ phiScanningAngles = 0:2:180;
 
 %Plot the steered response, no need to normalise the
 %spectrum or converting to decibel before input
-plotSteeredResponseUV(S, u, v, maxDynamicRange, 'lin', 'black', '2D')
+plotSteeredResponseUV(S, u, v, maxDynamicRange, 'log', 'black', '2D')
 
 
 

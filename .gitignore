@@ -2,4 +2,7 @@
 .bashhrc
 .bashhrc_profile
 data/arrays
+data/fig
+acousticCameraSimulatorC*
+acousticCameraSimulatorM*
 *.asv

@@ -1,9 +1,9 @@
 function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
-%plotSteeredResponseXY - plot the steered response in cartesian
+%plotSteeredResponseXY - plot the steered response in cartesian coordinate system
 %
-%Plots the steered response with a slider bar in either linear or
-%logarithmic scale and in black or white theme. Right click anywhere in the
-%figure to change between 2D and 3D view and white or black theme.
+%Plots the steered response with a slider bar in logarithmic scale and in
+%white theme. Right click anywhere in the figure to change between 2D and
+%3D view
 %
 %plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
 %
@@ -11,7 +11,7 @@ function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolatio
 %S                   - NxM matrix of delay-and-sum steered response power
 %u                   - NxM matrix of x-coordinates  
 %v                   - NxM matrix of y-coordinates
-%interpolationFactor - 1x1 int to decide how much to interpolate the final image
+%interpolationFactor - 1x1 int to decide how much to interpolate the final image (optional)
 %
 %OUT
 %[]                  - The figure plot
