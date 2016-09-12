@@ -105,7 +105,7 @@ phiScanningAngles = 0:1:180;
 inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
 
 % Calculate delay-and-sum steered response
-[S, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
+[S, u, v, R] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c,...
    thetaScanningAngles, phiScanningAngles);
 
 %Normalise spectrum
