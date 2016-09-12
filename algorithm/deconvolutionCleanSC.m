@@ -1,19 +1,21 @@
-function Q = deconvolutionCleanSC(D, e, w)
+function Q = deconvolutionCleanSC(D, e, w, loopGain, maxIterations)
 %deconvolutionCleanSC - deconvolves the intensity plot with the clean-sc algorithm
 %as implemented in "CLEAN based on spatial source coherence", Pieter Sijtsma, 2007
 %
-%Q = deconvolutionCleanSC(D, e, w)
+%Q = deconvolutionCleanSC(D, e, w, loopGain)
 %
 %IN
-%D - PxP cross spectral matrix (CSM)
-%e - NxMxP steering vector/matrix 
-%w - 1xP weighting vector
+%D             - PxP cross spectral matrix (CSM)
+%e             - NxMxP steering vector/matrix 
+%w             - 1xP weighting vector
+%loopGain      - 1x1 safety factor, 0 < loopGain < 1
+%maxIterations - Maximum number of iterations to create the clean map
 %
 %OUT
 %Q - NxM devonvolved intensity plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-05
+%Last updated 2016-09-12
 
 
 [numberOfScanningPointsY, numberOfScanningPointsX, nSensors] = size(e);
@@ -24,10 +26,18 @@ if isrow(w)
 end
 
 %Maximum number of iterations to create the clean map
-maxIterations = 100;
+if ~exist('maxIterations', 'var')
+    maxIterations = 100;
+end
 
-%Safety factor 0 < loopGain < 1
-loopGain = 0.9;
+%Safety factor that determines how much to remove that correlates with
+%strongest source, 0 removes nothing, 1 removes all
+if ~exist('loopGain', 'var')
+    loopGain = 0.9;
+end
+
+%Normalization factor to get correct dB scaling
+normFactor = 1/(nSensors^2-nSensors);
 
 %Initialise trimmed cross spectral matrix (CSM) by setting the diagonal to zero
 D(logical(eye(nSensors))) = 0;
@@ -48,7 +58,7 @@ for cleanMapIterations = 1:maxIterations
     for scanningPointY = 1:numberOfScanningPointsY
         for scanningPointX = 1:numberOfScanningPointsX
             ee = reshape(e(scanningPointY, scanningPointX, :), nSensors, 1);
-            P(scanningPointY, scanningPointX) = (w.*ee)'*D*(ee.*w);
+            P(scanningPointY, scanningPointX) = normFactor*(w.*ee)'*D*(ee.*w);
         end
     end
     
@@ -66,6 +76,7 @@ for cleanMapIterations = 1:maxIterations
     
     % Steering vector to location of peak source
     g = reshape(e(maxPeakValueYIndx, maxPeakValueXIndx, :), nSensors, 1);
+    g = g*sqrt(normFactor);
     
     %Get value of source component, initialise h as steering vector to peak
     %source
@@ -103,12 +114,17 @@ for cleanMapIterations = 1:maxIterations
     % in the previous iteration
     sumOfCSM = sum(sum(abs(D)));
     if sumOfCSM > sumOfDegradedCSM
-        disp(['Converged after ' num2str(cleanMapIterations) ' iterations'])
         break;
     end
     sumOfDegradedCSM = sumOfCSM;
     
     
+end
+
+if cleanMapIterations == maxIterations
+    disp(['Stopped after maximum iterations (' num2str(maxIterations) ')'])
+else
+    disp(['Converged after ' num2str(cleanMapIterations) ' iterations'])
 end
 
 % 6. Source plot is written as summation of clean beams and remaining dirty map
