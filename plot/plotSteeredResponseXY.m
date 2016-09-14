@@ -113,9 +113,8 @@ end
 ax.ZTick = 0:dynamicRangeTickStep:maxDynamicRange;
 
 
-daspect(ax,[max(scanningPointsX(:)) max(scanningPointsY(:)) maxDynamicRange])
+daspect(ax, [1 1 maxDynamicRange/max(max(scanningPointsX(:)))])
 box(ax, 'off')
-axis(ax, 'equal')
 grid(ax, 'minor')
 
 %Add dynamic range slider
