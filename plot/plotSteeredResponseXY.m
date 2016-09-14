@@ -23,7 +23,7 @@ if ~exist('interpolationFactor', 'var')
     interpolationFactor = 2;
 end
 
-maxDynamicRange = 60;
+maxDynamicRange = 30;
 dynamicRange = 6;
 display = '2D';
 
@@ -105,14 +105,17 @@ ax.XColor = [1 1 1]*0;
 ax.YColor = [1 1 1]*0;
 ax.ZColor = [1 1 1]*0;
 
-%ax.XTick = [];
-%ax.YTick = [];
-ax.ZTick = 0:10:maxDynamicRange;
+if maxDynamicRange <= 30
+    dynamicRangeTickStep = 5;
+else
+    dynamicRangeTickStep = 10;
+end
+ax.ZTick = 0:dynamicRangeTickStep:maxDynamicRange;
 
 box(ax, 'off')
 axis(ax, 'equal')
 grid(ax, 'minor')
-daspect(ax,[1 1 maxDynamicRange/2])
+daspect(ax,[max(scanningPointsX(:)) max(scanningPointsY(:)) maxDynamicRange])
 
 %Add dynamic range slider
 range = [0.01 maxDynamicRange];
