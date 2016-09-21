@@ -1,10 +1,12 @@
-function [thetaScanningAngles, phiScanningAngles] = meshgridScanningAngles(coveringAngleX, coveringAngleY, resolution)
+function [thetaScanAngles, phiScanAngles, scanPointsX, scanPointsY] = meshgridScanningAngles(maxAngleX, maxAngleY, resolution)
 
 
 %(x,y) position of scanning points
-distanceToScanningPlane = 1;
-scanningAxisX = tan((-coveringAngleX:resolution:coveringAngleX)*pi/180);
-scanningAxisY = tan((-coveringAngleY:resolution:coveringAngleY)*pi/180);
+scanAxisX = tan((-maxAngleX:resolution:maxAngleX)*pi/180);
+scanAxisY = tan((-maxAngleY:resolution:maxAngleY)*pi/180);
 
-[scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
-[thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
+%Scanning points in meshgrid
+[scanPointsY, scanPointsX] = meshgrid(scanAxisY,scanAxisX);
+
+%Calculate theta, phi angles to each scanning point
+[thetaScanAngles, phiScanAngles] = convertCartesianToPolar(scanPointsX, scanPointsY, 1);
