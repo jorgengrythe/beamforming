@@ -36,9 +36,6 @@ if ~exist('loopGain', 'var')
     loopGain = 0.9;
 end
 
-%Normalization factor to get correct dB scaling
-normFactor = 1/(nSensors^2-nSensors);
-
 %Initialise trimmed cross spectral matrix (CSM) by setting the diagonal to zero
 D(logical(eye(nSensors))) = 0;
 

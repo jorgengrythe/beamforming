@@ -78,8 +78,8 @@ for cleanMapIterations = 1:maxIterations
     g = reshape(e(maxPeakValueYIndx, maxPeakValueXIndx, :), nSensors, 1);
     g = g*sqrt(normFactor);
     
-    %Get value of source component, initialise h as steering vector to peak
-    %source
+    %Get value of source component, initialise h as steering vector to
+    %peak source
     h = g;
     for iterH = 1:maxIterations
         hOldValue = h;
