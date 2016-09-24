@@ -16,7 +16,7 @@ function [frequencySignal, fc] = convertTimeSignalToFrequencySignal(timeSignal, 
 %fc              - centre frequency for each bin
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-21
+%Last updated 2016-09-23
 
 if ~exist('nFFT', 'var')
     nFFT = 1024;
@@ -24,21 +24,28 @@ end
 
 [nMics, nSamples] = size(timeSignal);
 
-%Centre frequency for each bin
-fc = 0:fs/(2*nFFT):(fs-1)/2;
+%The spectrum is symmetrical, so we only pick out half the samples
+nFFT = 2*nFFT;
 
-%We need to iterate over entire time-signal a total of nMics + 1 times to
-%calculate a lineary independent space-frequency matrix (the increment
-%between time partitions is calculated to get nMics+1 total partitions)
+%Centre frequency for each bin
+fc = 0:fs/nFFT:(fs-1)/2;
+
+%We need to iterate over entire time-signal a total of nMics + 1 times
 nSamplesInIncrement = floor((nSamples-nFFT)/nMics);
 
 %Pre buffering for speed
-frequencySignal = zeros(nMics, nFFT);
+frequencySignal = zeros(nMics, nFFT/2);
 k=0;
 %Calculate space-frequency signal by iterating over entire signal
 for sample = 1:nSamplesInIncrement:nSamples-nFFT
-    timeSignalPartition = timeSignal(:, sample:sample+nFFT-1);
-    frequencySignal = frequencySignal + fft(timeSignalPartition, nFFT, 2);
+    %Take a slice of the signal nFFT samples long
+    timeSlice = timeSignal(:, sample:sample+nFFT-1);
+    
+    %Calculate the FFT of the signal slice
+    frequencySlice = fft(timeSlice, nFFT, 2);
+    
+    %Add the first of the symmetrical part of the FFT
+    frequencySignal = frequencySignal + frequencySlice(:, 1:nFFT/2);
     k=k+1;
 end
 
