@@ -24,28 +24,26 @@ end
 
 [nMics, nSamples] = size(timeSignal);
 
-%The spectrum is symmetrical, so we only pick out half the samples
-nFFT = 2*nFFT;
-
 %Centre frequency for each bin
-fc = 0:fs/nFFT:(fs-1)/2;
+fc = (0:fs/(2*nFFT):(fs-1)/2) + fs/(2*nFFT);
 
 %We need to iterate over entire time-signal a total of nMics + 1 times
 nSamplesInIncrement = floor((nSamples-nFFT)/nMics);
 
 %Pre buffering for speed
-frequencySignal = zeros(nMics, nFFT/2);
+frequencySignal = zeros(nMics, nFFT);
 k=0;
 %Calculate space-frequency signal by iterating over entire signal
 for sample = 1:nSamplesInIncrement:nSamples-nFFT
     %Take a slice of the signal nFFT samples long
     timeSlice = timeSignal(:, sample:sample+nFFT-1);
     
-    %Calculate the FFT of the signal slice
-    frequencySlice = fft(timeSlice, nFFT, 2);
+    %Calculate the FFT of the signal slice (only keep half the samples so
+    %double the FFT size
+    frequencySlice = fft(timeSlice, 2*nFFT, 2);
     
     %Add the first of the symmetrical part of the FFT
-    frequencySignal = frequencySignal + frequencySlice(:, 1:nFFT/2);
+    frequencySignal = frequencySignal + frequencySlice(:, 1:nFFT);
     k=k+1;
 end
 
