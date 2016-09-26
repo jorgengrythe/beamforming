@@ -24,16 +24,8 @@ function [S, R, e, u, v] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal
 %v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-24
+%Last updated 2016-09-26
 
-
-if ~exist('thetaScanningAngles', 'var')
-    thetaScanAngles = -90:90;
-end
-
-if ~exist('phiScanningAngles', 'var')
-    phiScanAngles = 0:180;
-end
 
 nMics = numel(xPos);
 
