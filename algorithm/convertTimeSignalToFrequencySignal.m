@@ -16,7 +16,7 @@ function [frequencySignal, fc] = convertTimeSignalToFrequencySignal(timeSignal, 
 %fc              - centre frequency for each bin
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-23
+%Last updated 2016-09-26
 
 if ~exist('nFFT', 'var')
     nFFT = 1024;
@@ -29,6 +29,9 @@ fc = (0:fs/(2*nFFT):(fs-1)/2) + fs/(2*nFFT);
 
 %We need to iterate over entire time-signal a total of nMics + 1 times
 nSamplesInIncrement = floor((nSamples-nFFT)/nMics);
+if nSamplesInIncrement > nFFT
+    nSamplesInIncrement = nFFT;
+end
 
 %Pre buffering for speed
 frequencySignal = zeros(nMics, nFFT);
