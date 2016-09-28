@@ -46,7 +46,7 @@ for sample = 1:nSamplesInIncrement:nSamples-nFFT
     frequencySlice = fft(timeSlice, 2*nFFT, 2);
     
     %Add the first of the symmetrical part of the FFT
-    frequencySignal = frequencySignal + frequencySlice(:, 1:nFFT);
+    frequencySignal = frequencySignal + 2*frequencySlice(:, 1:nFFT);
     k=k+1;
 end
 
