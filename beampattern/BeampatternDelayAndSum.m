@@ -18,7 +18,7 @@ phiArrivalAngles = [0 0];
 amplitudes = [0 2]; %difference in dB levels
 
 %Load array
-load ../../data/arrays/Nor848A-10.mat
+load ../data/arrays/Nor848A-10.mat
 w = hiResWeights;
 
 inputSignal = 0;
@@ -31,7 +31,7 @@ for j = 1:numel(f)
     inputSignal = inputSignal + signal;
     
     %Calculate steered response for individual signals
-    S(j,:) = steeredResponseDelayAndSum(xPos, yPos, w, signal, f(j), c, thetaScanningAngles, phiScanningAngles);
+    S(j,:) = steeredResponseDelayAndSumOptimized(xPos, yPos, w, signal, f(j), c, thetaScanningAngles, phiScanningAngles);
 
     %Need to save the max value of individual spectra
     %for normalisation purposes
@@ -43,7 +43,7 @@ end
 
 
 %Calculate steered response in frequency domain
-S_tot = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f(1), c, thetaScanningAngles, phiScanningAngles);
+S_tot = steeredResponseDelayAndSumOptimized(xPos, yPos, w, inputSignal, f(1), c, thetaScanningAngles, phiScanningAngles);
 S_tot = abs(S_tot)/max(abs(S_tot)); %normalisation
 
 

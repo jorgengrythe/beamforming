@@ -16,7 +16,7 @@ phiSteeringAngle = 0;
 amplitudes = [0 0 0];
 
 %Load array
-%load ../../data/arrays/ring-48.mat
+load ../data/arrays/ring-48.mat
 %w = hiResWeights;
 
 %Create signal hitting the array
@@ -69,11 +69,13 @@ title('Beampattern minimum variance','fontweight','normal')
 
 %% Calculate steered response
 inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+e = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
+R = inputSignal*inputSignal';
 
 dBmin = 30;
-S_DAS = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles);
+S_DAS = steeredResponseDelayAndSum(R, e, w);
 S_DAS = abs(S_DAS)/max(abs(S_DAS));
-S_MV = steeredResponseMinimumVariance(xPos, yPos, inputSignal, f, c, thetaScanningAngles, phiScanningAngles);
+S_MV = steeredResponseMinimumVariance(R, e);
 S_MV = abs(S_MV)/max(abs(S_MV));
 
 %Plot steered response
@@ -97,11 +99,11 @@ set(gca,'XTick',[-90 -60 -30 -10 5 30 60 90])
 %% Calculate and plot the response for DAS, MV, MUSIC
 
 dBmin = 60;
-S_DAS = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles);
+S_DAS = steeredResponseDelayAndSum(R, e, w);
 S_DAS = abs(S_DAS)/max(abs(S_DAS));
-S_MV = steeredResponseMinimumVariance(xPos, yPos, inputSignal, f, c, thetaScanningAngles, phiScanningAngles);
+S_MV = steeredResponseMinimumVariance(R, e);
 S_MV = abs(S_MV)/max(abs(S_MV));
-[S_MUSIC, kx, ky, V] = steeredResponseMusic(xPos, yPos, inputSignal, f, c, thetaScanningAngles, phiScanningAngles, 3);
+[S_MUSIC, V, Vn] = steeredResponseMusic(R, e, 3);
 S_MUSIC = abs(S_MUSIC)/max(abs(S_MUSIC));
 
 %Plot steered response

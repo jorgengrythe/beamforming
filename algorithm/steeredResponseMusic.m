@@ -1,66 +1,43 @@
-function [S, kx, ky, V] = steeredResponseMusic(xPos, yPos, inputSignal, f, c, thetaScanningAngles, phiScanningAngles, nSources)
+function [S, V, Vn] = steeredResponseMusic(R, e, nSources)
 %steeredResponseMusic - MUSIC beamforming
 %
 %Calculates the steered response from the MUSIC beamforming algorithm in
 %the frequency domain based on sensor positions, input signal and scanning angles
 %
-%[S, kx, ky] = steeredResponseMinimumVariance(xPos, yPos, inputSignal, f, c, thetaScanningAngles, phiScanningAngles, nSources)
+%S = steeredResponseMusic(R, e, nSources)
 %
 %IN
-%xPos                - 1xP vector of x-positions [m]
-%yPos                - 1xP vector of y-positions [m]
-%w                   - 1xP vector of element weights
-%inputSignal         - PxL vector of inputsignals consisting of L samples
-%f                   - Wave frequency [Hz]
-%c                   - Speed of sound [m/s]
-%thetaScanningAngles - 1xN vector of theta scanning angles [degrees]
-%phiScanningAngles   - 1xM vector of phi scanning angles [degrees]
-%nSources            - Number of sources present in input
+%R        - PxP correlation matrix / cross spectral matrix (CSM)
+%e        - NxMxP steering vector/matrix for a certain frequency
+%nSources - Number of sources present in input
 %
 %OUT
-%S                   - NxM matrix of delay-and-sum steered response power
-%kx                  - 1xN vector of theta scanning angles in polar coordinates
-%ky                  - 1xM vector of phi scanning angles in polar coordinates
-%V                   - Eigenvectors of correlation matrix
+%S        - NxM matrix of MUSIC steered response power
+%V        - Eigenvectors of correlation matrix
+%Vn       - Noise eigenvectors
 %
-%Created by Jørgen Grythe, Norsonic AS
-%Last updated 2015-10-27
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-09-30
 
 
-%Set up variables
-if ~exist('thetaScanningAngles', 'var')
-    thetaScanningAngles = -90:90;
-end
+[nPointsY, nPointsX, nMics] = size(e);
 
-if ~exist('phiScanningAngles', 'var')
-    phiScanningAngles = 0:180;
-end
+%Cross spectral matrix with diagonal loading
+R = R + trace(R)/(nMics^2)*eye(nMics, nMics);
+R = R/nMics;
 
-nSensors = size(inputSignal,1);
-nSamples = size(inputSignal,2);
-nThetaAngles = numel(thetaScanningAngles);
-nPhiAngles = numel(phiScanningAngles);
+%Eigenvectors of R
+[V,~] = eig(R);
 
-%Calculate steering vector for all scanning angles
-[e, kx, ky] = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
+%Noise eigenvectors
+Vn = V(:,1:end-nSources);
 
-%Calculate correlation matrix with diagonal loading
-R = inputSignal*inputSignal';
-R = R + trace(R)/(nSensors^2)*eye(nSensors, nSensors);
-R = R/nSamples;
-
-[V,~] = eig(R);%eigenvectors of R
-Vn = V(:,1:end-nSources);%noise eigenvectors
-
-%Calculate power as a function of scanning angle (minimum variance)
-S = zeros(nThetaAngles,nPhiAngles);
-for angleTheta = 1:nThetaAngles
-    for anglePhi = 1:nPhiAngles
-        
-        %Get steering vector from single scanning point
-        ee = squeeze(e(angleTheta,anglePhi,:));
-        
-        %Calculate power from that scanning point
-        S(angleTheta,anglePhi) = 1./(ee'*(Vn*Vn')*ee);
+%Music steered response power
+S = zeros(nPointsY, nPointsX);
+for pointY = 1:nPointsY
+    for pointX = 1:nPointsX
+        ee = reshape(e(pointY, pointX, :), nMics, 1);
+        S(pointY, pointX) = 1./(ee'*(Vn*Vn')*ee);
     end
 end
+
