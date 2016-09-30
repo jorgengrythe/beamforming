@@ -7,11 +7,11 @@ function S= steeredResponseDelayAndSum(R, e, w)
 %S = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanAngles, phiScanAngles)
 %
 %IN
-%R               - PxP correlation matrix / cross spectral matrix (CSM)
-%e               - NxMxP steering vector/matrix for a certain frequency
-%w               - 1xP vector of element weights
+%R - PxP correlation matrix / cross spectral matrix (CSM)
+%e - NxMxP steering vector/matrix for a certain frequency
+%w - 1xP vector of element weights
 %OUT
-%S               - NxM matrix of delay-and-sum steered response power
+%S - NxM matrix of delay-and-sum steered response power
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
 %Last updated 2016-09-30
