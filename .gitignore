@@ -6,3 +6,6 @@ data/fig
 acousticCameraSimulatorC*
 acousticCameraSimulatorM*
 *.asv
+test*
+jsonlab/
+
