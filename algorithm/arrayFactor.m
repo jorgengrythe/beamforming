@@ -1,4 +1,4 @@
-function [W, u, v] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
+function [W, u, v] = arrayFactor(xPos, yPos, w, f, c, thetaScanAngles, phiScanAngles, thetaSteerAngle, phiSteerAngle)
 %arrayFactor - Calculate array factor of 1D or 2D array
 %
 %This matlab function calculates the array factor of a 1D or 2D array based
@@ -9,24 +9,24 @@ function [W, u, v] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiSc
 %[W, u, v] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
 %
 %IN
-%xPos                - 1xP vector of x-positions
-%yPos                - 1xP vector of y-positions
-%w                   - 1xP vector of element weights
-%f                   - Wave frequency
-%c                   - Speed of sound
-%thetaScanningAngles - 1xM vector of theta scanning angles in degrees (optional)
-%phiScanningAngles   - 1XN vector of phi scanning angles in degrees (optional)
-%thetaSteeringAngle  - Theta steering angle in degrees (optional)
-%phiSteeringAngle    - Phi steering angle in degrees (optional)
+%xPos            - 1xP vector of x-positions
+%yPos            - 1xP vector of y-positions
+%w               - 1xP vector of element weights
+%f               - Wave frequency
+%c               - Speed of sound
+%thetaScanAngles - 1xM vector of theta scanning angles in degrees (optional)
+%phiScanAngles   - 1XN vector of phi scanning angles in degrees (optional)
+%thetaSteerAngle - Theta steering angle in degrees (optional)
+%phiSteerAngle   - Phi steering angle in degrees (optional)
 %
 %OUT
-%W                   - calculated array factor
-%u                   - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
-%v                   - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
+%W               - calculated array factor
+%u               - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
 %
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-07
+%Last updated 2016-10-04
 
 
 if ~isvector(xPos)
@@ -47,30 +47,30 @@ end
 
 
 %theta is the elevation and is the normal incidence angle from -90 to 90
-if ~exist('thetaScanningAngles', 'var')
-    thetaScanningAngles = -pi/2:pi/180:pi/2;
+if ~exist('thetaScanAngles', 'var')
+    thetaScanAngles = -pi/2:pi/180:pi/2;
 else
-    thetaScanningAngles = thetaScanningAngles*pi/180;
+    thetaScanAngles = thetaScanAngles*pi/180;
 end
 
 %phi is the azimuth, and is the angle in the XY-plane from 0 to 360
-if ~exist('phiScanningAngles', 'var')
-    phiScanningAngles = 0:pi/180:2*pi;
+if ~exist('phiScanAngles', 'var')
+    phiScanAngles = 0:pi/180:2*pi;
 else
-    phiScanningAngles = phiScanningAngles*pi/180;
+    phiScanAngles = phiScanAngles*pi/180;
 end
 
 %theta, phi steering angles
-if ~exist('thetaSteeringAngle', 'var')
-    thetaSteeringAngle = 0;
+if ~exist('thetaSteerAngle', 'var')
+    thetaSteerAngle = 0;
 else
-    thetaSteeringAngle = thetaSteeringAngle*pi/180;
+    thetaSteerAngle = thetaSteerAngle*pi/180;
 end
 
-if ~exist('phiSteeringAngle', 'var')
-    phiSteeringAngle = 0;
+if ~exist('phiSteerAngle', 'var')
+    phiSteerAngle = 0;
 else
-    phiSteeringAngle = phiSteeringAngle*pi/180;
+    phiSteerAngle = phiSteerAngle*pi/180;
 end
 
 
@@ -83,32 +83,32 @@ k = 2*pi*f/c;
 P = length(xPos);
 
 %Calculating wave vector in spherical coordinates
-if isvector(thetaScanningAngles)
+if isvector(thetaScanAngles)
     
     %Size of vectors containing theta and phi angles
-    M = length(thetaScanningAngles);
-    N = length(phiScanningAngles);
+    M = length(thetaScanAngles);
+    N = length(phiScanAngles);
     
     %Calculate UV coordinates
-    u = sin(thetaScanningAngles)'*cos(phiScanningAngles);
-    v = sin(thetaScanningAngles)'*sin(phiScanningAngles);
+    u = sin(thetaScanAngles)'*cos(phiScanAngles);
+    v = sin(thetaScanAngles)'*sin(phiScanAngles);
         
     % Apply steering
-    us = u - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
-    vs = v - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
+    us = u - sin(thetaSteerAngle)*cos(phiSteerAngle);
+    vs = v - sin(thetaSteerAngle)*sin(phiSteerAngle);
     
 else
     
     %Size of matrix containing theta and phi angles
-    [M, N] = size(thetaScanningAngles);
+    [M, N] = size(thetaScanAngles);
     
     %Calculate UV coordinates
-    u = sin(thetaScanningAngles).*cos(phiScanningAngles);
-    v = sin(thetaScanningAngles).*sin(phiScanningAngles);
+    u = sin(thetaScanAngles).*cos(phiScanAngles);
+    v = sin(thetaScanAngles).*sin(phiScanAngles);
         
     % Apply steering
-    us = u - sin(thetaSteeringAngle).*cos(phiSteeringAngle);
-    vs = v - sin(thetaSteeringAngle).*sin(phiSteeringAngle);
+    us = u - sin(thetaSteerAngle).*cos(phiSteerAngle);
+    vs = v - sin(thetaSteerAngle).*sin(phiSteerAngle);
 end
 
 
