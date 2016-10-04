@@ -89,26 +89,32 @@ if isvector(thetaScanningAngles)
     M = length(thetaScanningAngles);
     N = length(phiScanningAngles);
     
-    u = sin(thetaScanningAngles)'*cos(phiScanningAngles) ...
-        - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
-    v = sin(thetaScanningAngles)'*sin(phiScanningAngles) ...
-        - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
+    %Calculate UV coordinates
+    u = sin(thetaScanningAngles)'*cos(phiScanningAngles);
+    v = sin(thetaScanningAngles)'*sin(phiScanningAngles);
+        
+    % Apply steering
+    us = u - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
+    vs = v - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
     
 else
     
     %Size of matrix containing theta and phi angles
     [M, N] = size(thetaScanningAngles);
     
-    u = sin(thetaScanningAngles).*cos(phiScanningAngles) ...
-        - sin(thetaSteeringAngle)*cos(phiSteeringAngle);
-    v = sin(thetaScanningAngles).*sin(phiScanningAngles) ...
-        - sin(thetaSteeringAngle)*sin(phiSteeringAngle);
+    %Calculate UV coordinates
+    u = sin(thetaScanningAngles).*cos(phiScanningAngles);
+    v = sin(thetaScanningAngles).*sin(phiScanningAngles);
+        
+    % Apply steering
+    us = u - sin(thetaSteeringAngle).*cos(phiSteeringAngle);
+    vs = v - sin(thetaSteeringAngle).*sin(phiSteeringAngle);
 end
 
 
 %Calculate array factor
-uu = bsxfun(@times, u, reshape(xPos, 1, 1, P));
-vv = bsxfun(@times, v, reshape(yPos, 1, 1, P));
+uu = bsxfun(@times, us, reshape(xPos, 1, 1, P));
+vv = bsxfun(@times, vs, reshape(yPos, 1, 1, P));
 ww = repmat(reshape(w, 1, 1, P), M, N);
 
 W = sum(ww.*exp(1j*k*(uu+vv)), 3);
