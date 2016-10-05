@@ -1,4 +1,4 @@
-function [] = plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle, dynRange)
+function [] = plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
 %plotBeampattern - plots the beampattern for various frequencies
 %
 %plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle, dynRange)
@@ -10,17 +10,22 @@ function [] = plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle, dynRange)
 %f                   - Wave frequency [Hz]
 %c                   - Speed of sound [m/s]
 %thetaSteeringAngle  - 1x1 theta steering angle [degrees]
+%sliceAngle          - Angle slice to show, 0 for xz and 90 for yz view
 %dynRange            - Dynamic range in plot [dB]
 %
 %OUT
 %[]                  - The figure plot
 %
-%Created by J?rgen Grythe, Norsonic AS
-%Last updated 2016-01-04
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-10-05
 
 
 if ~exist('dynRange','var')
     dynRange = 50;
+end
+
+if ~exist('sliceAngle','var')
+    sliceAngle = 0;
 end
 
 if ~exist('thetaSteeringAngle','var')
@@ -28,7 +33,7 @@ if ~exist('thetaSteeringAngle','var')
 end
 
 %Scanning angles
-thetaScanningAngles = -90:0.1:90;
+thetaScanAngles = -90:0.1:90;
 
 %Linewidth in plot
 lwidth = 1;
@@ -43,7 +48,7 @@ hold(axRectangular, 'on')
 xlabel(axRectangular, 'Angle (deg)')
 ylabel(axRectangular, 'Attenuation (dB)')
 grid(axRectangular, 'on')
-axis(axRectangular, [thetaScanningAngles(1) thetaScanningAngles(end) -dynRange 0])
+axis(axRectangular, [thetaScanAngles(1) thetaScanAngles(end) -dynRange 0])
 axRectangular.YTick = [-50 -45 -40 -35 -30 -25 -20 -15 -10 -6 -3 0];
 axRectangular.XTick = [-90 -80 -70 -60 -50 -40 -30 -20 -10 0 10 20 30 40 50 60 70 80 90];
 
@@ -113,16 +118,16 @@ line([-dynRange dynRange], [0 0], ...
 
 %Calculate and plot the beampattern(s) in the figure
 for ff = f
-	W = arrayFactor(xPos, yPos, w, ff, c, thetaScanningAngles, 0, thetaSteeringAngle);
+	W = arrayFactor(xPos, yPos, w, ff, c, thetaScanAngles, sliceAngle, thetaSteeringAngle);
     W = 20*log10(W);
     W = reshape(W, 1, numel(W));
     
     % Rectangular plot
-    plot(axRectangular, thetaScanningAngles,W,'DisplayName',[num2str(ff*1e-3) ' kHz'],'linewidth',lwidth);
+    plot(axRectangular, thetaScanAngles,W,'DisplayName',[num2str(ff*1e-3) ' kHz'],'linewidth',lwidth);
     
     % Polar plot
-    xx = (W+dynRange) .* sin(thetaScanningAngles*pi/180);
-    yy = (W+dynRange) .* cos(thetaScanningAngles*pi/180);
+    xx = (W+dynRange) .* sin(thetaScanAngles*pi/180);
+    yy = (W+dynRange) .* cos(thetaScanAngles*pi/180);
     plot(axPolar, xx, yy, 'linewidth', lwidth);
 end
 
