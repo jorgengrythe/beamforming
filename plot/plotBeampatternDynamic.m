@@ -24,10 +24,11 @@ end
 %Default values
 f = 1e3;
 c = 340;
+dynamicRange = 50;
 thetaSteeringAngle = 0;
 phiSteeringAngle = 0;
-thetaScanningAngles = -90:0.1:90;
-phiScanningAngles = 0;
+thetaScanAngles = -90:0.1:90;
+phiScanAngles = 0;
 
 
 % Create figure and axes
@@ -39,31 +40,81 @@ fig.ToolBar = 'none';
 fig.MenuBar = 'none';
 fig.Resize = 'off';
 
-%Axis for geometry
-axArray = subplot(211);
-axArray.XLim = [-1 1]*0.6;
-axArray.YLim = [-1 1]*0.6;
-hold(axArray, 'on');
-box(axArray, 'on')
-axArray.XTick = [-1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1];
-axArray.YTick = [-1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1];
-grid(axArray, 'on')
-grid(axArray,'minor')
-title(axArray,'Microphone positions', 'fontweight', 'normal');
-axis(axArray, 'square')
-
 %Axis for beampattern
-axResponse = subplot(212);
+axResponse = subplot(211);
 box(axResponse, 'on')
 title(axResponse,['Beampattern @ ' sprintf('%0.2f', f*1e-3) ' kHz'],'fontweight','normal');
 ylabel(axResponse, 'dB');
-axResponse.XLim = [thetaScanningAngles(1) thetaScanningAngles(end)];
-axResponse.YLim = [-50 0];
+axResponse.XLim = [thetaScanAngles(1) thetaScanAngles(end)];
+axResponse.YLim = [-dynamicRange 0];
 axResponse.YTick = [-50 -40 -30 -20 -10 -3 0];
 axResponse.XTick = [-90 -60 -30 0 30 60 90];
 hold(axResponse, 'on');
 grid(axResponse, 'on')
 axResponse.NextPlot = 'replacechildren';
+
+%Polar plot axis
+axPolarResponse = subplot(212);
+axPolarResponse.Visible = 'off';
+hold(axPolarResponse, 'on')
+axis(axPolarResponse, 'equal')
+ylim(axPolarResponse, [0 dynamicRange])
+xlim(axPolarResponse, [-dynamicRange dynamicRange])
+polarPlot = plot(axPolarResponse, 0, 0);
+
+dBTicks = -(10:10:dynamicRange-10);
+angleTicks = [-90 -60 -30 0 30 60 90];
+
+%Set background color for polar plot to white (inside half circle)
+patch('XData', cos(0:pi/50:2*pi) * dynamicRange, ...
+    'YData', sin(0:pi/50:2*pi) * dynamicRange,...
+    'FaceColor', [1 1 1], ...
+    'Parent', axPolarResponse);
+
+%Plot angle spokes in polar plot
+for tick = angleTicks
+    line(dynamicRange * [-sin(tick*pi/180) sin(tick*pi/180)], ...
+        dynamicRange * [-cos(tick*pi/180) cos(tick*pi/180)], ...
+        'LineStyle', '-', ...
+        'Color', [1 1 1]*0.8, ...
+        'LineWidth', 0.5, ...
+        'Parent', axPolarResponse);
+    
+    text((dynamicRange*1.08) * sin(tick*pi/180), ...
+        (dynamicRange*1.08) * cos(tick*pi/180), ...
+        [int2str(tick) '^\circ'],...
+        'HorizontalAlignment', 'center', ...
+        'fontSize', 10, ...
+        'Parent', axPolarResponse);
+end
+
+    
+%Plot dB ticks in polar plot
+txtAngle = 10;
+for tick = dBTicks
+    line(cos(0:pi/50:2*pi)*(dynamicRange+tick), sin(0:pi/50:2*pi)*(dynamicRange+tick), ...
+        'LineStyle', '-', ...
+        'Color', [1 1 1]*0.8, ...
+        'LineWidth', 0.5, ...
+        'Parent', axPolarResponse);
+    
+    text((dynamicRange+tick)*cos(txtAngle*pi/180), ...
+        (dynamicRange+tick)*sin(txtAngle*pi/180), ...
+        ['  ' num2str(tick)], ...
+        'fontsize',8, ...
+        'Parent', axPolarResponse);
+end
+line(cos(0:pi/50:2*pi)*dynamicRange, sin(0:pi/50:2*pi)*dynamicRange, ...
+    'LineStyle', '-', ...
+    'Color', [0 0 0], ...
+    'LineWidth', 1, ...
+    'Parent', axPolarResponse);
+line([-dynamicRange dynamicRange], [0 0], ...
+    'LineStyle', '-', ...
+    'Color', [0 0 0], ...
+    'LineWidth', 1, ...
+    'Parent', axPolarResponse);
+
 
 
 %Add frequency slider to figure
@@ -86,8 +137,7 @@ angleSlider = uicontrol('style', 'slider', ...
 addlistener(angleSlider, 'ContinuousValueChange', @(obj,evt) changeAngleOfSource(obj, evt, obj.Value) );
 
 
-%Plot array geometry and beampattern
-scatter(axArray, xPos, yPos, 20, [0    0.4470    0.7410], 'filled')
+%Plot the beampattern
 plotBeampattern1D
 
     %Function used by frequency slider
@@ -104,11 +154,17 @@ plotBeampattern1D
     
     %Calculating the beampattern and updating beampattern plot
     function plotBeampattern1D
-        beamPattern = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, ...
-            phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+        beamPattern = arrayFactor(xPos, yPos, w, f, c, thetaScanAngles, ...
+            phiScanAngles, thetaSteeringAngle, phiSteeringAngle);
         beamPattern = 20*log10(beamPattern);
+        beamPattern = reshape(beamPattern, 1, numel(beamPattern));
         
-        plot(axResponse, thetaScanningAngles, beamPattern,'LineWidth',1)
+        plot(axResponse, thetaScanAngles, beamPattern, 'LineWidth', 1)
+        
+        delete(polarPlot)
+        xx = (beamPattern+dynamicRange) .* sin(thetaScanAngles*pi/180);
+        yy = (beamPattern+dynamicRange) .* cos(thetaScanAngles*pi/180);
+        polarPlot = plot(axPolarResponse, xx, yy, 'LineWidth', 1, 'Color', [0 0.4470 0.7410]);
     end
 
 

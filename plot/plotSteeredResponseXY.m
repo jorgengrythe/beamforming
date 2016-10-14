@@ -9,15 +9,15 @@ function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolatio
 %
 %IN
 %S                   - NxM matrix of delay-and-sum steered response power
-%u                   - NxM matrix of x-coordinates  
-%v                   - NxM matrix of y-coordinates
+%scanningPointsX     - NxM matrix of x-coordinates  
+%scanningPointsY     - NxM matrix of y-coordinates
 %interpolationFactor - 1x1 int to decide how much to interpolate the final image (optional)
 %
 %OUT
 %[]                  - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-08
+%Last updated 2016-10-14
 
 if ~exist('interpolationFactor', 'var')
     interpolationFactor = 2;

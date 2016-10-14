@@ -362,6 +362,7 @@ plotImage(imageFileGray)
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-16', 'Callback',{ @changeArray, 'Nor848A-16', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
+        uimenu('Parent', arrayMenuNorsonic, 'Label', 'S1-multi-lowfreq', 'Callback',{ @changeArray, 'S1-multi-lowfreq', steeredResponsePlot });
         arrayMenuCAE = uimenu('Parent', topMenuArray, 'Label', 'CAE');
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE S', 'Callback',{ @changeArray, 'CAE_S', steeredResponsePlot });
         uimenu('Parent', arrayMenuCAE, 'Label', 'CAE Bionic S-112', 'Callback',{ @changeArray, 'CAE_bionic_s-112', steeredResponsePlot });
