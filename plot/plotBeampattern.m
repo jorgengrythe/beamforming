@@ -33,7 +33,7 @@ if ~exist('thetaSteeringAngle','var')
 end
 
 %Scanning angles
-thetaScanAngles = -90:0.1:90;
+thetaScanAngles = -90:0.01:90;
 
 %Linewidth in plot
 lwidth = 1;

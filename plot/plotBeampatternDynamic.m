@@ -22,13 +22,15 @@ if ~exist('w','var')
 end
 
 %Default values
-f = 1e3;
+f = 5e3;
 c = 340;
 dynamicRange = 50;
 thetaSteeringAngle = 0;
 phiSteeringAngle = 0;
 thetaScanAngles = -90:0.1:90;
 phiScanAngles = 0;
+minFrequency = 50;
+maxFrequency = 30e3;
 
 
 % Create figure and axes
@@ -36,9 +38,10 @@ fig = figure;
 fig.Position = [400 150 470 750];
 fig.Name = 'Beampattern';
 fig.NumberTitle = 'off';
-fig.ToolBar = 'none';
-fig.MenuBar = 'none';
-fig.Resize = 'off';
+fig.Color = 'w';
+%fig.ToolBar = 'none';
+%fig.MenuBar = 'none';
+%fig.Resize = 'off';
 
 %Axis for beampattern
 axResponse = subplot(211);
@@ -122,8 +125,8 @@ frequencySlider = uicontrol('style', 'slider', ...
     'Units', 'normalized',...
     'position', [0.935 0.11 0.035 0.34],...
     'value', f,...
-    'min', 0.1e3,...
-    'max', 20e3);
+    'min', minFrequency, ...
+    'max', maxFrequency);
 addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) changeFrequencyOfSource(obj, evt, obj.Value) );
 addlistener(frequencySlider,'ContinuousValueChange',@(obj,evt) title(axResponse, ['Beampattern @ ' sprintf('%0.2f', obj.Value*1e-3) ' kHz'],'fontweight','normal'));
 

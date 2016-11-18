@@ -20,7 +20,7 @@ function plotBeampattern2D(xPos, yPos, w, coveringAngles, resolution)
 dynamicRange = 15;
 maxDynamicRange = 60;
 c = 340;
-f = 3e3;
+f = 5e3;
 xPosSource = 0;
 yPosSource = 0;
 

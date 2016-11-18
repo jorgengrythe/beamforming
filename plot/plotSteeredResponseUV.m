@@ -1,17 +1,17 @@
-function [] = plotSteeredResponseUV(S, u, v, maxDynamicRange, scaleView, displayTheme, displayStyle)
+function [] = plotSteeredResponseUV(S, u, v, defaultDisplayValue, scaleView, displayTheme, displayStyle)
 %plotSteeredResponseUV - plot the steered response in UV-space
 %
 %Plots the steered response with a slider bar in either linear or
 %logarithmic scale and in black or white theme. Right click anywhere in the
 %figure to change between 2D and 3D view and white or black theme.
 %
-%plotSteeredResponse(S, u, v, maxDynamicRange, scaleView, displayTheme, displayStyle)
+%plotSteeredResponse(S, u, v, defaultDisplayValue, scaleView, displayTheme, displayStyle)
 %
 %IN
 %S               - NxM matrix of delay-and-sum steered response power
 %u               - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
 %v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
-%maxDynamicRange - max dynamic range in decibels in the image (optional)
+%defaultDisplayValue - default dynamic range in decibels in the image (optional)
 %scaleView       - slider scale, use 'lin' or 'log' (optional)
 %displayTheme    - color theme, use 'white' or 'black' (optional)
 %displayStyle    - view style, use '2D' or '3D' (optional)
@@ -34,9 +34,11 @@ if ~exist('scaleView','var')
     scaleView = 'log';
 end
 
-if ~exist('maxDynamicRange','var')
-    maxDynamicRange = 60;
+if ~exist('defaultDisplayValue','var')
+    defaultDisplayValue = 15;
 end
+
+maxDynamicRange = 80;
 
 %Interpolate for higher resolution
 interpolationFactor = 2;
@@ -52,9 +54,8 @@ S = 10*log10(S);
 S(S<-maxDynamicRange) = -maxDynamicRange;
 
 %Default display value
-defaultDisplayValue = 6;
 if defaultDisplayValue > maxDynamicRange
-    defaultDisplayValue = maxDynamicRange/2;
+    maxDynamicRange = defaultDisplayValue;
 end
 
 

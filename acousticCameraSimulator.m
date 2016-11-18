@@ -5,7 +5,7 @@ c = 340;
 fs = 44.1e3;
 f = 5e3;
 
-array = load('data/arrays/Nor848A-10.mat');
+array = load('data/arrays/AMD256.mat');
 w = array.hiResWeights;
 xPos = array.xPos;
 yPos = array.yPos;
@@ -327,7 +327,7 @@ plotImage(imageFileGray)
     function changeArray(~, ~, arrayClicked, steeredResponsePlot)
         
         if strcmp(arrayClicked,'Nor848A-10-ring')
-            array = load('data/arrays/Nor848A-10.mat');
+            array = load('data/arrays/AMD256.mat');
             xPos = array.xPos(225:256);
             yPos = array.yPos(225:256);
             w = ones(1,32)/32;
@@ -358,8 +358,8 @@ plotImage(imageFileGray)
         %Array
         topMenuArray = uimenu('Parent', cmFigure, 'Label', 'Array');
         arrayMenuNorsonic = uimenu('Parent', topMenuArray, 'Label', 'Norsonic');
-        uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'Nor848A-4', steeredResponsePlot });
-        uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'Nor848A-10', steeredResponsePlot });
+        uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-4', 'Callback',{ @changeArray, 'AMD128', steeredResponsePlot });
+        uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10', 'Callback',{ @changeArray, 'AMD256', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-16', 'Callback',{ @changeArray, 'Nor848A-16', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'Nor848A-10-ring', 'Callback',{ @changeArray, 'Nor848A-10-ring', steeredResponsePlot });
         uimenu('Parent', arrayMenuNorsonic, 'Label', 'S1-multi-lowfreq', 'Callback',{ @changeArray, 'S1-multi-lowfreq', steeredResponsePlot });
