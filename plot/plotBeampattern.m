@@ -61,7 +61,7 @@ ylim(axPolar, [0 dynRange])
 xlim(axPolar, [-dynRange dynRange])
 
 
-dBTicks = -(10:10:dynRange-10);
+dBTicks = [-3 -(10:10:dynRange-10)];
 angleTicks = [-90 -60 -30 0 30 60 90];
 
 %Set background color for polar plot to white (inside half circle)
@@ -99,7 +99,7 @@ for tick = dBTicks
     
     text((dynRange+tick)*cos(txtAngle*pi/180), ...
         (dynRange+tick)*sin(txtAngle*pi/180), ...
-        ['  ' num2str(tick)], ...
+        ['  ' num2str(tick) ' dB'], ...
         'fontsize',8, ...
         'Parent', axPolar);
 end
@@ -117,21 +117,26 @@ line([-dynRange dynRange], [0 0], ...
 
 
 %Calculate and plot the beampattern(s) in the figure
+polarPlotHandles = [];
 for ff = f
 	W = arrayFactor(xPos, yPos, w, ff, c, thetaScanAngles, sliceAngle, thetaSteeringAngle);
     W = 20*log10(W);
     W = reshape(W, 1, numel(W));
     
     % Rectangular plot
-    plot(axRectangular, thetaScanAngles,W,'DisplayName',[num2str(ff*1e-3) ' kHz'],'linewidth',lwidth);
+    plot(axRectangular, thetaScanAngles, W, 'linewidth', lwidth, 'DisplayName', [num2str(ff*1e-3) ' kHz']);
     
     % Polar plot
     xx = (W+dynRange) .* sin(thetaScanAngles*pi/180);
     yy = (W+dynRange) .* cos(thetaScanAngles*pi/180);
-    plot(axPolar, xx, yy, 'linewidth', lwidth);
+    p = plot(axPolar, xx, yy, 'linewidth', lwidth, 'DisplayName', [num2str(ff*1e-3) ' kHz']);
+    
+    polarPlotHandles = [polarPlotHandles p];
 end
 
-legend(axRectangular, 'show','Location','SouthEast')
+legend(axRectangular, 'show', 'Location','NorthEast')
+legend(axPolar, polarPlotHandles, 'Location','NorthEast')
+
 
 
 set(bpFig,'position',[500 200 540 600])
