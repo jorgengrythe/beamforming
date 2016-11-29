@@ -4,7 +4,7 @@ function S= steeredResponseDelayAndSum(R, e, w)
 %Calculates the steered response from the delay-and-sum algorithm in the
 %frequency domain based on sensor positions, input signal and scanning angles
 %
-%S = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanAngles, phiScanAngles)
+%S = steeredResponseDelayAndSum(R, e, w)
 %
 %IN
 %R - PxP correlation matrix / cross spectral matrix (CSM)
