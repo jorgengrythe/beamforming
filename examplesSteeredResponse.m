@@ -2,19 +2,18 @@
 
 
 %% 1D-array case
-clear all
 
 % Create vectors of x- and y-coordinates of microphone positions 
-xPos = -1:0.2:1; % 1xP vector of x-positions in meters
-yPos = zeros(1, numel(xPos)); % 1xP vector of y-positions in meters
+xPos = -0.8:0.2:0.8; % 1xP vector of x-positions [m]
+yPos = zeros(1, numel(xPos)); % 1xP vector of y-positions [m]
 w = ones(1, numel(xPos))/numel(xPos); % 1xP vector of weightings
 
 % Define arriving angles and frequency of input signals
 thetaArrivalAngles = [-30 10]; % degrees
 phiArrivalAngles = [0 0]; % degrees
-f = 800; % Hz
-c = 340; % m/s
-fs = 44.1e3; % Hz
+f = 800; % [Hz]
+c = 340; % [m/s]
+fs = 44.1e3; % [Hz]
 
 % Define array scanning angles (1D, so phi = 0)
 thetaScanAngles = -90:0.1:90; % degrees
@@ -39,20 +38,33 @@ spectrumNormalized = abs(S)/max(abs(S));
 %Convert to decibel
 spectrumLog = 10*log10(spectrumNormalized);
 
-%Plot steered response
-figure(1);clf
-plot(thetaScanAngles, spectrumLog)
-grid on
-xlim([thetaScanAngles(1) thetaScanAngles(end)])
 
-yL = get(gca,'YLim');
+%Plot array
+fig1 = figure;
+fig1.Color = 'w';
+ax = axes('Parent', fig1);
+scatter(ax, xPos, yPos, 20, 'filled')
+axis(ax, 'square')
+ax.XLim = [-1 1];
+ax.YLim = [-1 1];
+grid(ax, 'on')
+title(ax, 'Microphone positions')
+
+%Plot steered response with indicator lines
+fig2 = figure;
+fig2.Color = 'w';
+ax = axes('Parent', fig2);
+plot(ax, thetaScanAngles, spectrumLog)
+grid(ax, 'on')
+ax.XLim = [thetaScanAngles(1) thetaScanAngles(end)];
+
 for j=1:numel(thetaArrivalAngles)
     indx = find(thetaScanAngles >= thetaArrivalAngles(j), 1);
-    line([thetaScanAngles(indx) thetaScanAngles(indx)], yL, ...
+    line(ax, [thetaScanAngles(indx) thetaScanAngles(indx)], ax.YLim, ...
         'LineWidth', 1, 'Color', 'r', 'LineStyle', '--');
 end
-xlabel('\theta')
-ylabel('dB')
+xlabel(ax, '\theta')
+ylabel(ax, 'dB')
 
 %% 1D-array case different source strengths
 
@@ -65,7 +77,7 @@ inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalA
 % Input signal is changed so update cross spectral matrix
 R = crossSpectralMatrix(inputSignal);
 
-% Calculate delay-and-sum steered response
+% Calculate delay-and-sum steered response, steering vector/matrix is same as before
 S = steeredResponseDelayAndSum(R, e, w);
 
 %Normalise spectrum
@@ -74,20 +86,22 @@ spectrumNormalized = abs(S)/max(abs(S));
 %Convert to decibel
 spectrumLog = 10*log10(spectrumNormalized);
 
-%Plot steered response
-figure(2)
-plot(thetaScanAngles,spectrumLog)
-grid on
-xlim([thetaScanAngles(1) thetaScanAngles(end)])
 
-yL = get(gca,'YLim');
+%Plot steered response with indicator lines
+fig3 = figure;
+fig3.Color = 'w';
+ax = axes('Parent', fig3);
+plot(ax, thetaScanAngles, spectrumLog)
+grid(ax, 'on')
+ax.XLim = [thetaScanAngles(1) thetaScanAngles(end)];
+
 for j=1:numel(thetaArrivalAngles)
     indx = find(thetaScanAngles >= thetaArrivalAngles(j), 1);
-    line([thetaScanAngles(indx) thetaScanAngles(indx)], yL, ...
+    line(ax, [thetaScanAngles(indx) thetaScanAngles(indx)], ax.YLim, ...
         'LineWidth', 1, 'Color', 'r', 'LineStyle', '--');
 end
-xlabel('\theta')
-ylabel('dB')
+xlabel(ax, '\theta')
+ylabel(ax, 'dB')
 
 
 %% 2D-array case, spectrum in linear scale in UV-space
@@ -123,22 +137,44 @@ S = steeredResponseDelayAndSum(R, e, w);
 %Normalise spectrum
 spectrumNormalized = abs(S)/max(max(abs(S)));
 
-%Plot steered response in UV-space
-figure(3)
-surf(u, v, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
-view(0, 90)
-axis square
 
-%Do some magic to make the figure look nice
-set(gcf, 'color','k')
+%Plot array
+fig3 = figure;
+fig3.Color = 'w';
+ax = axes('Parent', fig3);
+scatter(ax, xPos, yPos, 20, 'filled')
+axis(ax, 'square')
+ax.XLim = [-1 1];
+ax.YLim = [-1 1];
+grid(ax, 'on')
+title(ax, 'Microphone positions')
+
+%Plot steered response in UV-space
+fig4 = figure;
+ax = axes('Parent', fig4);
+surf(ax, u, v, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
+
+%Do some magic to make the figure look nice (black theme)
+fig4.Color = 'k';
+ax.Color = 'k';
 cmap = colormap;
 cmap(1,:) = [1 1 1]*0.2;
-colormap(cmap);
-set(gca, 'color', [0 0 0], 'xcolor', [1 1 1], 'ycolor', [1 1 1], 'zcolor', [1 1 1])
-set(gca, 'XTickLabel', [], 'YTickLabel', [], 'ZTickLabel', [])
-set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridColor', [1 1 1], 'MinorGridLineStyle', '-')
-xlabel('u = sin(\theta)cos(\phi)')
-ylabel('v = sin(\theta)sin(\phi)')
+colormap(ax, cmap);
+view(ax, 0, 90)
+axis(ax, 'square')
+ax.XColor = 'w';
+ax.YColor = 'w';
+ax.ZColor = 'w';
+ax.XTickLabel = [];
+ax.YTickLabel = [];
+ax.ZTickLabel = [];
+ax.XMinorGrid = 'on';
+ax.YMinorGrid = 'on';
+ax.ZMinorGrid = 'on';
+ax.MinorGridColor = 'w';
+ax.MinorGridLineStyle = '-';
+xlabel(ax, 'u = sin(\theta)cos(\phi)')
+ylabel(ax, 'v = sin(\theta)sin(\phi)')
 
 %% 2D-array case, different source strengths, spectrum in linear scale in UV-space
 
@@ -158,74 +194,106 @@ S = steeredResponseDelayAndSum(R, e, w);
 %Normalise spectrum
 spectrumNormalized = abs(S)/max(max(abs(S)));
 
-% Plot the steered response
-figure(4);clf
-surf(u, v, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
-view(0, 90)
-axis square
+%Plot steered response in UV-space
+fig5 = figure;
+ax = axes('Parent', fig5);
+surf(ax, u, v, spectrumNormalized, 'edgecolor', 'none', 'FaceAlpha', 0.8)
 
-%Do some magic to make the figure look nice
-set(gcf, 'color','k')
+%Do some magic to make the figure look nice (black theme)
+fig5.Color = 'k';
+ax.Color = 'k';
 cmap = colormap;
 cmap(1,:) = [1 1 1]*0.2;
-colormap(cmap);
-set(gca, 'color', [0 0 0], 'xcolor', [1 1 1], 'ycolor', [1 1 1], 'zcolor', [1 1 1])
-set(gca, 'XTickLabel', [], 'YTickLabel', [], 'ZTickLabel', [])
-set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridColor', [1 1 1], 'MinorGridLineStyle', '-')
-xlabel('u = sin(\theta)cos(\phi)')
-ylabel('v = sin(\theta)sin(\phi)')
+colormap(ax, cmap);
+view(ax, 0, 90)
+axis(ax, 'square')
+ax.XColor = 'w';
+ax.YColor = 'w';
+ax.ZColor = 'w';
+ax.XTickLabel = [];
+ax.YTickLabel = [];
+ax.ZTickLabel = [];
+ax.XMinorGrid = 'on';
+ax.YMinorGrid = 'on';
+ax.ZMinorGrid = 'on';
+ax.MinorGridColor = 'w';
+ax.MinorGridLineStyle = '-';
+xlabel(ax, 'u = sin(\theta)cos(\phi)')
+ylabel(ax, 'v = sin(\theta)sin(\phi)')
 
 %% 2D-array case, different source strengths, spectrum in logarithmic scale in UV-space
 
 %Convert the delay-and-sum steered response to decibel
 spectrumLog = 10*log10(spectrumNormalized);
 
-% Plot the steered response
-figure(5);clf
-surf(u, v, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
-view(0, 90)
-axis square
 
-%Do some magic to make the figure look nice
-set(gcf, 'color','k')
+%Plot steered response in UV-space
+fig6 = figure;
+ax = axes('Parent', fig6);
+surf(ax, u, v, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
+
+%Do some magic to make the figure look nice (black theme)
+fig6.Color = 'k';
+ax.Color = 'k';
 cmap = colormap;
 cmap(1,:) = [1 1 1]*0.2;
-colormap(cmap);
-set(gca, 'color', [0 0 0], 'xcolor', [1 1 1], 'ycolor', [1 1 1], 'zcolor', [1 1 1])
-set(gca, 'XTickLabel', [], 'YTickLabel', [], 'ZTickLabel', [])
-set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridColor', [1 1 1], 'MinorGridLineStyle', '-')
-xlabel('u = sin(\theta)cos(\phi)')
-ylabel('v = sin(\theta)sin(\phi)')
+colormap(ax, cmap);
+view(ax, 0, 90)
+axis(ax, 'square')
+ax.XColor = 'w';
+ax.YColor = 'w';
+ax.ZColor = 'w';
+ax.XTickLabel = [];
+ax.YTickLabel = [];
+ax.ZTickLabel = [];
+ax.XMinorGrid = 'on';
+ax.YMinorGrid = 'on';
+ax.ZMinorGrid = 'on';
+ax.MinorGridColor = 'w';
+ax.MinorGridLineStyle = '-';
+xlabel(ax, 'u = sin(\theta)cos(\phi)')
+ylabel(ax, 'v = sin(\theta)sin(\phi)')
 
 %% 2D-array case, different source strengths, spectrum in logarithmic scale with dynamic range in UV-space
 
 %Dynamic range in decibels
 dynamicRange = 6;
 
-% Plot the steered response
-figure(6);clf
-surf(u, v, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
-view(0, 90)
-axis square
 
-%Do some magic to make the figure look nice
-set(gcf, 'color','k')
+%Plot steered response in UV-space
+fig7 = figure;
+ax = axes('Parent', fig7);
+surf(ax, u, v, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
+
+%Do some magic to make the figure look nice (black theme)
+fig7.Color = 'k';
+ax.Color = 'k';
 cmap = colormap;
 cmap(1,:) = [1 1 1]*0.2;
-colormap(cmap);
-set(gca, 'color', [0 0 0], 'xcolor', [1 1 1], 'ycolor', [1 1 1], 'zcolor', [1 1 1])
-set(gca, 'XTickLabel', [], 'YTickLabel', [], 'ZTickLabel', [])
-set(gca, 'XMinorGrid', 'on', 'YMinorGrid', 'on', 'ZMinorGrid', 'on', 'MinorGridColor', [1 1 1], 'MinorGridLineStyle', '-')
-xlabel('u = sin(\theta)cos(\phi)')
-ylabel('v = sin(\theta)sin(\phi)')
+colormap(ax, cmap);
+view(ax, 0, 90)
+axis(ax, 'square')
+ax.XColor = 'w';
+ax.YColor = 'w';
+ax.ZColor = 'w';
+ax.XTickLabel = [];
+ax.YTickLabel = [];
+ax.ZTickLabel = [];
+ax.XMinorGrid = 'on';
+ax.YMinorGrid = 'on';
+ax.ZMinorGrid = 'on';
+ax.MinorGridColor = 'w';
+ax.MinorGridLineStyle = '-';
+xlabel(ax, 'u = sin(\theta)cos(\phi)')
+ylabel(ax, 'v = sin(\theta)sin(\phi)')
 
 %Set the dynamic range
-caxis([-dynamicRange 0])
+caxis(ax, [-dynamicRange 0])
 
 %% 2D-array case, different source strengths, use plotSteeredResponseUV function
 
-%Max range in decibels
-maxDynamicRange = 30;
+%Default dynamic range
+dynRange = 6;
 
 %The function interpolates the result, so can use fewer scanning
 %angles/points
@@ -241,7 +309,7 @@ S = steeredResponseDelayAndSum(R, e, w);
 
 %Plot the steered response, no need to normalise the
 %spectrum or converting to decibel before input
-plotSteeredResponseUV(S, u, v, maxDynamicRange, 'log', 'black', '2D')
+plotSteeredResponseUV(S, u, v, dynRange, 'log', 'black', '2D')
 
 
 
@@ -258,7 +326,7 @@ numberOfScanningPointsY = 30;
 xPosSource = [-1 0 1];
 yPosSource = [-0.5 0.75 0.25];
 zPosSource = ones(1, numel(xPosSource))*distanceToScanningPlane;
-amplitudes = [-3 -2 0];
+amplitudes = [0 -1 -2];
 
 %Create scanning points
 scanningAxisX = -maxScanningPlaneExtentX:2*maxScanningPlaneExtentX/(numberOfScanningPointsX-1):maxScanningPlaneExtentX;
@@ -266,8 +334,8 @@ scanningAxisY = -maxScanningPlaneExtentY:2*maxScanningPlaneExtentY/(numberOfScan
 [scanningPointsX, scanningPointsY] = meshgrid(scanningAxisX, scanningAxisY);
 
 %Get angles to scanning points and source positions
-[thetaScanAngles, phiScanAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
-[thetaArrivalAngles, phiArrivalAngles] = convertCartesianToPolar(xPosSource, yPosSource, zPosSource);
+[thetaScanAngles, phiScanAngles] = convertCartesianToSpherical(scanningPointsX, scanningPointsY, distanceToScanningPlane);
+[thetaArrivalAngles, phiArrivalAngles] = convertCartesianToSpherical(xPosSource, yPosSource, zPosSource);
 
 % Create input signal
 inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
@@ -281,6 +349,10 @@ R = crossSpectralMatrix(inputSignal);
 % Calculate delay-and-sum steered response
 S = steeredResponseDelayAndSum(R, e, w);
 
+
 %Plot the steered response in cartesian coordinate system rather than UV
 interpolationFactor = 2; %interpolate for higher resolution, 0 equals original
 plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
+
+%See the scanning grid and calculated points in UV-space as well
+plotSteeredResponseUV(S, u, v, dynRange, 'log', 'white', '2D')
