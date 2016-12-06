@@ -14,7 +14,7 @@ function [e, u, v] = steeringVector(xPos, yPos, f, c, thetaAngles, phiAngles)
 %phiAngles    - 1xM vector or NxM matrix of of phi scanning angles [degrees]
 %
 %OUT
-%ee           - MxNxP matrix of steering vectors
+%e            - MxNxP matrix of steering vectors
 %u            - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
 %v            - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
 %

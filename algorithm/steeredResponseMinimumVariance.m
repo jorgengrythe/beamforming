@@ -4,17 +4,17 @@ function S = steeredResponseMinimumVariance(R, e)
 %Calculates the steered response from the minimum variance beamforming algorithm in
 %the frequency domain based on sensor positions, input signal and scanning angles
 %
-%[S = steeredResponseMinimumVariance(xPos, yPos, inputSignal, f, c, thetaScanAngles, phiScanAngles)
+%S = steeredResponseMinimumVariance(R, e)
 %
 %IN
-%R               - PxP correlation matrix / cross spectral matrix (CSM)
-%e               - NxMxP steering vector/matrix for a certain frequency
+%R - PxP correlation matrix / cross spectral matrix (CSM)
+%e - NxMxP steering vector/matrix for a certain frequency
 %
 %OUT
-%S               - NxM matrix of minimum variance steered response power
+%S - NxM matrix of minimum variance steered response power
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-30
+%Last updated 2016-12-06
 
 
 [nPointsY, nPointsX, nMics] = size(e);
