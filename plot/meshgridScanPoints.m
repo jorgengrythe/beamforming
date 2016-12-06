@@ -9,4 +9,4 @@ scanAxisY = -maxY:2*maxY/(nPointsY-1):maxY;
 [scanPointsX, scanPointsY] = meshgrid(scanAxisX, scanAxisY);
 
 %Calculate theta, phi angles to each scanning point
-[thetaScanAngles, phiScanAngles] = convertCartesianToPolar(scanPointsX, scanPointsY, zDist);
+[thetaScanAngles, phiScanAngles] = convertCartesianToSpherical(scanPointsX, scanPointsY, zDist);
