@@ -1,17 +1,18 @@
-function [] = plotSteeredResponseUV(S, u, v, defaultDisplayValue, scaleView, displayTheme, displayStyle)
-%plotSteeredResponseUV - plot the steered response in UV-space
+function [] = plotSteeredResponseUV(S, u, v, w, projection, scaleView, displayTheme, displayStyle)
+%plotSteeredResponseUV - plot the steered response in UV or UVW-space
 %
 %Plots the steered response with a slider bar in either linear or
 %logarithmic scale and in black or white theme. Right click anywhere in the
 %figure to change between 2D and 3D view and white or black theme.
 %
-%plotSteeredResponse(S, u, v, defaultDisplayValue, scaleView, displayTheme, displayStyle)
+%plotSteeredResponseUV(S, u, v, w, projection, scaleView, displayTheme, displayStyle)
 %
 %IN
 %S               - NxM matrix of delay-and-sum steered response power
-%u               - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
-%v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
-%defaultDisplayValue - default dynamic range in decibels in the image (optional)
+%u               - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]
+%v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
+%w               - NxM matrix of w coordinates in UV space [cos(theta)]
+%projection      - 'uv' for UV space (2D arrays), and 'uvw' or UVW space (3D arrays)
 %scaleView       - slider scale, use 'lin' or 'log' (optional)
 %displayTheme    - color theme, use 'white' or 'black' (optional)
 %displayStyle    - view style, use '2D' or '3D' (optional)
@@ -20,25 +21,26 @@ function [] = plotSteeredResponseUV(S, u, v, defaultDisplayValue, scaleView, dis
 %[]              - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-07
+%Last updated 2016-12-07
 
-if ~exist('displayStyle','var')
+if ~exist('displayStyle', 'var')
     displayStyle = '2D';
 end
 
-if ~exist('displayTheme','var')
+if ~exist('displayTheme', 'var')
     displayTheme = 'black';
 end
 
-if ~exist('scaleView','var')
+if ~exist('scaleView', 'var')
     scaleView = 'log';
 end
 
-if ~exist('defaultDisplayValue','var')
-    defaultDisplayValue = 15;
+if ~exist('projection', 'var')
+    projection = 'uv';
 end
 
-maxDynamicRange = 80;
+defaultDisplayValue = 6;
+maxDynamicRange = 50;
 
 %Interpolate for higher resolution
 interpolationFactor = 2;
@@ -47,24 +49,26 @@ interpolationMethod = 'spline';
 S = interp2(S, interpolationFactor, interpolationMethod);
 u = interp2(u, interpolationFactor, interpolationMethod);
 v = interp2(v, interpolationFactor, interpolationMethod);
+w = interp2(w, interpolationFactor, interpolationMethod);
 
 %The input is a power signal, normalize and convert to decibel
 S = abs(S)/max(max(abs(S)));
 S = 10*log10(S);
 S(S<-maxDynamicRange) = -maxDynamicRange;
 
-%Default display value
-if defaultDisplayValue > maxDynamicRange
-    maxDynamicRange = defaultDisplayValue;
-end
-
-
-%Plot the steered response
+%Plot the steered response in either UV or UVW space
 fig = figure;
 ax = axes;
 
-
-steeredResponsePlot = surf(ax, u, v, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
+steeredResponsePlot = surf(ax, u, v, w, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
+% switch projection
+%     case 'uv'
+%         steeredResponsePlot = surf(ax, u, v, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
+%     case 'uvw'
+%         steeredResponsePlot = surf(ax, u, v, w, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
+%     otherwise
+%         error(['Undefined projection: ' projection '. Use uv or uvw'])
+% end
 
 %Default colormap
 cmap = [0    0.7500    1.0000
@@ -120,27 +124,14 @@ ax.ZMinorGrid = 'on';
 ax.Box = 'on';
 ax.XTick = [-1 -0.5 0 0.5 1];
 ax.YTick = [-1 -0.5 0 0.5 1];
-ax.ZTickLabel = [];
 ax.XLim = [-1 1];
 ax.YLim = [-1 1];
 
-%Set display style
-if isequal(displayStyle, '2D')
-    setOrientation(fig, fig, '2D')
-elseif isequal(displayStyle, '3D')
-    setOrientation(fig, fig, '3D')
-else
-    error('Use 2D or 3D for displayStyle')
-end
 
-%Set color theme
-if isequal(displayTheme,'black')
-    setTheme(fig, fig, 'Black');
-elseif isequal(displayTheme,'white')
-    setTheme(fig, fig, 'White');
-else
-    error('Use black or white for displayStyle')
-end
+%Set display style, projection and color theme
+setOrientation(fig, fig, displayStyle)
+setProjection(fig, fig, projection)
+setTheme(fig, fig, displayTheme)
 
 
 %Just show color from defaultDisplayValue up to dBmax
@@ -176,12 +167,15 @@ end
 
 %Create context menu (for easy switching between orientation and theme)
 cm = uicontextmenu;
-topMenuOrientation = uimenu('Parent',cm,'Label','Orientation');
+topMenuOrientation = uimenu('Parent',cm,'Label', 'Orientation');
+topMenuProjection = uimenu('Parent',cm,'Label', 'Projection');
 topMenuTheme = uimenu('Parent',cm,'Label','Theme');
 uimenu('Parent',topMenuOrientation, 'Label', '2D', 'Callback',{ @setOrientation, '2D' });
 uimenu('Parent',topMenuOrientation, 'Label', '3D', 'Callback',{ @setOrientation, '3D' });
-uimenu('Parent',topMenuTheme, 'Label', 'Black', 'Callback',{ @setTheme, 'Black' });
-uimenu('Parent',topMenuTheme, 'Label', 'White', 'Callback',{ @setTheme, 'White' });
+uimenu('Parent',topMenuProjection, 'Label', 'UV', 'Callback',{ @setProjection, 'uv' });
+uimenu('Parent',topMenuProjection, 'Label', 'UVW', 'Callback',{ @setProjection, 'uvw' });
+uimenu('Parent',topMenuTheme, 'Label', 'Black', 'Callback',{ @setTheme, 'black' });
+uimenu('Parent',topMenuTheme, 'Label', 'White', 'Callback',{ @setTheme, 'white' });
 
 %Enable the context menu regardless of right clicking on figure, axes or plot
 ax.UIContextMenu = cm;
@@ -200,11 +194,36 @@ fig.UIContextMenu = cm;
         
     end
 
+    %Function to change between UV and UVW space in plot
+    function setProjection(~, ~, selectedProjection)
+        if strcmp(selectedProjection, 'uv')
+            steeredResponsePlot.XData = u;
+            steeredResponsePlot.YData = v;
+            steeredResponsePlot.ZData = S;
+            
+            ax.ZTick = -maxDynamicRange:10:0;
+            ax.ZLim = [-maxDynamicRange 0];
+            zlabel(ax, 'dB')
+            
+        elseif strcmp(selectedProjection, 'uvw')
+            steeredResponsePlot.XData = u;
+            steeredResponsePlot.YData = v;
+            steeredResponsePlot.ZData = w;
+            steeredResponsePlot.CData = S;
+            
+            ax.ZTick = [-1 -0.5 0 0.5 1];
+            ax.ZLim = [-1 1];
+            zlabel(ax, 'w = cos(\theta)')
+        else
+            error('Use uv or uvw for projection')
+        end
+        
+    end
 
     %Function to change between black and white theme
     function setTheme(~, ~, selectedTheme)
         cmap = colormap;
-        if strcmp(selectedTheme,'Black')
+        if strcmp(selectedTheme, 'black')
             fig.Color = 'k';
             t.Color = 'w';
             cmap(1,:) = [1 1 1]*0.2;
@@ -213,7 +232,7 @@ fig.UIContextMenu = cm;
             ax.YColor = [1 1 1];
             ax.ZColor = [1 1 1];
             ax.MinorGridColor = [1 1 1];
-        elseif strcmp(selectedTheme,'White')
+        elseif strcmp(selectedTheme, 'white')
             fig.Color = 'w';
             t.Color = 'k';
             cmap(1,:) = [1 1 1]*0.9;

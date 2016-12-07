@@ -1,15 +1,16 @@
-function signalTotal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, nSamples, coherence)
+function signalTotal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, nSamples, coherence)
 %createSignal - create input signal to an array of microphones
 %
 %Creates the input signal to an array of microphones based on the position
 %in space of the microphones and the arrival angle and amplitude of
 %the individual sources
 %
-%signalTotal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, nSamples, coherence)
+%signalTotal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes, nSamples, coherence)
 %
 %IN
 %xPos               - 1xP vector of x-positions [m]
 %yPos               - 1xP vector of y-positions [m]
+%zPos               - 1xP vector of z-positions [m]
 %f                  - Wave frequency [Hz]
 %c                  - Speed of sound in [m/s]
 %fs                 - Sampling frequency in [Hz]
@@ -46,6 +47,10 @@ if ~isvector(yPos)
     error('Y-positions of array elements must be a 1xP vector where P is number of elements')
 end
 
+if ~isvector(zPos)
+    error('Z-positions of array elements must be a 1xP vector where P is number of elements')
+end
+
 
 T = nSamples/fs;
 t = 0:1/fs:T-1/fs;
@@ -54,13 +59,13 @@ signalTotal = 0;
 for k = 1:numel(thetaArrivalAngles)
 
     %Create signal hitting the array
-    doa = squeeze(steeringVector(xPos, yPos, f, c, thetaArrivalAngles(k), phiArrivalAngles(k)));
+    doa = squeeze(steeringVector(xPos, yPos, zPos, f, c, thetaArrivalAngles(k), phiArrivalAngles(k)));
         
     %Add random phase to make signals incoherent
     if coherence
         signal = 10^(amplitudes(k)/20)*doa*exp(1j*2*pi*f*t);
     else
-        signal = 10^(amplitudes(k)/20)*doa*exp(1j*2*pi*(f*t+randn(1,nSamples)));
+        signal = 10^(amplitudes(k)/20)*doa*exp(1j*2*pi*(f*t+randn(1, nSamples)));
     end
     
     %Total signal equals sum of individual signals

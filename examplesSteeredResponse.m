@@ -6,7 +6,8 @@
 % Create vectors of x- and y-coordinates of microphone positions 
 xPos = -0.8:0.2:0.8; % 1xP vector of x-positions [m]
 yPos = zeros(1, numel(xPos)); % 1xP vector of y-positions [m]
-w = ones(1, numel(xPos))/numel(xPos); % 1xP vector of weightings
+zPos = zeros(1, numel(xPos));
+elementWeights = ones(1, numel(xPos))/numel(xPos); % 1xP vector of weightings
 
 % Define arriving angles and frequency of input signals
 thetaArrivalAngles = [-30 10]; % degrees
@@ -21,16 +22,16 @@ phiScanAngles = 0; % degrees
 
 
 % Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
+inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
 
 % Create steering vector/matrix
-e = steeringVector(xPos, yPos, f, c, thetaScanAngles, phiScanAngles);
+e = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
 
 % Create cross spectral matrix
 R = crossSpectralMatrix(inputSignal);
 
 % Calculate delay-and-sum steered response
-S = steeredResponseDelayAndSum(R, e, w);
+S = steeredResponseDelayAndSum(R, e, elementWeights);
 
 %Normalise spectrum
 spectrumNormalized = abs(S)/max(abs(S));
@@ -72,13 +73,13 @@ ylabel(ax, 'dB')
 amplitudes = [0 -5];
 
 % Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
 % Input signal is changed so update cross spectral matrix
 R = crossSpectralMatrix(inputSignal);
 
 % Calculate delay-and-sum steered response, steering vector/matrix is same as before
-S = steeredResponseDelayAndSum(R, e, w);
+S = steeredResponseDelayAndSum(R, e, elementWeights);
 
 %Normalise spectrum
 spectrumNormalized = abs(S)/max(abs(S));
@@ -112,7 +113,8 @@ nElements = 20;
 radius = 0.6;
 
 [xPos, yPos] = pol2cart((0:1/nElements:1-1/nElements)*2*pi, ones(1,nElements)*radius);
-w = ones(1,numel(xPos))/numel(xPos);
+zPos = zeros(1, numel(xPos));
+elementWeights = ones(1,numel(xPos))/numel(xPos);
 
 % Define arriving angles of input signals
 thetaArrivalAngles = [30 20 30];
@@ -123,16 +125,16 @@ thetaScanAngles = -90:0.5:90;
 phiScanAngles = 0:1:180;
 
 % Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
+inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
 
 % Update steering vector and also save UV-space coordinates
-[e, u, v] = steeringVector(xPos, yPos, f, c, thetaScanAngles, phiScanAngles);
+[e, u, v] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
 
 % Update cross spectral matrix
 R = crossSpectralMatrix(inputSignal);
 
 % Calculate delay-and-sum steered response
-S = steeredResponseDelayAndSum(R, e, w);
+S = steeredResponseDelayAndSum(R, e, elementWeights);
 
 %Normalise spectrum
 spectrumNormalized = abs(S)/max(max(abs(S)));
@@ -183,13 +185,13 @@ ylabel(ax, 'v = sin(\theta)sin(\phi)')
 amplitudes = [0 -2 -3];
 
 % Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
 % Update cross spectral matrix (same scanning angles so steering vector is the same)
 R = crossSpectralMatrix(inputSignal);
 
 % Calculate delay-and-sum steered response
-S = steeredResponseDelayAndSum(R, e, w);
+S = steeredResponseDelayAndSum(R, e, elementWeights);
 
 %Normalise spectrum
 spectrumNormalized = abs(S)/max(max(abs(S)));
@@ -292,8 +294,6 @@ caxis(ax, [-dynamicRange 0])
 
 %% 2D-array case, different source strengths, use plotSteeredResponseUV function
 
-%Default dynamic range
-dynRange = 6;
 
 %The function interpolates the result, so can use fewer scanning
 %angles/points
@@ -302,16 +302,15 @@ phiScanAngles = 0:2:180;
 
 %Changed scanning angles so update steering vector (input signal is the
 %same so we can keep R as before)
-[e, u, v] = steeringVector(xPos, yPos, f, c, thetaScanAngles, phiScanAngles);
+[e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
 
 % Calculate delay-and-sum steered response
-S = steeredResponseDelayAndSum(R, e, w);
+S = steeredResponseDelayAndSum(R, e, elementWeights);
 
 %Plot the steered response, no need to normalise the
 %spectrum or converting to decibel before input
-plotSteeredResponseUV(S, u, v, dynRange, 'log', 'black', '2D')
 
-
+plotSteeredResponseUV(S, u, v, w, 'uv', 'log', 'black', '2D')
 
 %% 2D-array case, scanning plane in cartesian coordinates
 
@@ -338,16 +337,16 @@ scanningAxisY = -maxScanningPlaneExtentY:2*maxScanningPlaneExtentY/(numberOfScan
 [thetaArrivalAngles, phiArrivalAngles] = convertCartesianToSpherical(xPosSource, yPosSource, zPosSource);
 
 % Create input signal
-inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
 %Calculate steering vector
-[e, u, v] = steeringVector(xPos, yPos, f, c, thetaScanAngles, phiScanAngles);
+[e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
 
 %Calculate cross spectral matrix
 R = crossSpectralMatrix(inputSignal);
 
 % Calculate delay-and-sum steered response
-S = steeredResponseDelayAndSum(R, e, w);
+S = steeredResponseDelayAndSum(R, e, elementWeights);
 
 
 %Plot the steered response in cartesian coordinate system rather than UV
@@ -355,4 +354,111 @@ interpolationFactor = 2; %interpolate for higher resolution, 0 equals original
 plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
 
 %See the scanning grid and calculated points in UV-space as well
-plotSteeredResponseUV(S, u, v, dynRange, 'log', 'white', '2D')
+plotSteeredResponseUV(S, u, v, w, 'uv', 'log', 'white', '2D')
+
+%% 3D-array case
+
+% Position of sensors and weighting of 3D array
+% Create spherical array
+[xPos, yPos, zPos] = sphere(9);
+xPos = xPos(:);
+yPos = yPos(:);
+zPos = zPos(:);
+elementWeights = ones(1, numel(xPos))/numel(xPos);
+
+% Define arriving angles of input signals
+thetaArrivalAngles = [0 45 100];
+phiArrivalAngles = [0 -60 -30];
+
+% Define array scanning angles
+thetaScanAngles = 0:1:360;
+phiScanAngles = 0:2:180;
+
+%Source frequency
+f = 600; % [Hz]
+
+%Default dynamic range [dB]
+dynamicRange = 6;
+
+% Create input signal
+inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles);
+
+% Update steering vector and also save UV-space coordinates
+[e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
+
+% Update cross spectral matrix
+R = crossSpectralMatrix(inputSignal);
+
+% Calculate delay-and-sum steered response
+S = steeredResponseDelayAndSum(R, e, elementWeights);
+
+%Normalise and convert to decibel spectrum
+spectrumNormalized = abs(S)/max(max(abs(S)));
+
+%Convert the delay-and-sum steered response to decibel
+spectrumLog = 10*log10(spectrumNormalized);
+
+
+% Plot array geometry
+fig8 = figure;
+fig8.Color = 'w';
+ax = axes('Parent', fig8);
+scatter3(ax, xPos, yPos, zPos, 20, 'filled')
+axis(ax, 'square')
+ax.XLim = [-1 1];
+ax.YLim = [-1 1];
+ax.ZLim = [-1 1];
+grid(ax, 'on')
+title(ax, 'Microphone positions')
+
+%Plot steered response in UVW-space
+fig9 = figure;
+ax = axes('Parent', fig9);
+surf(ax, u, v, w, spectrumLog, 'edgecolor', 'none', 'FaceAlpha', 0.8)
+
+%Do some magic to make the figure look nice (black theme)
+fig9.Color = 'k';
+ax.Color = 'k';
+cmap = colormap;
+cmap(1,:) = [1 1 1]*0.2;
+colormap(ax, cmap);
+view(ax, 40, 40)
+axis(ax, 'square')
+ax.XColor = 'w';
+ax.YColor = 'w';
+ax.ZColor = 'w';
+ax.XTickLabel = [];
+ax.YTickLabel = [];
+ax.ZTickLabel = [];
+ax.XMinorGrid = 'on';
+ax.YMinorGrid = 'on';
+ax.ZMinorGrid = 'on';
+ax.MinorGridColor = 'w';
+ax.MinorGridLineStyle = '-';
+xlabel(ax, 'u = sin(\theta)cos(\phi)')
+ylabel(ax, 'v = sin(\theta)sin(\phi)')
+zlabel(ax, 'w = cos(\theta)')
+
+%Set the dynamic range
+caxis(ax, [-dynamicRange 0])
+
+%% 3D-array case, use plotSteeredResponseUV function
+
+
+%The function interpolates the result, so can use fewer scanning angles/points
+thetaScanAngles = 0:2:360;
+phiScanAngles = 0:4:180;
+
+%Changed scanning angles so update steering vector (input signal is the
+%same so we can keep R as before)
+[e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
+
+% Calculate delay-and-sum steered response
+S = steeredResponseDelayAndSum(R, e, elementWeights);
+
+%Plot the steered response, no need to normalise the
+%spectrum or converting to decibel before input
+plotSteeredResponseUV(S, u, v, w, 'uvw', 'log', 'black', '3D')
+
+
+
