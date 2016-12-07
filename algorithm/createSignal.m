@@ -24,7 +24,7 @@ function signalTotal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngl
 %signalTotal        - PxN matrix of input signal to individual sensors
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-09
+%Last updated 2016-12-07
 
 if ~exist('coherence', 'var')
     coherence = false;

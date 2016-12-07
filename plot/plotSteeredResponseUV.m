@@ -61,14 +61,6 @@ fig = figure;
 ax = axes;
 
 steeredResponsePlot = surf(ax, u, v, w, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
-% switch projection
-%     case 'uv'
-%         steeredResponsePlot = surf(ax, u, v, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
-%     case 'uvw'
-%         steeredResponsePlot = surf(ax, u, v, w, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
-%     otherwise
-%         error(['Undefined projection: ' projection '. Use uv or uvw'])
-% end
 
 %Default colormap
 cmap = [0    0.7500    1.0000

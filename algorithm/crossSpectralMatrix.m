@@ -8,6 +8,9 @@ function R = crossSpectralMatrix(inputSignal)
 %
 %OUT
 %R - PxP correlation matrix / cross spectral matrix (CSM)
+%
+%Created by J?rgen Grythe, Squarehead Technology AS
+%Last updated 2016-12-07
 
 [~, nSamples] = size(inputSignal);
 

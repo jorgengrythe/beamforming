@@ -5,21 +5,22 @@ function [e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, 
 %Theta is the elevation and is the normal incidence angle
 %Phi is the azimuth, and is the angle in the XY-plane
 %
-%[e, u, v, w] = steeringVector(xPos, yPos, f, c, theta, phi)
+% [e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles)
 %
 %IN
-%xPos         - 1xP vector of x-positions [m]
-%yPos         - 1xP vector of y-positions [m]
-%f            - Wave frequency [Hz]
-%c            - Speed of sound [m/s]
-%thetaAngles  - 1xN vector or NxM matrix of theta scanning angles [degrees]
-%phiAngles    - 1xM vector or NxM matrix of of phi scanning angles [degrees]
+%xPos            - 1xP vector of x-positions [m]
+%yPos            - 1xP vector of y-positions [m]
+%yPos            - 1xP vector of z-positions [m]
+%f               - Wave frequency [Hz]
+%c               - Speed of sound [m/s]
+%thetaScanAngles - 1xN vector or NxM matrix of theta scanning angles [degrees]
+%phiScanAngles   - 1xM vector or NxM matrix of of phi scanning angles [degrees]
 %
 %OUT
-%e            - MxNxP matrix of steering vectors
-%u            - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]
-%v            - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
-%w            - NxM matrix of w coordinates in UV space [cos(theta)]
+%e               - MxNxP matrix of steering vectors
+%u               - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]
+%v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
+%w               - NxM matrix of w coordinates in UV space [cos(theta)]
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
 %Last updated 2016-12-07
