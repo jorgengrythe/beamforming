@@ -1,4 +1,4 @@
-function [] = plotBeampattern3D(xPos, yPos, w)
+function [] = plotBeampattern3D(xPos, yPos, zPos, elementWeights)
 %plotBeampattern3D - plots the beampattern for various frequencies
 %
 %plotBeampattern3D(xPos, yPos, w)
@@ -16,9 +16,9 @@ function [] = plotBeampattern3D(xPos, yPos, w)
 
 
 %If no weights are given use uniform weighting
-if ~exist('w','var')
-    nMics = size(xPos,2);
-    w = ones(1,nMics)/nMics;
+if ~exist('elementWeights','var')
+    nMics = numel(xPos);
+    elementWeights = ones(1, nMics)/nMics;
 end
 
 %Default values
@@ -33,10 +33,11 @@ thetaSteeringAngle = 0;
 phiSteeringAngle = 0;
 thetaScanningAngles = -90:1:90;
 phiScanningAngles = 0:1:180;
-beamPattern = 0;
-thetaScanningAnglesRadians = 0;
-phiScanningAnglesRadians = 0;
 
+beamPattern = 0;
+u = 0;
+v = 0;
+w = 0;
 
 %Prepare the figure
 fig = figure;
@@ -153,9 +154,8 @@ bpPlot.UIContextMenu = cm;
             end
             
             %Calculating the beampattern
-            [beamPattern] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, ...
+            [beamPattern, u, v, w] = arrayFactor(xPos, yPos, zPos, elementWeights, f, c, thetaScanningAngles, ...
                 phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
-            [phiScanningAnglesRadians, thetaScanningAnglesRadians] = meshgrid(phiScanningAngles*pi/180, thetaScanningAngles*pi/180);
             beamPattern = 20*log10(beamPattern);
             
         else
@@ -171,9 +171,9 @@ bpPlot.UIContextMenu = cm;
         
         beamPatternDynamicRange = beamPattern + maxDynamicRange;
         
-        xx = (beamPatternDynamicRange) .* sin(thetaScanningAnglesRadians) .* cos(phiScanningAnglesRadians);
-        yy = (beamPatternDynamicRange) .* sin(thetaScanningAnglesRadians) .* sin(phiScanningAnglesRadians);
-        zz = (beamPatternDynamicRange) .* cos(thetaScanningAnglesRadians);
+        xx = (beamPatternDynamicRange) .* u;
+        yy = (beamPatternDynamicRange) .* v;
+        zz = (beamPatternDynamicRange) .* w;
         
         %Interpolate for increased resolution
         interpolationFactor = 2;

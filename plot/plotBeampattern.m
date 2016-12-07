@@ -1,4 +1,4 @@
-function [] = plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
+function [] = plotBeampattern(xPos, yPos, zPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
 %plotBeampattern - plots the beampattern for various frequencies
 %
 %plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle, dynRange)
@@ -119,7 +119,7 @@ line([-dynRange dynRange], [0 0], ...
 %Calculate and plot the beampattern(s) in the figure
 polarPlotHandles = [];
 for ff = f
-	W = arrayFactor(xPos, yPos, w, ff, c, thetaScanAngles, sliceAngle, thetaSteeringAngle);
+	W = arrayFactor(xPos, yPos, zPos, w, ff, c, thetaScanAngles, sliceAngle, thetaSteeringAngle);
     W = 20*log10(W);
     W = reshape(W, 1, numel(W));
     

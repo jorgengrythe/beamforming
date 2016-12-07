@@ -1,32 +1,34 @@
-function [W, u, v] = arrayFactor(xPos, yPos, w, f, c, thetaScanAngles, phiScanAngles, thetaSteerAngle, phiSteerAngle)
-%arrayFactor - Calculate array factor of 1D or 2D array
+function [AF, u, v, w] = arrayFactor(xPos, yPos, zPos, elementWeights, f, c, thetaScanAngles, phiScanAngles, thetaSteerAngle, phiSteerAngle)
+%arrayFactor - Calculate array factor of 1D, 2D or 3D array
 %
-%This matlab function calculates the array factor of a 1D or 2D array based
+%This matlab function calculates the array factor of a 1D, 2D or 3D array based
 %on the position of the elements/sensors and the weight associated with
 %each sensor. If no angle is given as input, the scanning angle is theta
 %from -90 to 90, and phi from 0 to 360 degrees with 1 degree resolution
 %
-%[W, u, v] = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle)
+%[AF, u, v, w] = arrayFactor(xPos, yPos, zPos, elementWeights, f, c, thetaScanAngles, phiScanAngles, thetaSteerAngle, phiSteerAngle)
 %
 %IN
 %xPos            - 1xP vector of x-positions
 %yPos            - 1xP vector of y-positions
-%w               - 1xP vector of element weights
+%zPos            - 1xP vector of z-positions
+%elementWeights  - 1xP vector of element weights
 %f               - Wave frequency
 %c               - Speed of sound
-%thetaScanAngles - 1xM vector of theta scanning angles in degrees (optional)
-%phiScanAngles   - 1XN vector of phi scanning angles in degrees (optional)
+%thetaScanAngles - 1xM vector or NxM matrix of theta scanning angles in degrees (optional)
+%phiScanAngles   - 1XN vector or NxM matrix of phi scanning angles in degrees (optional)
 %thetaSteerAngle - Theta steering angle in degrees (optional)
 %phiSteerAngle   - Phi steering angle in degrees (optional)
 %
 %OUT
-%W               - calculated array factor
+%AF              - Calculated array factor
 %u               - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
-%v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)] 
+%v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
+%w               - NxM matrix of w coordinates in UV space [cos(theta)]
 %
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-10-04
+%Last updated 2016-12-07
 
 
 if ~isvector(xPos)
@@ -37,7 +39,7 @@ if ~isvector(yPos)
     error('Y-positions of array elements must be a 1xP vector where P is number of elements')
 end
 
-if ~isvector(w)
+if ~isvector(elementWeights)
     error('Weighting of array elements must be a 1xP vector where P is number of elements')
 end
 
@@ -92,11 +94,12 @@ if isvector(thetaScanAngles)
     %Calculate UV coordinates
     u = sin(thetaScanAngles)'*cos(phiScanAngles);
     v = sin(thetaScanAngles)'*sin(phiScanAngles);
+    w = repmat(cos(thetaScanAngles)', 1, N);
         
     % Apply steering
     us = u - sin(thetaSteerAngle)*cos(phiSteerAngle);
     vs = v - sin(thetaSteerAngle)*sin(phiSteerAngle);
-    
+    ws = w - cos(thetaSteerAngle);
 else
     
     %Size of matrix containing theta and phi angles
@@ -105,26 +108,30 @@ else
     %Calculate UV coordinates
     u = sin(thetaScanAngles).*cos(phiScanAngles);
     v = sin(thetaScanAngles).*sin(phiScanAngles);
+    w = cos(thetaScanAngles);
         
     % Apply steering
     us = u - sin(thetaSteerAngle).*cos(phiSteerAngle);
     vs = v - sin(thetaSteerAngle).*sin(phiSteerAngle);
+    ws = w - cos(thetaSteerAngle); 
 end
 
 
 %Calculate array factor
 uu = bsxfun(@times, us, reshape(xPos, 1, 1, P));
 vv = bsxfun(@times, vs, reshape(yPos, 1, 1, P));
-ww = repmat(reshape(w, 1, 1, P), M, N);
+ww = bsxfun(@times, ws, reshape(zPos, 1, 1, P));
 
-W = sum(ww.*exp(1j*k*(uu+vv)), 3);
+g = repmat(reshape(elementWeights, 1, 1, P), M, N);
+
+AF = sum(g.*exp(1j*k*(uu + vv + ww)), 3);
 
 %Normalising
-W = abs(W)./max(max(abs(W)));
+AF = abs(AF)./max(max(abs(AF)));
 
 %
 %                 N
-%W(theta, phi) = sum [ w_n * exp{jk(u*x_n + v*y_n)} ]
+%AF(theta, phi) = sum [ g_n * exp{jk(u*x_n + v*y_n + w*z_n)} ]
 %                n=1
 %
 %u = 
@@ -139,6 +146,12 @@ W = abs(W)./max(max(abs(W)));
 %|    .                           .                         .               |
 %|sin(theta_M)*sin(phi_0) sin(theta_M)*sin(phi_1) .. sin(theta_M)*sin(phi_N)|
 
+%w = 
+%|cos(theta_0) cos(theta_0) .. cos(theta_0)|
+%|cos(theta_1) cos(theta_1) .. cos(theta_1)|
+%|    .            .                .      |
+%|cos(theta_N) cos(theta_N) .. cos(theta_N)|
+
 %uu = 
 %   --------
 %  /       /|
@@ -150,13 +163,13 @@ W = abs(W)./max(max(abs(W)));
 %---------/
 %   N (length phi)
 
-%ww = 
+%g = 
 %   --------
-%  / w_P   /|
+%  / g_P   /|
 % /       / |
 %---------  | M
-%|w1   w1|  |
-%|   w1  |  /
-%|w1   w1| / P (# elements)
+%|g1   g1|  |
+%|   g1  |  /
+%|g1   g1| / P (# elements)
 %---------/
 %   N

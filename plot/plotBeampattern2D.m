@@ -1,4 +1,4 @@
-function plotBeampattern2D(xPos, yPos, w, coveringAngles, resolution)
+function plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, resolution)
 %plotBeampattern2D - plots the beampattern for various frequencies
 %
 %plotBeampattern2D(xPos, yPos, w, coveringAngles, resolution)
@@ -53,11 +53,11 @@ scanningAxisX = tan((-coveringAngleX:resolution:coveringAngleX)*pi/180);
 scanningAxisY = tan((-coveringAngleY:resolution:coveringAngleY)*pi/180);
 [scanningPointsY, scanningPointsX] = meshgrid(scanningAxisY,scanningAxisX);
 
-[thetaScanningAngles, phiScanningAngles] = convertCartesianToPolar(scanningPointsX, scanningPointsY, distanceToScanningPlane);
-[thetaSteeringAngle, phiSteeringAngle] = convertCartesianToPolar(xPosSource, yPosSource, distanceToScanningPlane);
+[thetaScanningAngles, phiScanningAngles] = convertCartesianToSpherical(scanningPointsX, scanningPointsY, distanceToScanningPlane);
+[thetaSteeringAngle, phiSteeringAngle] = convertCartesianToSpherical(xPosSource, yPosSource, distanceToScanningPlane);
 
 %Calculate beampattern
-W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+W = arrayFactor(xPos, yPos, zPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
 W = 20*log10(W);
 
 
@@ -252,13 +252,13 @@ ax.ButtonDownFcn = {@changeSteeringAngles};
                     yPosSource = tan(eventData.IntersectionPoint(2)*pi/180);
             end
             
-            [thetaSteeringAngle, phiSteeringAngle] = convertCartesianToPolar(xPosSource, yPosSource, distanceToScanningPlane);
+            [thetaSteeringAngle, phiSteeringAngle] = convertCartesianToSpherical(xPosSource, yPosSource, distanceToScanningPlane);
             updateBeampatternPlot()
         end
     end
 
     function updateBeampatternPlot()
-        W = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+        W = arrayFactor(xPos, yPos, zPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
         W = 20*log10(W);
         
         beampatternPlot.ZData = W+dynamicRange;
