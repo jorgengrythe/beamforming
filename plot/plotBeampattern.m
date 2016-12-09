@@ -1,11 +1,12 @@
 function [] = plotBeampattern(xPos, yPos, zPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
 %plotBeampattern - plots the beampattern for various frequencies
 %
-%plotBeampattern(xPos, yPos, w, f, c, thetaSteeringAngle, dynRange)
+%plotBeampattern(xPos, yPos, zPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
 %yPos                - 1xP vector of y-positions [m]
+%zPos                - 1xP vector of z-positions [m]
 %w                   - 1xP vector of element weights
 %f                   - Wave frequency [Hz]
 %c                   - Speed of sound [m/s]
@@ -17,7 +18,7 @@ function [] = plotBeampattern(xPos, yPos, zPos, w, f, c, thetaSteeringAngle, sli
 %[]                  - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-10-05
+%Last updated 2016-12-09
 
 
 if ~exist('dynRange','var')
