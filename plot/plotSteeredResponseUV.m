@@ -60,7 +60,7 @@ S(S<-maxDynamicRange) = -maxDynamicRange;
 fig = figure;
 ax = axes;
 
-steeredResponsePlot = surf(ax, u, v, w, S, 'edgecolor', 'none', 'FaceAlpha', 0.8);
+steeredResponsePlot = surf(ax, u, v, w, S, 'edgecolor', 'none', 'FaceAlpha', 0.7);
 
 %Default colormap
 cmap = [0    0.7500    1.0000
