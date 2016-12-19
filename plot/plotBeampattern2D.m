@@ -1,11 +1,12 @@
 function plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, resolution)
 %plotBeampattern2D - plots the beampattern for various frequencies
 %
-%plotBeampattern2D(xPos, yPos, w, coveringAngles, resolution)
+%plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, resolution)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
 %yPos                - 1xP vector of y-positions [m]
+%zPos                - 1xP vector of z-positions [m]
 %w                   - 1xP vector of element weights (optional)
 %coveringAngles      - 1x2 vector of max x,y scanning angle (optional)
 %resolution          - image resolution in degrees (optional)
@@ -14,7 +15,7 @@ function plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, resolution)
 %[]                  - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-10-06
+%Last updated 2016-12-196
 
 %Default values
 dynamicRange = 15;

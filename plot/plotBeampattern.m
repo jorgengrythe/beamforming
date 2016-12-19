@@ -1,37 +1,38 @@
-function [] = plotBeampattern(xPos, yPos, zPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
+function [] = plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, phiScanAngle, dynRange)
 %plotBeampattern - plots the beampattern for various frequencies
 %
 %plotBeampattern(xPos, yPos, zPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
 %
 %IN
-%xPos                - 1xP vector of x-positions [m]
-%yPos                - 1xP vector of y-positions [m]
-%zPos                - 1xP vector of z-positions [m]
-%w                   - 1xP vector of element weights
-%f                   - Wave frequency [Hz]
-%c                   - Speed of sound [m/s]
-%thetaSteeringAngle  - 1x1 theta steering angle [degrees]
-%sliceAngle          - Angle slice to show, 0 for xz and 90 for yz view
-%dynRange            - Dynamic range in plot [dB]
+%xPos             - 1xP vector of x-positions [m]
+%yPos             - 1xP vector of y-positions [m]
+%zPos             - 1xP vector of z-positions [m]
+%weights          - 1xP vector of element weights
+%f                - Wave frequency [Hz]
+%c                - Speed of sound [m/s]
+%thetaSteerAngle  - 1x1 theta steering angle [degrees]
+%phiScanAngle     - Angle slice to show, 0 for xz and 90 for yz view
+%dynRange         - Dynamic range in plot [dB]
 %
 %OUT
-%[]                  - The figure plot
+%[]               - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-12-09
+%Last updated 2016-12-15
 
 
 if ~exist('dynRange','var')
     dynRange = 50;
 end
 
-if ~exist('sliceAngle','var')
-    sliceAngle = 0;
+if ~exist('phiScanAngle', 'var')
+    phiScanAngle = 0;
 end
 
-if ~exist('thetaSteeringAngle','var')
-    thetaSteeringAngle = 0;
+if ~exist('thetaSteerAngle', 'var')
+    thetaSteerAngle = 0;
 end
+
 
 %Scanning angles
 thetaScanAngles = -90:0.01:90;
@@ -120,7 +121,8 @@ line([-dynRange dynRange], [0 0], ...
 %Calculate and plot the beampattern(s) in the figure
 polarPlotHandles = [];
 for ff = f
-	W = arrayFactor(xPos, yPos, zPos, w, ff, c, thetaScanAngles, sliceAngle, thetaSteeringAngle);
+	W = arrayFactor(xPos, yPos, zPos, weights, ff, c, thetaScanAngles, phiScanAngle, thetaSteerAngle, phiScanAngle);
+    
     W = 20*log10(W);
     W = reshape(W, 1, numel(W));
     
@@ -131,7 +133,6 @@ for ff = f
     xx = (W+dynRange) .* sin(thetaScanAngles*pi/180);
     yy = (W+dynRange) .* cos(thetaScanAngles*pi/180);
     p = plot(axPolar, xx, yy, 'linewidth', lwidth, 'DisplayName', [num2str(ff*1e-3) ' kHz']);
-    
     polarPlotHandles = [polarPlotHandles p];
 end
 
