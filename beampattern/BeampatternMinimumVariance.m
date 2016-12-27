@@ -8,7 +8,7 @@ thetaScanningAngles = -60:0.1:60;
 phiScanningAngles = 0;
 
 %Set parameters of incoming signal(s)
-f = 2e3;
+f0 = 2e3;
 thetaArrivalAngles = [-10 5 30];
 phiArrivalAngles = [0 0 0];
 thetaSteeringAngle = -10;
@@ -16,18 +16,18 @@ phiSteeringAngle = 0;
 amplitudes = [0 0 0];
 
 %Load array
-load ../data/arrays/ring-48.mat
+load ../data/arrays/AMD128
 %w = hiResWeights;
 
 %Create signal hitting the array
-inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+inputSignal = createSignal(xPos, yPos, zPos, f0, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
 %Get MV weighting vector
-w_MV = weightingVectorMinimumVariance(xPos, yPos, inputSignal, f, c, thetaSteeringAngle, phiSteeringAngle);
+w_MV = weightingVectorMinimumVariance(xPos, yPos, zPos, inputSignal, f0, c, thetaSteeringAngle, phiSteeringAngle);
 
 %Calculate beampattern
-W_MV = arrayFactor(xPos, yPos, w_MV, f, c, thetaScanningAngles, phiScanningAngles);
-W_DAS = arrayFactor(xPos, yPos, w, f, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle);
+W_MV = arrayFactor(xPos, yPos, zPos, w_MV, f0, c, thetaScanningAngles, phiScanningAngles);
+W_DAS = arrayFactor(xPos, yPos, zPos, w, f0, c, thetaScanningAngles, phiScanningAngles, thetaSteeringAngle);
 W_MV = 20*log10(W_MV);
 W_DAS = 20*log10(W_DAS);
 
@@ -68,9 +68,9 @@ set(gca,'XTick',[-90 -60 -30 -10 5 30 60 90])
 title('Beampattern minimum variance','fontweight','normal')
 
 %% Calculate steered response
-inputSignal = createSignal(xPos, yPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
-e = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
-R = inputSignal*inputSignal';
+inputSignal = createSignal(xPos, yPos, zPos, f0, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
+e = steeringVector(xPos, yPos, zPos, f0, c, thetaScanningAngles, phiScanningAngles);
+R = crossSpectralMatrix(inputSignal);
 
 dBmin = 30;
 S_DAS = steeredResponseDelayAndSum(R, e, w);

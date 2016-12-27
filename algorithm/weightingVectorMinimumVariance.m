@@ -1,4 +1,4 @@
-function w = weightingVectorMinimumVariance(xPos, yPos, inputSignal, f, c, thetaScanningAngle, phiScanningAngle)
+function w = weightingVectorMinimumVariance(xPos, yPos, zPos, inputSignal, f, c, thetaScanningAngle, phiScanningAngle)
 %weightingVectorMinimumVariance - minimum variance optimal weights
 %
 %Calculates the optimal minimum variance weights for a specific array with
@@ -24,7 +24,7 @@ nSensors = size(inputSignal,1);
 nSamples = size(inputSignal,2);
 
 %Calculate steering vector for all scanning angles
-e = squeeze(steeringVector(xPos, yPos, f, c, thetaScanningAngle, phiScanningAngle));
+e = squeeze(steeringVector(xPos, yPos, zPos, f, c, thetaScanningAngle, phiScanningAngle));
 
 %Calculate correlation matrix with diagonal loading
 R = inputSignal*inputSignal';
