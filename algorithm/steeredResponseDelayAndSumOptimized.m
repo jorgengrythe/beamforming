@@ -1,10 +1,10 @@
-function [S, u, v, R, e] = steeredResponseDelayAndSumOptimized(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
+function [S, u, v, w, R, e] = steeredResponseDelayAndSumOptimized(xPos, yPos, zPos, elementWeights, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
 %steeredResponseDelayAndSum - calculate delay and sum in frequency domain
 %
 %Calculates the steered response from the delay-and-sum algorithm in the
 %frequency domain based on sensor positions, input signal and scanning angles
 %
-%[S, u, v, R, e] = steeredResponseDelayAndSum(xPos, yPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
+%[S, u, v, R, e] = steeredResponseDelayAndSum(xPos, yPos, zPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
@@ -38,11 +38,11 @@ end
 nSensors = numel(xPos);
 
 %Calculate steering vector for all scanning angles
-[e, u, v] = steeringVector(xPos, yPos, f, c, thetaScanningAngles, phiScanningAngles);
+[e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanningAngles, phiScanningAngles);
 
 
 %Calculate correlation matrix
-inputSignal = diag(w)*inputSignal;
+inputSignal = diag(elementWeights)*inputSignal;
 R = inputSignal*inputSignal';
 
 
