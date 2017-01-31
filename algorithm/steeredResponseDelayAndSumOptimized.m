@@ -4,7 +4,7 @@ function [S, u, v, w, R, e] = steeredResponseDelayAndSumOptimized(xPos, yPos, zP
 %Calculates the steered response from the delay-and-sum algorithm in the
 %frequency domain based on sensor positions, input signal and scanning angles
 %
-%[S, u, v, R, e] = steeredResponseDelayAndSum(xPos, yPos, zPos, w, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
+%[S, u, v, w, R, e] = steeredResponseDelayAndSumOptimized(xPos, yPos, zPos, elementWeights, inputSignal, f, c, thetaScanningAngles, phiScanningAngles)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
@@ -20,11 +20,12 @@ function [S, u, v, w, R, e] = steeredResponseDelayAndSumOptimized(xPos, yPos, zP
 %S                   - NxM matrix of delay-and-sum steered response power
 %u                   - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
 %v                   - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
+%w                   - NxM matrix of w coordinates in UV space [cos(theta)]
 %R                   - PxP correlation matrix / cross spectral matrix (CSM)
 %e                   - NxMxP steering vector/matrix 
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-07
+%Last updated 2017-01-31
 
 
 if ~exist('thetaScanningAngles', 'var')
@@ -35,31 +36,23 @@ if ~exist('phiScanningAngles', 'var')
     phiScanningAngles = 0:180;
 end
 
-nSensors = numel(xPos);
 
 %Calculate steering vector for all scanning angles
 [e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanningAngles, phiScanningAngles);
-
 
 %Calculate correlation matrix
 inputSignal = diag(elementWeights)*inputSignal;
 R = inputSignal*inputSignal';
 
 
-%Calculate power as a function of steering vector/scanning angle (delay-and-sum)
-%with scanning angles as either vectors or matrices
-if isvector(thetaScanningAngles);
-    numberOfRowsInS = numel(thetaScanningAngles);
-    numberOfColsInS = numel(phiScanningAngles);
-else
-    [numberOfRowsInS, numberOfColsInS] = size(thetaScanningAngles);
-end
+%N # of y-points, M # of x-points, P number of mics
+[N, M, P] = size(e);
 
-S = zeros(numberOfRowsInS, numberOfColsInS);
-for rowScanningPoint = 1:numberOfRowsInS
-    for columnScanningPoint = 1:numberOfColsInS
-        ee = reshape(e(rowScanningPoint, columnScanningPoint, :), nSensors, 1);
-        S(rowScanningPoint, columnScanningPoint) = ee'*R*ee;
+S = zeros(N, M);
+for y = 1:N
+    for x = 1:M
+        ee = reshape(e(y, x, :), P, 1);
+        S(y, x) = ee'*R*ee;
     end
 end
 

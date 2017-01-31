@@ -17,14 +17,14 @@ function [S, V, Vn] = steeredResponseMusic(R, e, nSources)
 %Vn       - Noise eigenvectors
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-30
+%Last updated 2017-01-31
 
-
-[nPointsY, nPointsX, nMics] = size(e);
+%N # of y-points, M # of x-points, P number of mics
+[N, M, P] = size(e);
 
 %Cross spectral matrix with diagonal loading
-R = R + trace(R)/(nMics^2)*eye(nMics, nMics);
-R = R/nMics;
+R = R + trace(R)/(P^2)*eye(P, P);
+R = R/P;
 
 %Eigenvectors of R
 [V,~] = eig(R);
@@ -33,11 +33,11 @@ R = R/nMics;
 Vn = V(:,1:end-nSources);
 
 %Music steered response power
-S = zeros(nPointsY, nPointsX);
-for pointY = 1:nPointsY
-    for pointX = 1:nPointsX
-        ee = reshape(e(pointY, pointX, :), nMics, 1);
-        S(pointY, pointX) = 1./(ee'*(Vn*Vn')*ee);
+S = zeros(N, M);
+for y = 1:N
+    for x = 1:M
+        ee = reshape(e(y, x, :), P, 1);
+        S(y, x) = 1./(ee'*(Vn*Vn')*ee);
     end
 end
 

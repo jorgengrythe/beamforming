@@ -14,19 +14,20 @@ function S = steeredResponseFunctionalBeamforming(R, e, mapOrder)
 %S        - NxM matrix of Functional Beamforming steered response power
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-30
+%Last updated 2017-01-31
 
 if ~exist('mapOrder', 'var')
     mapOrder = 20;
 end
 
-[nPointsY, nPointsX, nMics] = size(e);
+%N # of y-points, M # of x-points, P number of mics
+[N, M, P] = size(e);
 
 %Functional beamforming steered response power
-S = zeros(nPointsY, nPointsX);
-for pointY = 1:nPointsY
-    for pointX = 1:nPointsX
-        ee = reshape(e(pointY, pointX, :), nMics, 1);
-        S(pointY, pointX) = (ee'*R^(1/mapOrder)*ee)^mapOrder;
+S = zeros(N, M);
+for y = 1:N
+    for x = 1:M
+        ee = reshape(e(y, x, :), P, 1);
+        S(y, x) = (ee'*R^(1/mapOrder)*ee)^mapOrder;
     end
 end
