@@ -20,20 +20,22 @@ if ~exist('maxIterations', 'var')
 end
 
 Y = real(S);
+deps = 1e-1;
 
 [nPointsY, nPointsX, nMics] = size(e);
 N = nPointsY*nPointsX;
 
-%Make the A-matrix
+%Make the A-matrix size totalScanningPoints x totalScanningPoints
 ee = reshape(e, N, nMics);
 A = (abs(ee*ee').^2)./nMics^2;
 
-% DAMAS
+%Initialise final source powers Q
 Q = zeros(size(Y));
 Q0 = Y;
 
-deps = 1e-1;
-for iteration=1:maxIterations;
+
+%Solve the system Y = AQ for Q by Gauss-Seidel iteration
+for i=1:maxIterations;
     
     for n=1:N
         Q(n) = max(0, Y(n) - A(n, 1:n-1)*Q(1:n-1).' ...
@@ -49,16 +51,16 @@ for iteration=1:maxIterations;
     dX = (Q - Q0);
     maxd = max(abs(dX(:)))/mean(Q0(:));
     if  maxd < deps
-        disp(['Converged after ' num2str(iteration) ' iterations']);
+        disp(['Converged after ' num2str(i) ' iterations']);
         break;
     end
     Q0 = Q;
 end
 
 
-if iteration == maxIterations
+if i == maxIterations
     disp(['Stopped after maximum iterations (' num2str(maxIterations) ')'])
 else
-    disp(['Converged after ' num2str(iteration) ' iterations'])
+    disp(['Converged after ' num2str(i) ' iterations'])
 end
 
