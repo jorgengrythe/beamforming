@@ -13,47 +13,47 @@ function Q = deconvolutionDAMAS(S, e, maxIterations)
 %Q - NxM devonvolved intensity plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2017-01-27
+%Last updated 2017-02-01
 
 if ~exist('maxIterations', 'var')
     maxIterations = 100;
 end
 
 Y = real(S);
-deps = 1e-1;
+deps = 0.1;
 
-[nPointsY, nPointsX, nMics] = size(e);
-N = nPointsY*nPointsX;
+%N # of y-points, M # of x-points, P number of mics
+[N, M, P] = size(e);
 
-%Make the A-matrix size totalScanningPoints x totalScanningPoints
-ee = reshape(e, N, nMics);
-A = (abs(ee*ee').^2)./nMics^2;
+%Make the A-matrix square size NxM x NxM x P
+ee = reshape(e, N*M, P);
+A = (abs(ee*ee').^2)./P^2;
 
 %Initialise final source powers Q
 Q = zeros(size(Y));
 Q0 = Y;
 
 
-%Solve the system Y = AQ for Q by Gauss-Seidel iteration
+%Solve the system Y = AQ for Q by Gauss-Seidel iteration where Y is the
+%original delay-and-sum plot we want to deconvolve, and Q are the true
+%source powers
 for i=1:maxIterations;
     
-    for n=1:N
-        Q(n) = max(0, Y(n) - A(n, 1:n-1)*Q(1:n-1).' ...
-            - A(n, n+1:end)*Q0(n+1:end).');
+    %Gauss-Seidel iteration. If the solution is negative set it to zero (to
+    %ensure that we only have positive and not negative power)
+    for n=1:N*M
+        Q(n) = max(0, Y(n) - A(n, 1:n-1)*Q(1:n-1)' ...
+            - A(n, n+1:end)*Q0(n+1:end)');
     end
-    
-    for n=N:-1:1
-        Q(n) = max(0, Y(n) - A(n, 1:n-1)*Q0(1:n-1).' ...
-            - A(n,n+1:end)*Q(n+1:end).');
-    end
-    
-    
+
+    %Break criterion for convergence
     dX = (Q - Q0);
     maxd = max(abs(dX(:)))/mean(Q0(:));
+    
     if  maxd < deps
-        disp(['Converged after ' num2str(i) ' iterations']);
         break;
     end
+    
     Q0 = Q;
 end
 
