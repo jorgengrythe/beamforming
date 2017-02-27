@@ -1,4 +1,4 @@
-function [] = plotBeampattern3D(xPos, yPos, zPos, elementWeights)
+function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
 %plotBeampattern3D - plots the beampattern for various frequencies
 %
 %plotBeampattern3D(xPos, yPos, w)
