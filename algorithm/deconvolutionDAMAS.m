@@ -6,14 +6,14 @@ function Q = deconvolutionDAMAS(S, e, maxIterations)
 %Q = deconvolutionDAMAS(S, e, maxIterations)
 %
 %IN
-%S - NxM matrix of delay-and-sum steered response power
-%e - NxMxP steering vector/matrix for a certain frequency
+%S - MxN matrix of delay-and-sum steered response power
+%e - MxNxP steering vector/matrix for a certain frequency
 %
 %OUT
-%Q - NxM devonvolved intensity plot
+%Q - MxN devonvolved intensity plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2017-02-01
+%Last updated 2017-02-27
 
 if ~exist('maxIterations', 'var')
     maxIterations = 100;
@@ -22,11 +22,11 @@ end
 Y = real(S);
 deps = 0.1;
 
-%N # of y-points, M # of x-points, P number of mics
-[N, M, P] = size(e);
+%M # of y-points, N # of x-points, P number of mics
+[M, N, P] = size(e);
 
 %Make the A-matrix square size NxM x NxM x P
-ee = reshape(e, N*M, P);
+ee = reshape(e, M*N, P);
 A = (abs(ee*ee').^2)./P^2;
 
 %Initialise final source powers Q
@@ -41,7 +41,7 @@ for i=1:maxIterations;
     
     %Gauss-Seidel iteration. If the solution is negative set it to zero (to
     %ensure that we only have positive and not negative power)
-    for n=1:N*M
+    for n=1:M*N
         Q(n) = max(0, Y(n) - A(n, 1:n-1)*Q(1:n-1)' ...
             - A(n, n+1:end)*Q0(n+1:end)');
     end

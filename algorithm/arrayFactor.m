@@ -15,20 +15,20 @@ function [AF, u, v, w] = arrayFactor(xPos, yPos, zPos, elementWeights, f, c, the
 %elementWeights  - 1xP vector of element weights
 %f               - Wave frequency
 %c               - Speed of sound
-%thetaScanAngles - 1xM vector or NxM matrix of theta scanning angles in degrees (optional)
-%phiScanAngles   - 1XN vector or NxM matrix of phi scanning angles in degrees (optional)
+%thetaScanAngles - 1xM vector or MxN matrix of theta scanning angles in degrees (optional)
+%phiScanAngles   - 1XN vector or MxN matrix of phi scanning angles in degrees (optional)
 %thetaSteerAngle - Theta steering angle in degrees (optional)
 %phiSteerAngle   - Phi steering angle in degrees (optional)
 %
 %OUT
 %AF              - Calculated array factor
-%u               - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
-%v               - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
-%w               - NxM matrix of w coordinates in UV space [cos(theta)]
+%u               - MxN matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v               - MxN matrix of v coordinates in UV space [sin(theta)*sin(phi)]
+%w               - MxN matrix of w coordinates in UV space [cos(theta)]
 %
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-12-07
+%Last updated 2017-02-27
 
 
 if ~isvector(xPos)

@@ -13,19 +13,19 @@ function [S, u, v, w, R, e] = steeredResponseDelayAndSumOptimized(xPos, yPos, zP
 %inputSignal         - PxL vector of input signals consisting of L samples
 %f                   - Wave frequency [Hz]
 %c                   - Speed of sound [m/s]
-%thetaScanningAngles - 1xN vector or NxM matrix of theta scanning angles [degrees]
-%phiScanningAngles   - 1xM vector or NxM matrix of of phi scanning angles [degrees]
+%thetaScanningAngles - 1xM vector or MxN matrix of theta scanning angles [degrees]
+%phiScanningAngles   - 1xN vector or MxN matrix of of phi scanning angles [degrees]
 %
 %OUT
-%S                   - NxM matrix of delay-and-sum steered response power
-%u                   - NxM matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
-%v                   - NxM matrix of v coordinates in UV space [sin(theta)*sin(phi)]
-%w                   - NxM matrix of w coordinates in UV space [cos(theta)]
+%S                   - MxN matrix of delay-and-sum steered response power
+%u                   - MxN matrix of u coordinates in UV space [sin(theta)*cos(phi)]  
+%v                   - MxN matrix of v coordinates in UV space [sin(theta)*sin(phi)]
+%w                   - MxN matrix of w coordinates in UV space [cos(theta)]
 %R                   - PxP correlation matrix / cross spectral matrix (CSM)
-%e                   - NxMxP steering vector/matrix 
+%e                   - MxNxP steering vector/matrix 
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2017-01-31
+%Last updated 2017-02-27
 
 
 if ~exist('thetaScanningAngles', 'var')
@@ -45,12 +45,12 @@ inputSignal = diag(elementWeights)*inputSignal;
 R = inputSignal*inputSignal';
 
 
-%N # of y-points, M # of x-points, P number of mics
-[N, M, P] = size(e);
+%M # of y-points, N # of x-points, P number of mics
+[M, N, P] = size(e);
 
-S = zeros(N, M);
-for y = 1:N
-    for x = 1:M
+S = zeros(M, N);
+for y = 1:M
+    for x = 1:N
         ee = reshape(e(y, x, :), P, 1);
         S(y, x) = ee'*R*ee;
     end

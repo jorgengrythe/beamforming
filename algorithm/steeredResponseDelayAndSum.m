@@ -8,17 +8,17 @@ function S = steeredResponseDelayAndSum(R, e, w)
 %
 %IN
 %R - PxP correlation matrix / cross spectral matrix (CSM)
-%e - NxMxP steering vector/matrix for a certain frequency
+%e - MxNxP steering vector/matrix for a certain frequency
 %w - 1xP vector of element weights
 %
 %OUT
-%S - NxM matrix of delay-and-sum steered response power
+%S - MxN matrix of delay-and-sum steered response power
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
 %Last updated 2017-01-31
 
-%N # of y-points, M # of x-points, P number of mics
-[N, M, P] = size(e);
+%M # of y-points, N # of x-points, P number of mics
+[M, N, P] = size(e);
 
 %Make the weighting vector a column vector instead of row vector
 if isrow(w)
@@ -26,9 +26,9 @@ if isrow(w)
 end
 
 %Delay and sum steered response power
-S = zeros(N, M);
-for y = 1:N
-    for x = 1:M
+S = zeros(M, N);
+for y = 1:M
+    for x = 1:N
         ee = reshape(e(y, x, :), P, 1);
         S(y, x) = (w.*ee)'*R*(ee.*w);
     end

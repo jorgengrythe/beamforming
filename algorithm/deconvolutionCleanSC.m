@@ -6,7 +6,7 @@ function Q = deconvolutionCleanSC(D, e, w, loopGain, maxIterations)
 %
 %IN
 %D             - PxP cross spectral matrix (CSM)
-%e             - NxMxP steering vector/matrix 
+%e             - MxNxP steering vector/matrix 
 %w             - 1xP weighting vector
 %loopGain      - 1x1 safety factor, 0 < loopGain < 1
 %maxIterations - Maximum number of iterations to create the clean map
@@ -17,8 +17,8 @@ function Q = deconvolutionCleanSC(D, e, w, loopGain, maxIterations)
 %Created by J?rgen Grythe, Squarehead Technology AS
 %Last updated 2017-02-27
 
-%N # of y-points, M # of x-points, P number of mics
-[N, M, P] = size(e);
+%M # of y-points, N # of x-points, P number of mics
+[M, N, P] = size(e);
 
 %Make the weighting vector a column vector instead of row vector
 if isrow(w)
@@ -43,7 +43,7 @@ normFactor = 1/(P^2-P);
 D(logical(eye(P))) = 0;
 
 %Initialise final clean image
-Q = zeros(N, M);
+Q = zeros(M, N);
 
 %Initialise break criterion
 sumOfCSM = sum(sum(abs(D)));
@@ -54,9 +54,9 @@ for cleanMapIterations = 1:maxIterations
     
     % -------------------------------------------------------
     % 1. Calculate dirty map
-    P = zeros(N, M);
-    for y = 1:N
-        for x = 1:M
+    P = zeros(M, N);
+    for y = 1:M
+        for x = 1:N
             ee = reshape(e(y, x, :), P, 1);
             P(y, x) = normFactor*(w.*ee)'*D*(ee.*w);
         end
@@ -97,7 +97,7 @@ for cleanMapIterations = 1:maxIterations
     % -------------------------------------------------------
     % 4. New updated map with clean beam from peak source location
     % Clean beam with specified width and max value of 1
-    PmaxCleanBeam = zeros(N, M);
+    PmaxCleanBeam = zeros(M, N);
     PmaxCleanBeam(maxPeakValueYIndx, maxPeakValueXIndx) = 1;
     
     % Update clean map with clean beam from peak source location

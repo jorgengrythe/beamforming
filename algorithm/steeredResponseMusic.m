@@ -8,7 +8,7 @@ function [S, V, Vn] = steeredResponseMusic(R, e, nSources)
 %
 %IN
 %R        - PxP correlation matrix / cross spectral matrix (CSM)
-%e        - NxMxP steering vector/matrix for a certain frequency
+%e        - MxNxP steering vector/matrix for a certain frequency
 %nSources - Number of sources present in input
 %
 %OUT
@@ -19,8 +19,8 @@ function [S, V, Vn] = steeredResponseMusic(R, e, nSources)
 %Created by J?rgen Grythe, Squarehead Technology AS
 %Last updated 2017-01-31
 
-%N # of y-points, M # of x-points, P number of mics
-[N, M, P] = size(e);
+%M # of y-points, N # of x-points, P number of mics
+[M, N, P] = size(e);
 
 %Cross spectral matrix with diagonal loading
 R = R + trace(R)/(P^2)*eye(P, P);
@@ -33,9 +33,9 @@ R = R/P;
 Vn = V(:,1:end-nSources);
 
 %Music steered response power
-S = zeros(N, M);
-for y = 1:N
-    for x = 1:M
+S = zeros(M, N);
+for y = 1:M
+    for x = 1:N
         ee = reshape(e(y, x, :), P, 1);
         S(y, x) = 1./(ee'*(Vn*Vn')*ee);
     end
