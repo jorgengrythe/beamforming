@@ -1,18 +1,19 @@
 function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
-%plotBeampattern3D - plots the beampattern for various frequencies
+%plotBeampatternSpherical - plots the beampattern for various frequencies
 %
-%plotBeampattern3D(xPos, yPos, w)
+%plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
 %yPos                - 1xP vector of y-positions [m]
-%w                   - 1xP vector of element weights (optional)
+%zPos                - 1xP vector of z-positions [m]
+%elementWeights      - 1xP vector of element weights (optional)
 %
 %OUT
 %[]                  - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-05-04
+%Last updated 2017-02-27
 
 
 %If no weights are given use uniform weighting
