@@ -1,12 +1,13 @@
-function [] = plotBeampatternDynamic(xPos, yPos, w)
+function [] = plotBeampatternDynamic(xPos, yPos, zPos, w)
 %plotBeampatternDynamic - plots the beampattern for all frequencies and any
 %steering angle selected in the figure plot by slider bars
 %
-%plotBeampatternDynamic(xPos, yPos, w)
+%plotBeampatternDynamic(xPos, yPos, zPos, w)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
 %yPos                - 1xP vector of y-positions [m]
+%yPos                - 1xP vector of z-positions [m]
 %w                   - 1xP vector of element weights (optional)
 %
 %OUT
@@ -22,7 +23,7 @@ if ~exist('w','var')
 end
 
 %Default values
-f = 5e3;
+f = 4e3;
 c = 340;
 dynamicRange = 50;
 thetaSteeringAngle = 0;
@@ -30,7 +31,7 @@ phiSteeringAngle = 0;
 thetaScanAngles = -90:0.1:90;
 phiScanAngles = 0;
 minFrequency = 50;
-maxFrequency = 30e3;
+maxFrequency = 20e3;
 
 
 % Create figure and axes
@@ -157,7 +158,7 @@ plotBeampattern1D
     
     %Calculating the beampattern and updating beampattern plot
     function plotBeampattern1D
-        beamPattern = arrayFactor(xPos, yPos, w, f, c, thetaScanAngles, ...
+        beamPattern = arrayFactor(xPos, yPos, zPos, w, f, c, thetaScanAngles, ...
             phiScanAngles, thetaSteeringAngle, phiSteeringAngle);
         beamPattern = 20*log10(beamPattern);
         beamPattern = reshape(beamPattern, 1, numel(beamPattern));

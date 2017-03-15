@@ -1,11 +1,11 @@
-function Q = deconvolutionCleanSC(D, e, w, loopGain, maxIterations)
+function Q = deconvolutionCleanSC(R, e, w, loopGain, maxIterations)
 %deconvolutionCleanSC - deconvolves the intensity plot with the clean-sc algorithm
 %as implemented in "CLEAN based on spatial source coherence", Pieter Sijtsma, 2007
 %
-%Q = deconvolutionCleanSC(D, e, w, loopGain)
+%Q = deconvolutionCleanSC(R, e, w, loopGain)
 %
 %IN
-%D             - PxP cross spectral matrix (CSM)
+%R             - PxP cross spectral matrix (CSM)
 %e             - MxNxP steering vector/matrix 
 %w             - 1xP weighting vector
 %loopGain      - 1x1 safety factor, 0 < loopGain < 1
@@ -15,7 +15,7 @@ function Q = deconvolutionCleanSC(D, e, w, loopGain, maxIterations)
 %Q - NxM devonvolved intensity plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2017-02-27
+%Last updated 2017-03-15
 
 %M # of y-points, N # of x-points, P number of mics
 [M, N, P] = size(e);
@@ -40,13 +40,13 @@ end
 normFactor = 1/(P^2-P);
 
 %Initialise trimmed cross spectral matrix (CSM) by setting the diagonal to zero
-D(logical(eye(P))) = 0;
+R(logical(eye(P))) = 0;
 
 %Initialise final clean image
-Q = zeros(M, N);
+cleanMap = zeros(M, N);
 
 %Initialise break criterion
-sumOfCSM = sum(sum(abs(D)));
+sumOfCSM = sum(sum(abs(R)));
 sumOfDegradedCSM = sumOfCSM;
 
 
@@ -54,11 +54,11 @@ for cleanMapIterations = 1:maxIterations
     
     % -------------------------------------------------------
     % 1. Calculate dirty map
-    P = zeros(M, N);
+    dirtyMap = zeros(M, N);
     for y = 1:M
         for x = 1:N
             ee = reshape(e(y, x, :), P, 1);
-            P(y, x) = normFactor*(w.*ee)'*D*(ee.*w);
+            dirtyMap(y, x) = normFactor*(w.*ee)'*R*(ee.*w);
         end
     end
     
@@ -66,8 +66,8 @@ for cleanMapIterations = 1:maxIterations
     
     % -------------------------------------------------------
     % 2. Find peak value and its position in dirty map
-    [maxPeakValue, maxPeakIndx] = max(P(:));
-    [maxPeakValueYIndx, maxPeakValueXIndx] = ind2sub(size(P), maxPeakIndx);
+    [maxPeakValue, maxPeakIndx] = max(dirtyMap(:));
+    [maxPeakValueYIndx, maxPeakValueXIndx] = ind2sub(size(dirtyMap), maxPeakIndx);
     
     
     
@@ -86,7 +86,7 @@ for cleanMapIterations = 1:maxIterations
         H = h*h';
         
         H(~logical(eye(P))) = 0;
-        h = 1/sqrt(1+(w.*g)'*H*(g.*w))*(D*(g.*w)/maxPeakValue + H*(g.*w));
+        h = 1/sqrt(1+(w.*g)'*H*(g.*w))*(R*(g.*w)/maxPeakValue + H*(g.*w));
         if norm(h-hOldValue) < 1e-6
             break;
         end
@@ -101,18 +101,18 @@ for cleanMapIterations = 1:maxIterations
     PmaxCleanBeam(maxPeakValueYIndx, maxPeakValueXIndx) = 1;
     
     % Update clean map with clean beam from peak source location
-    Q = Q + loopGain*maxPeakValue*PmaxCleanBeam;
+    cleanMap = cleanMap + loopGain*maxPeakValue*PmaxCleanBeam;
     
     
     
     % -------------------------------------------------------
     % 5. Calculate degraded cross spectral matrix
-    D = D - loopGain*maxPeakValue*(h*h');
-    D(logical(eye(P))) = 0;
+    R = R - loopGain*maxPeakValue*(h*h');
+    R(logical(eye(P))) = 0;
     
     % Stop the iteration if the degraded CSM contains more information than
     % in the previous iteration
-    sumOfCSM = sum(sum(abs(D)));
+    sumOfCSM = sum(sum(abs(R)));
     if sumOfCSM > sumOfDegradedCSM
         break;
     end
@@ -128,7 +128,7 @@ else
 end
 
 % 6. Source plot is written as summation of clean beams and remaining dirty map
-Q = Q + P;
+Q = cleanMap + dirtyMap;
 
 
 
