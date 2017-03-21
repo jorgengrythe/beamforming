@@ -16,7 +16,8 @@ phiSteeringAngle = 0;
 amplitudes = [0 0 0];
 
 %Load array
-load ../data/arrays/AMD128
+load ../data/arrays/ring-48.mat
+zPos = zeros(1, numel(xPos));
 %w = hiResWeights;
 
 %Create signal hitting the array
@@ -32,40 +33,37 @@ W_MV = 20*log10(W_MV);
 W_DAS = 20*log10(W_DAS);
 
 % Plot the beampattern at specific scanning direction
-figure(1);clf
-subplot(211)
-plot(thetaScanningAngles,W_DAS);
-ylabel('Attenuation (dB)')
+fig = figure(1);clf
+fig.Color = 'w';
+
+ax1 = subplot(211, 'Parent', fig);
+plot(ax1, thetaScanningAngles, W_DAS);
+ylabel(ax1, 'Attenuation (dB)')
 
 
 for j=1:numel(thetaArrivalAngles)
-    line([thetaArrivalAngles(j) thetaArrivalAngles(j)],[-dBmin 0],'LineWidth',0.1,'Color',[0.8500 0.3250 0.0980],'LineStyle','--');
+    line(ax1, [thetaArrivalAngles(j) thetaArrivalAngles(j)],[-dBmin 0],'LineWidth',0.1,'Color',[0.8500 0.3250 0.0980],'LineStyle','--');
 end
 
-axis([thetaScanningAngles(1) thetaScanningAngles(end) -dBmin 0])
-
-set(gca,'YTick',[-50 -40 -30 -20 -10 0])
-set(gca,'XTick',[-90 -60 -30 -10 5 30 60 90])
-
-title('Beampattern delay-and-sum','fontweight','normal')
+axis(ax1, [thetaScanningAngles(1) thetaScanningAngles(end) -dBmin 0])
+ax1.YTick = [-50 -40 -30 -20 -10 0];
+ax1.XTick = [-90 -60 -30 -10 5 30 60 90];
+title(ax1, 'Beampattern delay-and-sum','fontweight','normal')
 
 
-subplot(212)
-plot(thetaScanningAngles,W_MV);
-xlabel('Angle (deg)')
-ylabel('Attenuation (dB)')
+ax2 = subplot(212, 'Parent', fig);
+plot(ax2, thetaScanningAngles, W_MV);
+xlabel(ax2, 'Angle (deg)')
+ylabel(ax2, 'Attenuation (dB)')
 
 for j=1:numel(thetaArrivalAngles)
-    line([thetaArrivalAngles(j) thetaArrivalAngles(j)],[-dBmin 0],'LineWidth',0.1,'Color',[0.8500 0.3250 0.0980],'LineStyle','--');
+    line(ax2, [thetaArrivalAngles(j) thetaArrivalAngles(j)],[-dBmin 0],'LineWidth',0.1,'Color',[0.8500 0.3250 0.0980],'LineStyle','--');
 end
 
-axis([thetaScanningAngles(1) thetaScanningAngles(end) -dBmin 0])
-
-set(gca,'YTick',[-50 -40 -30 -20 -10 0])
-set(gca,'XTick',[-90 -60 -30 -10 5 30 60 90])
-
-
-title('Beampattern minimum variance','fontweight','normal')
+axis(ax2, [thetaScanningAngles(1) thetaScanningAngles(end) -dBmin 0])
+ax2.YTick = [-50 -40 -30 -20 -10 0];
+ax2.XTick = [-90 -60 -30 -10 5 30 60 90];
+title(ax2, 'Beampattern minimum variance','fontweight','normal')
 
 %% Calculate steered response
 inputSignal = createSignal(xPos, yPos, zPos, f0, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
@@ -79,22 +77,26 @@ S_MV = steeredResponseMinimumVariance(R, e);
 S_MV = abs(S_MV)/max(abs(S_MV));
 
 %Plot steered response
-figure(2);clf;hold on
-plotDAS = plot(thetaScanningAngles,10*log10(abs(S_DAS)));
-plotMV = plot(thetaScanningAngles,10*log10(abs(S_MV)));
-xlabel('Angle (deg)')
-ylabel('Attenuation (dB)')
+fig = figure(2);clf;
+fig.Color = 'w';
+ax = axes('PArent', fig);
+hold(ax, 'on');
+plotDAS = plot(ax, thetaScanningAngles,10*log10(abs(S_DAS)));
+plotMV = plot(ax, thetaScanningAngles,10*log10(abs(S_MV)));
+xlabel(ax, 'Angle (deg)')
+ylabel(ax, 'Attenuation (dB)')
 %grid on
-axis([thetaScanningAngles(1) thetaScanningAngles(end) -dBmin 0])
+axis(ax, [thetaScanningAngles(1) thetaScanningAngles(end) -dBmin 0])
 yL = get(gca,'YLim');
 for j=1:numel(thetaArrivalAngles)
     indx = find(thetaScanningAngles >= thetaArrivalAngles(j),1);
-    line([thetaScanningAngles(indx) thetaScanningAngles(indx)],yL,'LineWidth',1,'Color',[1 1 1]*0.5,'LineStyle','--');
+    line(ax, [thetaScanningAngles(indx) thetaScanningAngles(indx)],yL,'LineWidth',1,'Color',[1 1 1]*0.5,'LineStyle','--');
 end
-title('Steered response','FontWeight','Normal')
-legend('Delay-and-sum','Minimum variance','location','northwest')
-box on
-set(gca,'XTick',[-90 -60 -30 -10 5 30 60 90])
+title(ax, 'Steered response','FontWeight','Normal')
+legend(ax, 'Delay-and-sum','Minimum variance','location','northwest')
+box(ax, 'on')
+ax.YTick = [-50 -40 -30 -20 -10 0];
+ax.XTick = [-90 -60 -30 -10 5 30 60 90];
 
 %% Calculate and plot the response for DAS, MV, MUSIC
 
