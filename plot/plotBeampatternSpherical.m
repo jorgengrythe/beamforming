@@ -13,19 +13,17 @@ function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
 %[]                  - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2017-02-27
+%Last updated 2017-03-23
 
 
 %If no weights are given use uniform weighting
 if ~exist('elementWeights','var')
-    nMics = numel(xPos);
-    elementWeights = ones(1, nMics)/nMics;
+    elementWeights = ones(1, numel(xPos));
 end
 
 %Default values
-displayStyle = '3D';
-displayTheme = 'Black';
-maxDynamicRange = 50;
+maxDynamicRange = 30;
+displayTheme = 'White';
 
 f = 3e3;
 c = 340;
@@ -33,7 +31,7 @@ c = 340;
 thetaSteeringAngle = 0;
 phiSteeringAngle = 0;
 thetaScanningAngles = -90:1:90;
-phiScanningAngles = 0:1:180;
+phiScanningAngles = 0:2:180;
 
 beamPattern = 0;
 u = 0;
@@ -59,17 +57,53 @@ axis(ax, 'equal')
 hold(ax, 'on')
 fColor = [1 1 1];
 fAlpha = 0.25;
+ax.View = [30, 20];
 
+cmap = [0    0.7500    1.0000
+    0    0.8125    1.0000
+    0    0.8750    1.0000
+    0    0.9375    1.0000
+    0    1.0000    1.0000
+    0.0625    1.0000    0.9375
+    0.1250    1.0000    0.8750
+    0.1875    1.0000    0.8125
+    0.2500    1.0000    0.7500
+    0.3125    1.0000    0.6875
+    0.3750    1.0000    0.6250
+    0.4375    1.0000    0.5625
+    0.5000    1.0000    0.5000
+    0.5625    1.0000    0.4375
+    0.6250    1.0000    0.3750
+    0.6875    1.0000    0.3125
+    0.7500    1.0000    0.2500
+    0.8125    1.0000    0.1875
+    0.8750    1.0000    0.1250
+    0.9375    1.0000    0.0625
+    1.0000    1.0000         0
+    1.0000    0.9375         0
+    1.0000    0.8750         0
+    1.0000    0.8125         0
+    1.0000    0.7500         0
+    1.0000    0.6875         0
+    1.0000    0.6250         0
+    1.0000    0.5625         0
+    1.0000    0.5000         0
+    1.0000    0.4375         0
+    1.0000    0.3750         0
+    1.0000    0.3125         0
+    1.0000    0.2500         0
+    1.0000    0.1875         0
+    1.0000    0.1250         0
+    1.0000    0.0625         0
+    1.0000         0         0
+    0.9375         0         0];
 
+colormap(fig, cmap);
 
 %Create context menu (for easy switching between orientation and theme)
 cm = uicontextmenu;
-topMenuOrientation = uimenu('Parent',cm,'Label','Orientation');
-topMenuTheme = uimenu('Parent',cm,'Label','Theme');
-uimenu('Parent',topMenuOrientation, 'Label', '2D', 'Callback',{ @setOrientation, '2D' });
-uimenu('Parent',topMenuOrientation, 'Label', '3D', 'Callback',{ @setOrientation, '3D' });
-uimenu('Parent',topMenuTheme, 'Label', 'Black', 'Callback',{ @setTheme, 'Black' });
-uimenu('Parent',topMenuTheme, 'Label', 'White', 'Callback',{ @setTheme, 'White' });
+uimenu('Parent', cm, 'Label', 'Black Theme', 'Callback',{ @setTheme, 'Black' });
+uimenu('Parent', cm, 'Label', 'White Theme', 'Callback',{ @setTheme, 'White' });
 
 %Generate a sphere to be displayed over the beampattern
 [sx, sy, sz] = sphere(100);
@@ -107,7 +141,7 @@ dynamicRangeSlider = uicontrol('style', 'slider', ...
     'position', [0.55 0.01 0.3 0.04],...
     'value', maxDynamicRange,...
     'min', 0.01,...
-    'max', 80);
+    'max', 60);
 addlistener(dynamicRangeSlider, 'ContinuousValueChange', @(obj,evt) calculateBeamPattern(obj, evt, 'dynamicRange') );
 txtdB = annotation('textbox', [0.5, 0.065, 0, 0], 'string', 'dB');
 
@@ -117,8 +151,6 @@ calculateBeamPattern(fig, fig, 'init')
 
 %Set default theme and orientation of the figure
 setTheme(fig, fig, displayTheme);
-setOrientation(fig, fig, displayStyle)
-
 
 %Enable the context menu regardless of right clicking on figure, axes or plot
 ax.UIContextMenu = cm;
@@ -133,7 +165,7 @@ bpPlot.UIContextMenu = cm;
 
 
     %Function to calculate and plot the beampattern
-    function calculateBeamPattern(obj, evt, type)
+    function calculateBeamPattern(obj, ~, type)
         
         if ~strcmp(type, 'init')
             delete(bpPlot)
@@ -169,12 +201,13 @@ bpPlot.UIContextMenu = cm;
                 'Color', fColor);
         end
         
+        %Create spherical beampattern representation
+        beampatternDynamicRange = beamPattern + maxDynamicRange;
+        beampatternDynamicRange(beampatternDynamicRange < 0) = 0;
         
-        beamPatternDynamicRange = beamPattern + maxDynamicRange;
-        
-        xx = (beamPatternDynamicRange) .* u;
-        yy = (beamPatternDynamicRange) .* v;
-        zz = (beamPatternDynamicRange) .* w;
+        xx = (beampatternDynamicRange) .* u;
+        yy = (beampatternDynamicRange) .* v;
+        zz = (beampatternDynamicRange) .* w;
         
         %Interpolate for increased resolution
         interpolationFactor = 2;
@@ -183,23 +216,25 @@ bpPlot.UIContextMenu = cm;
         xx = interp2(xx, interpolationFactor, interpolationMethod);
         yy = interp2(yy, interpolationFactor, interpolationMethod);
         zz = interp2(zz, interpolationFactor, interpolationMethod);
+        beampatternDynamicRange = interp2(beampatternDynamicRange, interpolationFactor, interpolationMethod);
         
         %Plot the beampattern        
         bpPlot = surf(ax, xx, yy, zz);
         bpPlot.EdgeColor = 'none';
         
-        %Enable contextmenu
-        spherePlot.UIContextMenu = cm;
-        circlePlot.UIContextMenu = cm;
-        bpPlot.UIContextMenu = cm;
-        
         %Scale the figure
-        maxHeight = max(max(zz));
-        caxis(ax, [0 maxHeight])
         ax.ZLim = [0 maxDynamicRange];
         ax.XLim = [-maxDynamicRange maxDynamicRange];
         ax.YLim = [-maxDynamicRange maxDynamicRange];
         
+        %Set coloring as max extent, not max z-value
+        bpPlot.CData = beampatternDynamicRange;
+        caxis(ax, [0 maxDynamicRange])
+        
+        %Enable contextmenu
+        spherePlot.UIContextMenu = cm;
+        circlePlot.UIContextMenu = cm;
+        bpPlot.UIContextMenu = cm;
         
         %Make dynamic ZTicks and show as decreasing dB
         if maxDynamicRange > 30
@@ -221,26 +256,8 @@ bpPlot.UIContextMenu = cm;
     end
 
 
-
-
-    %Function to change between 2D and 3D orientation
-    function setOrientation(~, ~, selectedOrientation)
-        displayStyle = selectedOrientation;
-        if strcmp(selectedOrientation, '2D')
-            view(ax, 0, 90)
-        elseif strcmp(selectedOrientation, '3D')
-            view(ax, 30, 20)
-        else
-            error('Use 2D or 3D for displayStyle')
-        end
-        
-    end
-
-
-
     %Function to change between black and white theme
     function setTheme(~, ~, selectedTheme)
-        cmap = colormap;
         if strcmp(selectedTheme,'Black')
             fig.Color = 'k';
             t.Color = 'w';
@@ -280,7 +297,6 @@ bpPlot.UIContextMenu = cm;
         else
             error('Use black or white for displayStyle')
         end
-        colormap(ax, cmap);
     end
 
 end
