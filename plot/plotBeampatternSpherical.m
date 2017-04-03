@@ -35,7 +35,7 @@ phiSteeringAngle = 0;
 thetaScanningAngles = -90:1:90;
 phiScanningAngles = 0:2:180;
 microphoneType = 'omni';
-minZlim = 0;
+sphereView = 'half';
 
 beamPattern = 0;
 u = 0;
@@ -238,7 +238,11 @@ bpPlot.UIContextMenu = cm;
         bpPlot.EdgeColor = 'none';
         
         %Scale the figure
-        ax.ZLim = [minZlim maxDynamicRange];
+        if strcmp(sphereView, 'half')
+            ax.ZLim = [0 maxDynamicRange];
+        else
+            ax.ZLim = [-maxDynamicRange maxDynamicRange];
+        end
         ax.XLim = [-maxDynamicRange maxDynamicRange];
         ax.YLim = [-maxDynamicRange maxDynamicRange];
         
@@ -284,10 +288,10 @@ bpPlot.UIContextMenu = cm;
     function changeView(obj, ~)
         if strcmp(obj.Label, 'Full sphere')
             thetaScanningAngles = -180:1:180;
-            minZlim = -maxDynamicRange;
+            sphereView = 'full';
         else
             thetaScanningAngles = -90:1:90;
-            minZlim = 0;
+            sphereView = 'half';
         end
         calculateBeamPattern(fig, fig, 'null')  
     end
