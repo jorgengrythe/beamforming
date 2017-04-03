@@ -21,17 +21,21 @@ if ~exist('elementWeights','var')
     elementWeights = ones(1, numel(xPos));
 end
 
+
 %Default values
 maxDynamicRange = 30;
 displayTheme = 'White';
 
-f = 3e3;
+f = 1e3;
 c = 340;
 
+%Initialise with half sphere view and omnidirectional mics
 thetaSteeringAngle = 0;
 phiSteeringAngle = 0;
 thetaScanningAngles = -90:1:90;
 phiScanningAngles = 0:2:180;
+microphoneType = 'omni';
+minZlim = 0;
 
 beamPattern = 0;
 u = 0;
@@ -56,9 +60,10 @@ ax.NextPlot = 'replacechildren';
 axis(ax, 'equal')
 hold(ax, 'on')
 fColor = [1 1 1];
-fAlpha = 0.25;
+fAlpha = 0.35;
 ax.View = [30, 20];
 
+%Default colormap for the beampattern
 cmap = [0    0.7500    1.0000
     0    0.8125    1.0000
     0    0.8750    1.0000
@@ -97,13 +102,19 @@ cmap = [0    0.7500    1.0000
     1.0000    0.0625         0
     1.0000         0         0
     0.9375         0         0];
-
 colormap(fig, cmap);
 
-%Create context menu (for easy switching between orientation and theme)
+%Create context menu
 cm = uicontextmenu;
-uimenu('Parent', cm, 'Label', 'Black Theme', 'Callback',{ @setTheme, 'Black' });
-uimenu('Parent', cm, 'Label', 'White Theme', 'Callback',{ @setTheme, 'White' });
+cmDirectivity = uimenu('Parent', cm, 'Label', 'Microphone type');
+uimenu('Parent', cmDirectivity, 'Label', 'Omni', 'Callback', { @setMicDirectivity });
+uimenu('Parent', cmDirectivity, 'Label', 'Cardioid', 'Callback', { @setMicDirectivity });
+cmView = uimenu('Parent', cm, 'Label', 'View');
+uimenu('Parent', cmView, 'Label', 'Full sphere', 'Callback', { @changeView });
+uimenu('Parent', cmView, 'Label', 'Half sphere', 'Callback', { @changeView });
+cmTheme = uimenu('Parent', cm, 'Label', 'Color theme');
+uimenu('Parent', cmTheme, 'Label', 'Black', 'Callback',{ @setTheme, 'Black' });
+uimenu('Parent', cmTheme, 'Label', 'White', 'Callback',{ @setTheme, 'White' });
 
 %Generate a sphere to be displayed over the beampattern
 [sx, sy, sz] = sphere(100);
@@ -132,7 +143,7 @@ frequencySlider = uicontrol('style', 'slider', ...
     'position', [0.55 0.06 0.3 0.04],...
     'value', f,...
     'min', 0.1e3,...
-    'max', 20e3);
+    'max', 15e3);
 addlistener(frequencySlider, 'ContinuousValueChange', @(obj,evt) calculateBeamPattern(obj, evt, 'frequency') );
 txtF = annotation('textbox', [0.52, 0.115, 0, 0], 'string', 'f');
 
@@ -161,9 +172,6 @@ bpPlot.UIContextMenu = cm;
 
 
 
-
-
-
     %Function to calculate and plot the beampattern
     function calculateBeamPattern(obj, ~, type)
         
@@ -189,6 +197,13 @@ bpPlot.UIContextMenu = cm;
             %Calculating the beampattern
             [beamPattern, u, v, w] = arrayFactor(xPos, yPos, zPos, elementWeights, f, c, thetaScanningAngles, ...
                 phiScanningAngles, thetaSteeringAngle, phiSteeringAngle);
+            
+            %Multiply with microphone directivity if it exist
+            if strcmp(microphoneType, 'cardioid')
+                elementResponse = 0.5 + 0.5*cos(thetaScanningAngles*pi/180)';
+                beamPattern = beamPattern.*elementResponse;
+            end
+            
             beamPattern = 20*log10(beamPattern);
             
         else
@@ -223,7 +238,7 @@ bpPlot.UIContextMenu = cm;
         bpPlot.EdgeColor = 'none';
         
         %Scale the figure
-        ax.ZLim = [0 maxDynamicRange];
+        ax.ZLim = [minZlim maxDynamicRange];
         ax.XLim = [-maxDynamicRange maxDynamicRange];
         ax.YLim = [-maxDynamicRange maxDynamicRange];
         
@@ -254,7 +269,28 @@ bpPlot.UIContextMenu = cm;
             ', \phi = ' sprintf('%0.0f', phiSteeringAngle) ...
             ', f = ' sprintf('%0.1f', f*1e-3) ' kHz'],'fontweight','normal');
     end
-
+    
+    %Function to change between omni and cardiod microphones
+    function setMicDirectivity(obj, ~)
+        if strcmp(obj.Label, 'Omni')
+            microphoneType = 'omni';
+        else
+            microphoneType = 'cardioid';
+        end
+        calculateBeamPattern(fig, fig, 'null')   
+    end
+    
+    %Function to change between full sphere view og half sphere
+    function changeView(obj, ~)
+        if strcmp(obj.Label, 'Full sphere')
+            thetaScanningAngles = -180:1:180;
+            minZlim = -maxDynamicRange;
+        else
+            thetaScanningAngles = -90:1:90;
+            minZlim = 0;
+        end
+        calculateBeamPattern(fig, fig, 'null')  
+    end
 
     %Function to change between black and white theme
     function setTheme(~, ~, selectedTheme)
