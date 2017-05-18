@@ -1,7 +1,7 @@
-function plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, resolution)
+function plotBeampattern2D(xPos, yPos, zPos, w, defaultFrequency, defaultDynamicRange, coveringAngles, resolution)
 %plotBeampattern2D - plots the beampattern for various frequencies
 %
-%plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, resolution)
+%plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, defaultFrequency, defaultDynamicRange, resolution)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
@@ -9,6 +9,8 @@ function plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, resolution)
 %zPos                - 1xP vector of z-positions [m]
 %w                   - 1xP vector of element weights (optional)
 %coveringAngles      - 1x2 vector of max x,y scanning angle (optional)
+%defaultFrequency    - Default frequency to be displayed (optional)
+%defaultDynamicRange - Default dynamic range to be displayed (optional)
 %resolution          - image resolution in degrees (optional)
 %
 %OUT
@@ -18,15 +20,13 @@ function plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, resolution)
 %Last updated 2016-12-196
 
 %Default values
-dynamicRange = 15;
 maxDynamicRange = 60;
 c = 340;
-f = 5e3;
 xPosSource = 0;
 yPosSource = 0;
 
-if ~exist('w', 'var')
-    w = ones(1, numel(xPos));
+if ~exist('resolution', 'var')
+    resolution = 0.5;
 end
 
 if ~exist('coveringAngles', 'var')
@@ -37,14 +37,26 @@ else
     coveringAngleY = coveringAngles(2);
 end
 
+if ~exist('defaultDynamicRange', 'var')
+    dynamicRange = 15;
+else
+    dynamicRange = defaultDynamicRange;
+end
+
+if ~exist('defaultFrequency', 'var')
+    f = 5e3;
+else
+    f = defaultFrequency;
+end
+
 if max(coveringAngleX, coveringAngleY) > 60
     projection = 'angles';
 else
     projection = 'xy';
 end
 
-if ~exist('resolution', 'var')
-    resolution = 0.5;
+if ~exist('w', 'var')
+    w = ones(1, numel(xPos));
 end
 
 
@@ -169,7 +181,7 @@ ax.ButtonDownFcn = {@changeSteeringAngles};
         
         caxis(ax, [0 dynamicRange]);
         zlim(ax, [0 dynamicRange+0.1])
-        title(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz, dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
+        title(ax, ['Frequency: ' sprintf('%0.2f', f*1e-3) ' kHz, dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
         
         %Make dynamic ZTicks and show as decreasing dB
         if dynamicRange >= 30
@@ -236,7 +248,7 @@ ax.ButtonDownFcn = {@changeSteeringAngles};
         f = selectedFrequency;
         updateBeampatternPlot()
         
-        title(ax, ['Frequency: ' sprintf('%0.1f', f*1e-3) ' kHz, dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
+        title(ax, ['Frequency: ' sprintf('%0.2f', f*1e-3) ' kHz, dynamic range: ' sprintf('%0.2f', dynamicRange) ' dB'], 'fontweight', 'normal','Color',[0 0 0]);
     end
 
     function changeSteeringAngles(obj, eventData)

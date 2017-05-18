@@ -1,16 +1,17 @@
-function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
+function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, defaultDynamicRange, interpolationFactor)
 %plotSteeredResponseXY - plot the steered response in cartesian coordinate system
 %
 %Plots the steered response with a slider bar in logarithmic scale and in
 %white theme. Right click anywhere in the figure to change between 2D and
 %3D view
 %
-%plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
+%plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, defaultDynamicRange, interpolationFactor)
 %
 %IN
 %S                   - NxM matrix of delay-and-sum steered response power
 %scanningPointsX     - NxM matrix of x-coordinates  
 %scanningPointsY     - NxM matrix of y-coordinates
+%defaultdynamicRange - Default dynamic range in view
 %interpolationFactor - 1x1 int to decide how much to interpolate the final image (optional)
 %
 %OUT
@@ -23,8 +24,13 @@ if ~exist('interpolationFactor', 'var')
     interpolationFactor = 2;
 end
 
+if exist('defaultDynamicRange', 'var')
+    dynamicRange = defaultDynamicRange;
+else
+    dynamicRange = 6;
+end
+
 maxDynamicRange = 30;
-dynamicRange = 6;
 display = '2D';
 
 fig = figure;

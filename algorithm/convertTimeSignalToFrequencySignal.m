@@ -5,7 +5,7 @@ function [frequencySignal, fc] = convertTimeSignalToFrequencySignal(timeSignal, 
 %44.1 kHz and nFFT = 1024, frequency resolution is 1024 bins where each bin
 %cover 44.1 kHz / 1024 ~ 43 Hz
 %
-%convertTimeSignalToComplexSignal(timeSignal, numberOfFFTSamples)
+%convertTimeSignalToFrequencySignal(timeSignal, nFFT, fs)
 %
 %IN
 %timeSignal      - MxN matrix of N samples on M microphones
@@ -16,7 +16,7 @@ function [frequencySignal, fc] = convertTimeSignalToFrequencySignal(timeSignal, 
 %fc              - centre frequency for each bin
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-09-26
+%Last updated 2017-05-18
 
 if ~exist('nFFT', 'var')
     nFFT = 1024;

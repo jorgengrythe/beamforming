@@ -1,4 +1,4 @@
-function [] = plotBeampatternDynamic(xPos, yPos, zPos, w)
+function [] = plotBeampatternDynamic(xPos, yPos, zPos, w, f)
 %plotBeampatternDynamic - plots the beampattern for all frequencies and any
 %steering angle selected in the figure plot by slider bars
 %
@@ -9,6 +9,7 @@ function [] = plotBeampatternDynamic(xPos, yPos, zPos, w)
 %yPos                - 1xP vector of y-positions [m]
 %yPos                - 1xP vector of z-positions [m]
 %w                   - 1xP vector of element weights (optional)
+%f                   - 1xP vector of default frequency (optional)
 %
 %OUT
 %[]                  - The figure plot
@@ -22,8 +23,11 @@ if ~exist('w','var')
     w = ones(1,nMics)/nMics;
 end
 
+if ~exist('f','var')
+    f = 4e3;
+end
+
 %Default values
-f = 4e3;
 c = 340;
 dynamicRange = 50;
 thetaSteeringAngle = 0;
