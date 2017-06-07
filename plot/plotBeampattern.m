@@ -1,4 +1,4 @@
-function [] = plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, phiScanAngle, dynRange)
+function [] = plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, phiScanAngle, dynRange, plotType)
 %plotBeampattern - plots the beampattern for various frequencies
 %
 %plotBeampattern(xPos, yPos, zPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
@@ -10,16 +10,20 @@ function [] = plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, 
 %weights          - 1xP vector of element weights
 %f                - Wave frequency [Hz]
 %c                - Speed of sound [m/s]
-%thetaSteerAngle  - 1x1 theta steering angle [degrees]
-%phiScanAngle     - Angle slice to show, 0 for xz and 90 for yz view
-%dynRange         - Dynamic range in plot [dB]
+%thetaSteerAngle  - 1x1 theta steering angle [degrees]  (optional)
+%phiScanAngle     - Angle slice to show, 0 for xz and 90 for yz view  (optional)
+%dynRange         - Dynamic range in plot [dB]  (optional)
+%plotType         - Use 'rect' or 'polar' (optional)
 %
 %OUT
 %[]               - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2016-12-15
+%Last updated 2017-06-07
 
+if ~exist('plotType','var')
+    plotType = 'full';
+end
 
 if ~exist('dynRange','var')
     dynRange = 50;
@@ -140,5 +144,18 @@ legend(axRectangular, 'show', 'Location','NorthEast')
 legend(axPolar, polarPlotHandles, 'Location','NorthEast')
 
 
+bpFig.Position = [500 200 540 600];
 
-set(bpFig,'position',[500 200 540 600])
+%Only show rectangular or polar plot if plotType is given
+switch plotType
+    case 'rect'
+        delete(axPolar)
+        bpFig.Position = [500 200 540 300];
+        axRectangular.Position = [0.1300 0.1100 0.7750 0.7750];
+    case 'polar'
+        delete(axRectangular)
+        bpFig.Position = [500 200 540 300];
+        axPolar.Position = [0.1300 0.1100 0.7750 0.7750];
+    otherwise
+        error(['Unknown plotType ' plotType ', use rect or polar'])
+end
