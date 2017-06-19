@@ -1,7 +1,7 @@
 function [] = plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, phiScanAngle, dynRange, plotType)
 %plotBeampattern - plots the beampattern for various frequencies
 %
-%plotBeampattern(xPos, yPos, zPos, w, f, c, thetaSteeringAngle, sliceAngle, dynRange)
+%plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, phiScanAngle, dynRange, plotType)
 %
 %IN
 %xPos             - 1xP vector of x-positions [m]
