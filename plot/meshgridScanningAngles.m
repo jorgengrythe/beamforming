@@ -9,4 +9,4 @@ scanAxisY = tan((-maxAngleY:resolution:maxAngleY)*pi/180);
 [scanPointsY, scanPointsX] = meshgrid(scanAxisY,scanAxisX);
 
 %Calculate theta, phi angles to each scanning point
-[thetaScanAngles, phiScanAngles] = convertCartesianToPolar(scanPointsX, scanPointsY, 1);
+[thetaScanAngles, phiScanAngles] = convertCartesianToShperical(scanPointsX, scanPointsY, 1);
