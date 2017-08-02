@@ -1,4 +1,4 @@
-function [thetaScanAngles, phiScanAngles, scanPointsX, scanPointsY] = meshgridScanningAngles(maxAngleX, maxAngleY, resolution)
+function [thetaScanAngles, phiScanAngles, scanPointsX, scanPointsY] = meshgridScanAngles(maxAngleX, maxAngleY, resolution)
 
 
 %(x,y) position of scanning points
