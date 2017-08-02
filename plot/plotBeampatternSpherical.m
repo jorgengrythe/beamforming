@@ -1,4 +1,4 @@
-function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
+function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights, sphereView)
 %plotBeampatternSpherical - plots the beampattern for various frequencies
 %
 %plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
@@ -8,17 +8,23 @@ function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
 %yPos                - 1xP vector of y-positions [m]
 %zPos                - 1xP vector of z-positions [m]
 %elementWeights      - 1xP vector of element weights (optional)
+%sphereView          - full or half (optional)
 %
 %OUT
 %[]                  - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2017-04-03
+%Last updated 2017-08-02
 
 
 %If no weights are given use uniform weighting
 if ~exist('elementWeights','var')
     elementWeights = ones(1, numel(xPos));
+end
+
+%If no view is given show half view
+if ~exist('sphereView','var')
+    sphereView = 'half';
 end
 
 
@@ -35,7 +41,6 @@ phiSteeringAngle = 0;
 thetaScanningAngles = -90:1:90;
 phiScanningAngles = 0:2:180;
 microphoneType = 'omni';
-sphereView = 'half';
 
 beamPattern = 0;
 u = 0;
