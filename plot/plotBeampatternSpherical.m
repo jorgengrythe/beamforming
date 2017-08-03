@@ -1,4 +1,4 @@
-function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights, sphereView)
+function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
 %plotBeampatternSpherical - plots the beampattern for various frequencies
 %
 %plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
@@ -8,7 +8,6 @@ function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights, sphereV
 %yPos                - 1xP vector of y-positions [m]
 %zPos                - 1xP vector of z-positions [m]
 %elementWeights      - 1xP vector of element weights (optional)
-%sphereView          - full or half (optional)
 %
 %OUT
 %[]                  - The figure plot
@@ -22,11 +21,6 @@ if ~exist('elementWeights','var')
     elementWeights = ones(1, numel(xPos));
 end
 
-%If no view is given show half view
-if ~exist('sphereView','var')
-    sphereView = 'half';
-end
-
 
 %Default values
 maxDynamicRange = 30;
@@ -38,9 +32,10 @@ c = 340;
 %Initialise with half sphere view and omnidirectional mics
 thetaSteeringAngle = 0;
 phiSteeringAngle = 0;
-thetaScanningAngles = -90:1:90;
 phiScanningAngles = 0:2:180;
+thetaScanningAngles = -180:1:180;
 microphoneType = 'omni';
+sphereView = 'half';
 
 beamPattern = 0;
 u = 0;
