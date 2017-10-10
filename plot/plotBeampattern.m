@@ -19,7 +19,7 @@ function [] = plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, 
 %[]               - The figure plot
 %
 %Created by J?rgen Grythe, Squarehead Technology AS
-%Last updated 2017-06-07
+%Last updated 2017-10-10
 
 if ~exist('plotType','var')
     plotType = 'full';
@@ -131,12 +131,17 @@ for ff = f
     W = reshape(W, 1, numel(W));
     
     % Rectangular plot
-    plot(axRectangular, thetaScanAngles, W, 'linewidth', lwidth, 'DisplayName', [num2str(ff*1e-3) ' kHz']);
+    if ff < 1e3
+        displayName = [num2str(ff) ' Hz'];
+    else
+        displayName = [num2str(ff*1e-3) ' kHz'];
+    end
+    plot(axRectangular, thetaScanAngles, W, 'linewidth', lwidth, 'DisplayName', displayName);
     
     % Polar plot
     xx = (W+dynRange) .* sin(thetaScanAngles*pi/180);
     yy = (W+dynRange) .* cos(thetaScanAngles*pi/180);
-    p = plot(axPolar, xx, yy, 'linewidth', lwidth, 'DisplayName', [num2str(ff*1e-3) ' kHz']);
+    p = plot(axPolar, xx, yy, 'linewidth', lwidth, 'DisplayName', displayName);
     polarPlotHandles = [polarPlotHandles p];
 end
 
@@ -156,6 +161,4 @@ switch plotType
         delete(axRectangular)
         bpFig.Position = [500 200 540 300];
         axPolar.Position = [0.1300 0.1100 0.7750 0.7750];
-    otherwise
-        error(['Unknown plotType ' plotType ', use rect or polar'])
 end
