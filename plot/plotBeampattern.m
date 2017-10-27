@@ -42,7 +42,7 @@ end
 thetaScanAngles = -90:0.01:90;
 
 %Linewidth in plot
-lwidth = 1;
+lwidth = 2;
 
 % Plot beampattern
 bpFig = figure;
