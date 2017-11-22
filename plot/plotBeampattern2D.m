@@ -1,7 +1,7 @@
 function plotBeampattern2D(xPos, yPos, zPos, w, defaultFrequency, defaultDynamicRange, coveringAngles, resolution)
 %plotBeampattern2D - plots the beampattern for various frequencies
 %
-%plotBeampattern2D(xPos, yPos, zPos, w, coveringAngles, defaultFrequency, defaultDynamicRange, resolution)
+%plotBeampattern2D(xPos, yPos, zPos, w, defaultFrequency, defaultDynamicRange, coveringAngles, resolution)
 %
 %IN
 %xPos                - 1xP vector of x-positions [m]
