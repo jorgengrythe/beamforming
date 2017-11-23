@@ -7,9 +7,9 @@ function [] = plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, 
 %xPos             - 1xP vector of x-positions [m]
 %yPos             - 1xP vector of y-positions [m]
 %zPos             - 1xP vector of z-positions [m]
-%weights          - 1xP vector of element weights
-%f                - Wave frequency [Hz]
-%c                - Speed of sound [m/s]
+%weights          - 1xP vector of element weights (optional, default uniform weighting)
+%f                - Wave frequency [Hz] (optional, default 0.5, 1, 1.5, 3 kHz)
+%c                - Speed of sound [m/s] (optional, default 340 m/s)
 %thetaSteerAngle  - 1x1 theta steering angle [degrees]  (optional)
 %phiScanAngle     - Angle slice to show, 0 for xz and 90 for yz view  (optional)
 %dynRange         - Dynamic range in plot [dB]  (optional)
@@ -35,6 +35,18 @@ end
 
 if ~exist('thetaSteerAngle', 'var')
     thetaSteerAngle = 0;
+end
+
+if ~exist('c', 'var')
+    c = 340;
+end
+
+if ~exist('f', 'var')
+    f = [0.5 1 1.5 3]*1e3;
+end
+
+if ~exist('weights', 'var')
+    weights = ones(1, numel(xPos))/numel(xPos);
 end
 
 
