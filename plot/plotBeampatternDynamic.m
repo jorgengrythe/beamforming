@@ -32,8 +32,8 @@ dynamicRange = 50;
 thetaSteeringAngle = 0;
 thetaScanAngles = -90:0.1:90;
 phiScanAngle = 0;
-minFrequency = 50;
-maxFrequency = 20e3;
+minFrequency = 20;
+maxFrequency = 15e3;
 
 
 % Create figure and axes
