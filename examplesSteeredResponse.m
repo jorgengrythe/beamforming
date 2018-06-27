@@ -28,7 +28,7 @@ inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiAr
 e = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
 
 % Create cross spectral matrix
-R = crossSpectralMatrix(inputSignal);
+R = inputSignal*inputSignal';
 
 % Calculate delay-and-sum steered response
 S = steeredResponseDelayAndSum(R, e, elementWeights);
@@ -76,7 +76,7 @@ amplitudes = [0 -5];
 inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
 % Input signal is changed so update cross spectral matrix
-R = crossSpectralMatrix(inputSignal);
+R = inputSignal*inputSignal';
 
 % Calculate delay-and-sum steered response, steering vector/matrix is same as before
 S = steeredResponseDelayAndSum(R, e, elementWeights);
@@ -131,7 +131,7 @@ inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiAr
 [e, u, v] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
 
 % Update cross spectral matrix
-R = crossSpectralMatrix(inputSignal);
+R = inputSignal*inputSignal';
 
 % Calculate delay-and-sum steered response
 S = steeredResponseDelayAndSum(R, e, elementWeights);
@@ -188,7 +188,7 @@ amplitudes = [0 -2 -3];
 inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiArrivalAngles, amplitudes);
 
 % Update cross spectral matrix (same scanning angles so steering vector is the same)
-R = crossSpectralMatrix(inputSignal);
+R = inputSignal*inputSignal';
 
 % Calculate delay-and-sum steered response
 S = steeredResponseDelayAndSum(R, e, elementWeights);
@@ -318,8 +318,8 @@ plotSteeredResponseUV(S, u, v, w, 'uv', 'log', 'black', '2D')
 distanceToScanningPlane = 1.8; %[m]
 maxScanningPlaneExtentX = 2;    %[m];
 maxScanningPlaneExtentY = 1.5;  %[m];
-numberOfScanningPointsX = 40;
-numberOfScanningPointsY = 30;
+numberOfScanningPointsX = 15;
+numberOfScanningPointsY = 10;
 
 %Define sources
 xPosSource = [-1 0 1];
@@ -343,18 +343,18 @@ inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiAr
 [e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
 
 %Calculate cross spectral matrix
-R = crossSpectralMatrix(inputSignal);
+R = inputSignal*inputSignal';
 
 % Calculate delay-and-sum steered response
 S = steeredResponseDelayAndSum(R, e, elementWeights);
 
 
 %Plot the steered response in cartesian coordinate system rather than UV
-interpolationFactor = 2; %interpolate for higher resolution, 0 equals original
+interpolationFactor = 1; %interpolate for higher resolution, 0 equals original
 plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, interpolationFactor)
 
 %See the scanning grid and calculated points in UV-space as well
-plotSteeredResponseUV(S, u, v, w, 'uv', 'log', 'white', '2D')
+%plotSteeredResponseUV(S, u, v, w, 'uv', 'log', 'white', '2D')
 
 %% 3D-array case
 
@@ -387,7 +387,7 @@ inputSignal = createSignal(xPos, yPos, zPos, f, c, fs, thetaArrivalAngles, phiAr
 [e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, phiScanAngles);
 
 % Update cross spectral matrix
-R = crossSpectralMatrix(inputSignal);
+R = inputSignal*inputSignal';
 
 % Calculate delay-and-sum steered response
 S = steeredResponseDelayAndSum(R, e, elementWeights);
