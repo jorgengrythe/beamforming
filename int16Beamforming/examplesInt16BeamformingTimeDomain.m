@@ -23,7 +23,7 @@ Wm = ones(1, numel(Xm))/numel(Xm);
 
 
 % Scanning range (multiple frequencies, broadband)
-fmin = 3e3; 
+fmin = 3e3;
 fmax = 5e3;
 c = 340; %speed of sound
 
@@ -42,7 +42,7 @@ filterFrequencies = [fmin, fmax];
 
 
 tic
-[anglex,angley, pow] = sweepPow2(XmMultiOffset, YmMultiOffset, ZmMulti, Wm, data(:, (t_start*fs)+1:end), fs, filterFrequencies, distance, maxX, maxY, anglRes, block, deltaX, deltaY);
+[anglex,angley, pow] = sweepPow2(Xm, Ym, Zm, Wm, data(:, (t_start*fs)+1:end), fs, filterFrequencies, distance, maxX, maxY, anglRes, block, deltaX, deltaY);
 toc
 
 figure;
