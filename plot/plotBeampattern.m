@@ -18,7 +18,7 @@ function [] = plotBeampattern(xPos, yPos, zPos, weights, f, c, thetaSteerAngle, 
 %OUT
 %[]               - The figure plot
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-10-10
 
 if ~exist('plotType','var')
