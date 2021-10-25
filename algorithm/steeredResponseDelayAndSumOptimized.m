@@ -24,7 +24,7 @@ function [S, u, v, w, R, e] = steeredResponseDelayAndSumOptimized(xPos, yPos, zP
 %R                   - PxP correlation matrix / cross spectral matrix (CSM)
 %e                   - MxNxP steering vector/matrix 
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-02-27
 
 
