@@ -20,7 +20,7 @@ function [] = plotSteeredResponseUV(S, u, v, w, projection, scaleView, displayTh
 %OUT
 %[]              - The figure plot
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2016-12-07
 
 if ~exist('displayStyle', 'var')
