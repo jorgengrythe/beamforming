@@ -12,7 +12,7 @@ function [] = plotBeampatternSpherical(xPos, yPos, zPos, elementWeights)
 %OUT
 %[]                  - The figure plot
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-08-02
 
 
