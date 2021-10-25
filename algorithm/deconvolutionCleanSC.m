@@ -14,7 +14,7 @@ function Q = deconvolutionCleanSC(R, e, w, loopGain, maxIterations)
 %OUT
 %Q - NxM devonvolved intensity plot
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-03-15
 
 %M # of y-points, N # of x-points, P number of mics
