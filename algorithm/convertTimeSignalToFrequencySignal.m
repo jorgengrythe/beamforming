@@ -15,7 +15,7 @@ function [frequencySignal, fc] = convertTimeSignalToFrequencySignal(timeSignal, 
 %frequencySignal - M x nFFT matrix of complex signal
 %fc              - centre frequency for each bin
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-10-30
 
 if ~exist('nFFT', 'var')
