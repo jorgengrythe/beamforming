@@ -17,7 +17,7 @@ function R = CSM(inputMatrix, f, fs, nFFT, K)
 %R           - the cross spectral matrix for a frequency f
 %
 %
-%Created by Jørgen Grythe, Squarehead Technology AS
+%Created by Jørgen Grythe
 %Last updated 2018-05-23
 
 if ~exist('K', 'var')
