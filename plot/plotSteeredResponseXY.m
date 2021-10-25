@@ -17,7 +17,7 @@ function plotSteeredResponseXY(S, scanningPointsX, scanningPointsY, defaultDynam
 %OUT
 %[]                  - The figure plot
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2016-10-14
 
 if ~exist('interpolationFactor', 'var')
