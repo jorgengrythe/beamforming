@@ -13,7 +13,7 @@ function S = steeredResponseFunctionalBeamforming(R, e, mapOrder)
 %OUT
 %S        - MxN matrix of Functional Beamforming steered response power
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-02-27
 
 if ~exist('mapOrder', 'var')
