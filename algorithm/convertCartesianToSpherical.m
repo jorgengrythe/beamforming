@@ -12,7 +12,7 @@ function [thetaAngles, phiAngles] = convertCartesianToSpherical(xPos, yPos, zPos
 %thetaAngles - theta angles [deg]
 %phiAngles - phi angles [deg]
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2016-11-29
 
 thetaAngles = atan(sqrt(xPos.^2+yPos.^2)./zPos);
