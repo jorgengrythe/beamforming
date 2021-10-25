@@ -16,7 +16,7 @@ function [S, V, Vn] = steeredResponseMusic(R, e, nSources)
 %V        - Eigenvectors of correlation matrix
 %Vn       - Noise eigenvectors
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-01-31
 
 %M # of y-points, N # of x-points, P number of mics
