@@ -22,7 +22,7 @@ function [e, u, v, w] = steeringVector(xPos, yPos, zPos, f, c, thetaScanAngles, 
 %v               - MxN matrix of v coordinates in UV space [sin(theta)*sin(phi)]
 %w               - MxN matrix of w coordinates in UV space [cos(theta)]
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-02-27
 
 if ~isvector(xPos)
