@@ -13,7 +13,7 @@ function [] = plotBeampatternDynamic(xPos, yPos, zPos, w, phiScanAngle)
 %OUT
 %[]                  - The figure plot
 %
-%Created by J?rgen Grythe, Squarehead Technology
+%Created by J?rgen Grythe
 %Last updated 2016-05-02
 
 %If no weights are given use uniform weighting
