@@ -12,7 +12,7 @@ function Q = deconvolutionDAMAS(S, e, maxIterations)
 %OUT
 %Q - MxN devonvolved intensity plot
 %
-%Created by J?rgen Grythe, Squarehead Technology AS
+%Created by J?rgen Grythe
 %Last updated 2017-02-27
 
 if ~exist('maxIterations', 'var')
